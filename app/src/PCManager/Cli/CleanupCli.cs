@@ -1,3 +1,4 @@
+using System.IO;
 using System.Runtime.InteropServices;
 using PCManager.Core;
 using PCManager.Core.Formatting;
