@@ -8,7 +8,7 @@ using PCManager.Services.Abstractions;
 
 namespace PCManager.ViewModels;
 
-/// <summary>One running user application with its own End command.</summary>
+/// <summary>One running application with its own End command.</summary>
 public sealed class RunningAppViewModel : ObservableObject
 {
     private readonly Func<RunningAppViewModel, Task> _end;
@@ -24,7 +24,7 @@ public sealed class RunningAppViewModel : ObservableObject
     public int ProcessId => Process.ProcessId;
     public string Name => Process.Name;
     public string PidText => $"PID {Process.ProcessId}";
-    public string MemoryText => $"{Process.MemoryBytes / (1024.0 * 1024.0):0.0} MB";
+    public string MemoryText => Process.MemoryText;
     public string CpuText => Process.CpuText;
     public AsyncRelayCommand EndCommand { get; }
 }
@@ -53,7 +53,7 @@ public sealed class InstalledAppViewModel : ObservableObject
 /// Apps: running user applications (ending is refused for protected processes), startup
 /// entries with real On/Off toggles, and the installed-application list with search.
 /// </summary>
-public sealed class AppsViewModel : ViewModelBase, IDisposable
+public sealed partial class AppsViewModel : ViewModelBase, IDisposable
 {
     private const int MaxRows = 60;
 
@@ -98,32 +98,16 @@ public sealed class AppsViewModel : ViewModelBase, IDisposable
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand RefreshStartupCommand { get; }
 
+    [ObservableProperty]
     private string _appSearch = string.Empty;
-    public string AppSearch
-    {
-        get => _appSearch;
-        set
-        {
-            if (SetProperty(ref _appSearch, value))
-            {
-                ApplyInstalledFilter();
-            }
-        }
-    }
 
+    [ObservableProperty]
     private string _installedSummary = "Reading installed applications...";
-    public string InstalledSummary
-    {
-        get => _installedSummary;
-        private set => SetProperty(ref _installedSummary, value);
-    }
 
+    [ObservableProperty]
     private string _processSummary = "Reading running applications...";
-    public string ProcessSummary
-    {
-        get => _processSummary;
-        private set => SetProperty(ref _processSummary, value);
-    }
+
+    partial void OnAppSearchChanged(string value) => ApplyInstalledFilter();
 
     public override async Task LoadAsync()
     {
@@ -153,9 +137,7 @@ public sealed class AppsViewModel : ViewModelBase, IDisposable
 
             // Only user-facing applications, and never ourselves or Microsoft PC Manager.
             List<ProcessInfo> apps = all
-                .Where(p => !p.IsSystem)
-                .Where(p => !AppInfo.IsProtectedProcessName(p.Name))
-                .Where(p => !string.IsNullOrWhiteSpace(p.Name))
+                .Where(p => !p.IsSystem && !AppInfo.IsProtectedProcessName(p.Name) && !string.IsNullOrWhiteSpace(p.Name))
                 .OrderByDescending(p => p.MemoryBytes)
                 .Take(MaxRows)
                 .ToList();

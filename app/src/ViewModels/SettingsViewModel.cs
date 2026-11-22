@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.IO;
 using CommunityToolkit.Mvvm.Input;
 using PCManager.Core;
@@ -18,20 +17,23 @@ public sealed class SettingsViewModel : ViewModelBase
     private readonly IAppStartupService _appStartup;
     private readonly ISettingsService _settings;
     private readonly IThemeService _theme;
+    private readonly IToolLauncher _launcher;
     private readonly IAppLogger _logger;
 
     public SettingsViewModel(
         IAppStartupService appStartup,
         ISettingsService settings,
         IThemeService theme,
+        IToolLauncher launcher,
         IAppLogger logger)
     {
         _appStartup = appStartup;
         _settings = settings;
         _theme = theme;
+        _launcher = launcher;
         _logger = logger;
 
-        OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
+        OpenDataFolderCommand = new RelayCommand(() => OpenFolder(AppInfo.DataFolder));
         OpenLogFolderCommand = new RelayCommand(OpenLogFolder);
         ResetThresholdCommand = new RelayCommand(() => SmartBoostThreshold = 75);
     }
@@ -104,7 +106,7 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public string SmartBoostThresholdText => $"Trim memory automatically above {_settings.Current.SmartBoostThresholdPercent}%";
 
-    /// <summary>True for the dark palette; the switch writes the same theme file the shell uses.</summary>
+    /// <summary>True for the dark palette; the switch writes the same setting the shell uses.</summary>
     public bool IsDark
     {
         get => _theme.Current == ThemeOption.Dark;
@@ -121,8 +123,6 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public string ThemeLabel => IsDark ? "Dark" : "Light";
 
-    private void OpenDataFolder() => OpenFolder(AppInfo.DataFolder);
-
     private void OpenLogFolder()
     {
         Directory.CreateDirectory(AppInfo.LogFolder);
@@ -133,7 +133,7 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         try
         {
-            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true });
+            _launcher.OpenFolder(path);
         }
         catch (Exception ex)
         {

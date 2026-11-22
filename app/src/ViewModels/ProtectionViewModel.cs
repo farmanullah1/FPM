@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
@@ -8,7 +9,7 @@ namespace PCManager.ViewModels;
 /// Protection: the security status banner, the Windows Update check, and the four action
 /// cards (pop-up management, default browser, taskbar repair, restore default apps).
 /// </summary>
-public sealed class ProtectionViewModel : ViewModelBase
+public sealed partial class ProtectionViewModel : ViewModelBase
 {
     private readonly IProtectionService _protection;
     private readonly ISystemRepairService _repair;
@@ -41,47 +42,23 @@ public sealed class ProtectionViewModel : ViewModelBase
     public AsyncRelayCommand TaskbarCommand { get; }
     public RelayCommand RestoreAppsCommand { get; }
 
+    [ObservableProperty]
     private bool _bannerHealthy = true;
-    public bool BannerHealthy
-    {
-        get => _bannerHealthy;
-        private set => SetProperty(ref _bannerHealthy, value);
-    }
 
+    [ObservableProperty]
     private string _bannerTitle = "Checking your protection status...";
-    public string BannerTitle
-    {
-        get => _bannerTitle;
-        private set => SetProperty(ref _bannerTitle, value);
-    }
 
+    [ObservableProperty]
     private string _bannerDetail = "Definitions, real-time protection and Windows Update are checked locally.";
-    public string BannerDetail
-    {
-        get => _bannerDetail;
-        private set => SetProperty(ref _bannerDetail, value);
-    }
 
+    [ObservableProperty]
     private string _defenderDetail = "Checking...";
-    public string DefenderDetail
-    {
-        get => _defenderDetail;
-        private set => SetProperty(ref _defenderDetail, value);
-    }
 
+    [ObservableProperty]
     private string _updateDetail = "Checking...";
-    public string UpdateDetail
-    {
-        get => _updateDetail;
-        private set => SetProperty(ref _updateDetail, value);
-    }
 
+    [ObservableProperty]
     private string _browserName = "-";
-    public string BrowserName
-    {
-        get => _browserName;
-        private set => SetProperty(ref _browserName, value);
-    }
 
     public override Task LoadAsync() => RefreshAsync();
 
@@ -103,12 +80,9 @@ public sealed class ProtectionViewModel : ViewModelBase
             UpdateStatus update = await Task.Run(_protection.GetUpdateStatus);
             DefaultBrowserSetting browser = await Task.Run(_browser.GetDefaultBrowser);
 
-            DefenderDetail = string.Join(Environment.NewLine, new[]
-            {
-                defender.StatusText,
-                string.IsNullOrWhiteSpace(defender.SignatureVersion) ? null : $"Definitions: {defender.SignatureVersion}"
-            }.Where(line => !string.IsNullOrWhiteSpace(line)));
-
+            DefenderDetail = string.IsNullOrWhiteSpace(defender.SignatureVersion)
+                ? defender.StatusText
+                : $"{defender.StatusText}{Environment.NewLine}Definitions: {defender.SignatureVersion}";
             UpdateDetail = update.StatusText;
             BrowserName = string.IsNullOrWhiteSpace(browser.Name) ? "Not detected" : browser.Name;
 
@@ -144,14 +118,13 @@ public sealed class ProtectionViewModel : ViewModelBase
     private async Task CheckUpdatesAsync()
     {
         IsBusy = true;
+        StatusMessage = "Reading Windows Update state...";
 
         try
         {
             UpdateStatus update = await Task.Run(_protection.GetUpdateStatus);
             UpdateDetail = update.StatusText;
-
-            // Opening the page is the supported way to actually start a check.
-            Run(() => _repair.OpenWindowsUpdateSettings(), announce: false);
+            _repair.OpenWindowsUpdateSettings();
             StatusMessage = update.PendingReboot
                 ? "A restart is required to finish installing updates."
                 : update.UpdateServiceRunning
@@ -197,13 +170,5 @@ public sealed class ProtectionViewModel : ViewModelBase
         }
     }
 
-    private void Run(Func<OperationResult> action, bool announce = true)
-    {
-        OperationResult result = action();
-
-        if (announce)
-        {
-            StatusMessage = result.Message;
-        }
-    }
+    private void Run(Func<OperationResult> action) => StatusMessage = action().Message;
 }

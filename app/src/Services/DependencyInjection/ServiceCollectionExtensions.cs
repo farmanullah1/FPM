@@ -2,8 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using PCManager.Services.Abstractions;
 using PCManager.Services.Boost;
 using PCManager.Services.Cleaners;
-using PCManager.Services.HealthCheck;
-using PCManager.Services.HealthCheck.Modules;
 using PCManager.Services.Infrastructure;
 using PCManager.Services.Memory;
 using PCManager.Services.Processes;
@@ -18,11 +16,8 @@ namespace PCManager.Services.DependencyInjection;
 /// <summary>
 /// Single place where every service is registered.
 ///
-/// To add a new tool or cleaner:
-///   1. write the interface + implementation in this project,
-///   2. add one line to the "isolated services" block (or to the health-check block
-///      if it is a scan module),
-///   3. inject it into a view model.
+/// To add a tool or cleaner: write the interface + implementation in this project, add
+/// one line below, then inject it into the view model that exposes it.
 /// </summary>
 public static class ServiceCollectionExtensions
 {
@@ -47,9 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IDefenderStatusService, DefenderStatusService>();
         services.AddSingleton<IWindowsUpdateStatusService, WindowsUpdateStatusService>();
         services.AddSingleton<IToolLauncher, ToolLauncher>();
-        services.AddSingleton<INetworkDiagnosticsService, NetworkDiagnosticsService>();
         services.AddSingleton<IDefaultBrowserService, DefaultBrowserService>();
-        services.AddSingleton<ITaskbarPinService, TaskbarPinService>();
 
         // --- Page facades -------------------------------------------------
         services.AddSingleton<IPcBoostService, PcBoostService>();
@@ -57,14 +50,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IStorageService, StorageService>();
         services.AddSingleton<IToolboxService, ToolboxService>();
         services.AddSingleton<IProtectionService, ProtectionService>();
-        services.AddSingleton<IHealthCheckService, HealthCheckService>();
-
-        // --- Health check modules (add new scans here) --------------------
-        services.AddSingleton<IHealthCheckModule, TempFileModule>();
-        services.AddSingleton<IHealthCheckModule, BrowserCacheModule>();
-        services.AddSingleton<IHealthCheckModule, StartupImpactModule>();
-        services.AddSingleton<IHealthCheckModule, SystemUpdateModule>();
-        services.AddSingleton<IHealthCheckModule, DiskSpaceModule>();
 
         return services;
     }

@@ -34,10 +34,7 @@ public sealed class MemoryOptimizer : IMemoryOptimizer
         {
             TotalPhysicalBytes = status.ullTotalPhys,
             AvailableBytes = status.ullAvailPhys,
-            LoadPercent = status.dwMemoryLoad,
-            CommitUsedBytes = status.ullTotalPageFile > status.ullAvailPageFile
-                ? status.ullTotalPageFile - status.ullAvailPageFile
-                : 0
+            LoadPercent = status.dwMemoryLoad
         };
     }
 

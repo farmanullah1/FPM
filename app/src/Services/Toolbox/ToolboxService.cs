@@ -115,7 +115,7 @@ public sealed class ToolboxService : IToolboxService
         }
     }
 
-    public Task<string?> TakeScreenshotAsync(CancellationToken cancellationToken = default) => Task.Run(() =>
+    private Task<string?> TakeScreenshotAsync(CancellationToken cancellationToken = default) => Task.Run(() =>
     {
         try
         {

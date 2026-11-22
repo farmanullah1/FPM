@@ -28,8 +28,7 @@ public sealed class WindowsUpdateStatusService : IWindowsUpdateStatusService
         var status = new UpdateStatus
         {
             UpdateServiceRunning = IsUpdateServiceRunning(),
-            PendingReboot = IsRebootPending(),
-            LastInstalled = GetRecentHotfixes()
+            PendingReboot = IsRebootPending()
         };
 
         status.StatusText = status.PendingReboot
@@ -85,33 +84,5 @@ public sealed class WindowsUpdateStatusService : IWindowsUpdateStatusService
         catch (Exception) { }
 
         return false;
-    }
-
-    private static List<string> GetRecentHotfixes()
-    {
-        var hotfixes = new List<string>();
-
-        try
-        {
-            using var searcher = new ManagementObjectSearcher(
-                "SELECT HotFixID, InstalledOn FROM Win32_QuickFixEngineering");
-
-            foreach (ManagementBaseObject result in searcher.Get())
-            {
-                using (result)
-                {
-                    string id = result["HotFixID"]?.ToString() ?? string.Empty;
-                    string installed = result["InstalledOn"]?.ToString() ?? string.Empty;
-
-                    if (!string.IsNullOrWhiteSpace(id))
-                    {
-                        hotfixes.Add(string.IsNullOrWhiteSpace(installed) ? id : $"{id} ({installed})");
-                    }
-                }
-            }
-        }
-        catch (Exception) { }
-
-        return hotfixes.TakeLast(6).Reverse().ToList();
     }
 }

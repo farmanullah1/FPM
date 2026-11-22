@@ -9,6 +9,7 @@ public static class ByteFormatter
     {
         double value = Math.Abs((double)bytes);
         int unit = 0;
+
         while (value >= 1024 && unit < Units.Length - 1)
         {
             value /= 1024;
@@ -20,6 +21,4 @@ public static class ByteFormatter
             ? $"{sign}{value:0} {Units[unit]}"
             : $"{sign}{value:0.##} {Units[unit]}";
     }
-
-    public static string FormatRate(long bytesPerSecond) => $"{Format(bytesPerSecond)}/s";
 }

@@ -40,23 +40,25 @@ NuGet packages are declared per project and restore automatically:
 app/
 ├── PCManager.sln
 ├── global.json                 SDK pin
-├── MECHANICS.md                Behaviour reference taken from the original 3.23.3.0 build
+├── screenshots/                One capture per page plus the floating toolbar
 └── src/
     ├── Core/                   Models + formatting, no Windows dependencies
-    │   ├── Models/             HealthCheckItem, HealthCheckSummary, process/storage/toolbox models
+    │   ├── Models/             Process, startup, storage, cleanup, settings and toolbox models
     │   └── Formatting/         ByteFormatter
     ├── Services/               All system access; one interface per tool/cleaner
-    │   ├── Abstractions/       IHealthCheckModule, ITempFileCleaner, IProcessManager, ...
+    │   ├── Abstractions/       ITempFileCleaner, IProcessService, IDeepCleanupService, ...
     │   ├── Interop/            NativeMethods (P/Invoke signatures + documented constants)
-    │   ├── Infrastructure/     SafeFileSystem (guarded deletion), ProcessRunner (exe + PowerShell)
+    │   ├── Infrastructure/     SafeFileSystem (guarded deletion), ProcessRunner, AppLogger
     │   ├── Cleaners/           TempFileCleaner, BrowserCacheCleaner, RecycleBinService
-    │   ├── HealthCheck/        HealthCheckService + Modules/ (one scan per file)
-    │   ├── Boost/              PcBoostService (memory trim + cleanup orchestration)
+    │   ├── Boost/              PcBoostService (memory trim + temp purge)
     │   ├── Process/            ProcessService, ProcessManager, StartupManager
-    │   ├── Storage/            StorageService, StorageAnalyzer, StorageSenseService
+    │   ├── Storage/            StorageService, StorageAnalyzer, DeepCleanupService,
+    │   │                        DuplicateFinderService, StorageSenseService
     │   ├── Protection/         Defender + Windows Update status
-    │   ├── Toolbox/            ToolboxService (screenshot/large files), Network, DefaultBrowser, TaskbarPin
+    │   ├── Toolbox/            ToolboxService, ToolLauncher, InstalledAppService,
+    │   │                        SystemRepairService, DefaultBrowserService
     │   ├── Settings/           SettingsService (per-user JSON under %LOCALAPPDATA%)
+    │   ├── Startup/            AppStartupService (HKCU Run value)
     │   └── DependencyInjection/ServiceCollectionExtensions.cs   ← single registration point
     ├── ViewModels/             One view model per page + shell, theme abstraction, item wrappers
     └── PCManager/              WPF shell
@@ -83,53 +85,7 @@ which is what makes each feature testable and replaceable.
 | Toolbox | `ToolboxViewModel` | Floating always-on-top toolbar toggle, multi-monitor screenshot via GDI, screen recorder (Game Bar with `psr.exe` fallback), calculator, notepad, `ipconfig /flushdns` and quick web links. |
 | Settings | `SettingsViewModel` | Start with Windows (own `HKCU\...\Run` value), Smart Boost on/off and threshold, Light/Dark theme, and the About block with data/log paths. |
 
-## Adding a module
-
-### New health-check scan
-
-1. Create `src/Services/HealthCheck/Modules/MyModule.cs`:
-
-```csharp
-public sealed class MyModule : IHealthCheckModule
-{
-    public string Id => "my-module";
-    public string Title => "My scan";
-
-    public async Task ScanAsync(IList<HealthCheckItem> items, CancellationToken token = default)
-    {
-        // Inspect the machine, then append exactly one aggregate row (see below).
-        items.Add(new HealthCheckItem
-        {
-            Id = "my-module.row",
-            ModuleId = Id,
-            Title = "Something",
-            Description = "What was found",
-            Details = "Paths / registry keys involved",
-            Status = HealthItemStatus.Warning,
-            Bytes = 0,
-            CanFix = false
-        });
-
-        await Task.CompletedTask;
-    }
-
-    public Task<bool> FixAsync(HealthCheckItem item, CancellationToken token = default)
-        => Task.FromResult(false); // or perform the real repair and write back item.Bytes
-}
-```
-
-2. Register it in `ServiceCollectionExtensions.AddPCManagerServices`:
-
-```csharp
-services.AddSingleton<IHealthCheckModule, MyModule>();
-```
-
-Nothing else changes — `HealthCheckService` enumerates every registered module, runs them
-in parallel, and the Home page lists whatever they return. Return one aggregate row per
-area (not one row per file) so the card stays readable; put file counts and sample paths in
-`Details`. Never throw for expected conditions (access denied, missing folder) — report them
-as a `Good`/`Warning` row instead, because `AccessDeniedException` from a scan should not
-break the whole page.
+## Adding a feature
 
 ### New page
 

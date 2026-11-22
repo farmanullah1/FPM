@@ -28,14 +28,8 @@
                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
                     </Grid>
 
-                    <ItemsControl ItemsSource="{Binding RunningApps}" Margin="0,12,0,0" MaxHeight="340">
-                        <ItemsControl.Template>
-                            <ControlTemplate TargetType="ItemsControl">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <ItemsPresenter />
-                                </ScrollViewer>
-                            </ControlTemplate>
-                        </ItemsControl.Template>
+                    <ItemsControl ItemsSource="{Binding RunningApps}" Margin="0,12,0,0"
+                                  Style="{StaticResource CardList}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border Style="{StaticResource RowCard}" Padding="10" Margin="0,0,0,6">
@@ -77,14 +71,8 @@
                     <TextBlock Style="{StaticResource CaptionText}" Margin="0,2,0,0"
                                Text="Read from HKCU/HKLM Run, the Startup folders and Task Scheduler." />
 
-                    <ItemsControl ItemsSource="{Binding StartupApps}" Margin="0,12,0,0" MaxHeight="300">
-                        <ItemsControl.Template>
-                            <ControlTemplate TargetType="ItemsControl">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <ItemsPresenter />
-                                </ScrollViewer>
-                            </ControlTemplate>
-                        </ItemsControl.Template>
+                    <ItemsControl ItemsSource="{Binding StartupApps}" Margin="0,12,0,0"
+                                  Style="{StaticResource CardList}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border Style="{StaticResource RowCard}" Padding="10" Margin="0,0,0,6">
@@ -129,14 +117,7 @@
                                  ToolTip="Search installed apps" VerticalAlignment="Center" />
                     </Grid>
 
-                    <ItemsControl ItemsSource="{Binding InstalledApps}" MaxHeight="320">
-                        <ItemsControl.Template>
-                            <ControlTemplate TargetType="ItemsControl">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <ItemsPresenter />
-                                </ScrollViewer>
-                            </ControlTemplate>
-                        </ItemsControl.Template>
+                    <ItemsControl ItemsSource="{Binding InstalledApps}" Style="{StaticResource CardList}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border Style="{StaticResource RowCard}" Padding="10" Margin="0,0,0,6">

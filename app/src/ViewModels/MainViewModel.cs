@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using PCManager.Core;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
@@ -9,13 +8,11 @@ namespace PCManager.ViewModels;
 
 /// <summary>
 /// Shell: the six-entry navigation rail (Settings pinned at the bottom), the hosted page
-/// and the theme. Pages register themselves once; navigation between them goes through
-/// <see cref="NavigationService"/> so the quick-action cards do not need a reference to
-/// the shell.
+/// and the theme. Navigation from a page goes through <see cref="NavigationService"/> so
+/// the quick-action cards never reference the shell.
 /// </summary>
 public sealed class MainViewModel : ObservableObject
 {
-    private readonly ISettingsService _settings;
     private readonly IThemeService _themeService;
 
     public MainViewModel(
@@ -29,7 +26,6 @@ public sealed class MainViewModel : ObservableObject
         ISettingsService settings,
         IThemeService themeService)
     {
-        _settings = settings;
         _themeService = themeService;
 
         Pages = new ObservableCollection<NavigationItem>
@@ -41,31 +37,21 @@ public sealed class MainViewModel : ObservableObject
             new(PageKeys.Toolbox, "Toolbox", "Everyday utilities", "Icon.Toolbox", toolbox)
         };
 
-        SettingsPage = new NavigationItem(PageKeys.Settings, "Settings", "Preferences and about", "Icon.Settings", settingsPage);
-        NavigationItems = new ObservableCollection<NavigationItem>(Pages) { SettingsPage };
-
-        // Bound to the pinned bottom ListBox in the shell.
-        SettingsItems = new ObservableCollection<NavigationItem> { SettingsPage };
+        // Settings is pinned under the rail separator, so it lives in its own one-item list.
+        SettingsItems = new ObservableCollection<NavigationItem>
+        {
+            new(PageKeys.Settings, "Settings", "Preferences and about", "Icon.Settings", settingsPage)
+        };
 
         navigation.Handler = SelectPage;
-
         _themeService.Apply(settings.Current.Theme);
 
         _currentPage = Pages[0].Page;
         _selectedPage = Pages[0];
-        Pages[0].IsSelected = true;
     }
 
-    /// <summary>The five main tabs.</summary>
     public ObservableCollection<NavigationItem> Pages { get; }
 
-    /// <summary>Settings is pinned under the rail separator.</summary>
-    public NavigationItem SettingsPage { get; }
-
-    /// <summary>All six entries, in rail order.</summary>
-    public ObservableCollection<NavigationItem> NavigationItems { get; }
-
-    /// <summary>Single-item collection for the pinned Settings entry.</summary>
     public ObservableCollection<NavigationItem> SettingsItems { get; }
 
     public string ProductName => AppInfo.ProductName;
@@ -85,16 +71,12 @@ public sealed class MainViewModel : ObservableObject
         get => _selectedPage;
         set
         {
-            if (value is null || !SetProperty(ref _selectedPage, value))
+            if (value is null || ReferenceEquals(value, _selectedPage))
             {
                 return;
             }
 
-            foreach (NavigationItem item in NavigationItems)
-            {
-                item.IsSelected = ReferenceEquals(item, value);
-            }
-
+            SetProperty(ref _selectedPage, value);
             CurrentPage = value.Page;
             _ = value.Page.LoadAsync();
         }
@@ -103,10 +85,9 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>Called by the window once it is on screen.</summary>
     public Task LoadAsync() => CurrentPage.LoadAsync();
 
-    /// <summary>Navigation target for <see cref="NavigationService"/> (quick-action cards).</summary>
     private void SelectPage(string pageKey)
     {
-        NavigationItem? target = NavigationItems.FirstOrDefault(i => i.Key == pageKey);
+        NavigationItem? target = Pages.Concat(SettingsItems).FirstOrDefault(i => i.Key == pageKey);
 
         if (target is not null)
         {

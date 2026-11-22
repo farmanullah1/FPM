@@ -1,5 +1,3 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace PCManager.ViewModels;
 
 /// <summary>Page identifiers used by <see cref="INavigationService"/>.</summary>
@@ -20,27 +18,11 @@ public interface INavigationService
 }
 
 /// <summary>One entry of the left navigation rail.</summary>
-public sealed class NavigationItem : ObservableObject
+public sealed class NavigationItem(string key, string title, string subtitle, string iconKey, ViewModelBase page)
 {
-    public NavigationItem(string key, string title, string subtitle, string iconKey, ViewModelBase page)
-    {
-        Key = key;
-        Title = title;
-        Subtitle = subtitle;
-        IconKey = iconKey;
-        Page = page;
-    }
-
-    public string Key { get; }
-    public string Title { get; }
-    public string Subtitle { get; }
-    public string IconKey { get; }
-    public ViewModelBase Page { get; }
-
-    private bool _isSelected;
-    public bool IsSelected
-    {
-        get => _isSelected;
-        set => SetProperty(ref _isSelected, value);
-    }
+    public string Key { get; } = key;
+    public string Title { get; } = title;
+    public string Subtitle { get; } = subtitle;
+    public string IconKey { get; } = iconKey;
+    public ViewModelBase Page { get; } = page;
 }

@@ -7,7 +7,6 @@ public sealed class ToolboxTool
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string IconKey { get; set; } = string.Empty;
-    public bool IsAvailable { get; set; } = true;
 }
 
 /// <summary>The browser Windows currently uses for http/https links.</summary>
@@ -15,22 +14,9 @@ public sealed class DefaultBrowserSetting
 {
     public string Name { get; set; } = string.Empty;
     public string ExecutablePath { get; set; } = string.Empty;
-    public string ProgId { get; set; } = string.Empty;
-    public bool IsDefault { get; set; }
 }
 
-/// <summary>A shortcut pinned to the taskbar.</summary>
-public sealed class TaskbarPinEntry
-{
-    public string Name { get; set; } = string.Empty;
-    public string Path { get; set; } = string.Empty;
-    public bool IsPinned { get; set; }
-    public bool IsRunning { get; set; }
-}
-
-/// <summary>
-/// Persistent, user-editable application settings.
-/// </summary>
+/// <summary>Persistent, user-editable application settings.</summary>
 public sealed class AppSettings
 {
     public ThemeOption Theme { get; set; } = ThemeOption.System;
@@ -50,7 +36,6 @@ public sealed class AppSettings
     public bool ShowFloatingToolbar { get; set; }
 }
 
-/// <summary>Mirrors the ThemeOption enum found in the original shell assembly.</summary>
 public enum ThemeOption
 {
     Default = 0,

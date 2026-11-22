@@ -12,9 +12,6 @@ public sealed class CleanupCategory
     /// <summary>Bytes that were found by the scan.</summary>
     public long Bytes { get; set; }
 
-    /// <summary>False for categories Windows will not let an unelevated process touch.</summary>
-    public bool CanClean { get; set; } = true;
-
     public bool IsSelected { get; set; } = true;
 
     public bool IsCleaned { get; set; }

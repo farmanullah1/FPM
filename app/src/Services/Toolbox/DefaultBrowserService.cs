@@ -20,6 +20,10 @@ public sealed class DefaultBrowserService : IDefaultBrowserService
     private const string UserChoiceKey =
         @"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice";
 
+    private readonly IToolLauncher _launcher;
+
+    public DefaultBrowserService(IToolLauncher launcher) => _launcher = launcher;
+
     public DefaultBrowserSetting GetDefaultBrowser()
     {
         string progId = string.Empty;
@@ -31,11 +35,7 @@ public sealed class DefaultBrowserService : IDefaultBrowserService
         }
         catch (Exception) { }
 
-        var setting = new DefaultBrowserSetting
-        {
-            ProgId = progId,
-            IsDefault = !string.IsNullOrEmpty(progId)
-        };
+        var setting = new DefaultBrowserSetting();
 
         if (string.IsNullOrEmpty(progId))
         {
@@ -61,10 +61,7 @@ public sealed class DefaultBrowserService : IDefaultBrowserService
     {
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:defaultapps")
-            {
-                UseShellExecute = true
-            });
+            _launcher.OpenUri("ms-settings:defaultapps");
 
             return OperationResult.Ok("Opened Default apps. Pick your browser there - Windows blocks changing it from other programs.");
         }

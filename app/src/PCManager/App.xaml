@@ -13,11 +13,8 @@
                 <ResourceDictionary Source="Styles/Controls.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
             <conv:IconKeyToGeometryConverter x:Key="IconKeyConverter" />
-            <conv:StatusToBrushConverter x:Key="StatusToBrush" />
             <conv:HealthyToBrushConverter x:Key="HealthyToBrush" />
-            <conv:InverseBooleanConverter x:Key="InverseBoolean" />
 
             <!-- View location: page view models are hosted by the shell's ContentControl. -->
             <DataTemplate DataType="{x:Type vm:HomeViewModel}">

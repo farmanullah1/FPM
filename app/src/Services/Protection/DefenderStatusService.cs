@@ -29,7 +29,6 @@ public sealed class DefenderStatusService : IDefenderStatusService
 
         return new DefenderStatus
         {
-            Available = false,
             StatusText = "Defender status is not available. Another antivirus may be managing protection."
         };
     }
@@ -49,11 +48,9 @@ public sealed class DefenderStatusService : IDefenderStatusService
             {
                 using (result)
                 {
-                    status.Available = true;
                     status.AntivirusEnabled = GetBool(result, "AntivirusEnabled");
                     status.RealTimeEnabled = GetBool(result, "RealTimeProtectionEnabled");
                     status.SignatureVersion = GetString(result, "AntivirusSignatureVersion");
-                    status.LastScan = GetDate(result, "QuickScanStartTime");
                     status.StatusText = Describe(status);
                     return true;
                 }
@@ -90,11 +87,9 @@ public sealed class DefenderStatusService : IDefenderStatusService
                     int definitionState = state & 0xFF;
                     int scannerState = (state >> 8) & 0xFF;
 
-                    status.Available = true;
                     status.AntivirusEnabled = scannerState == 0x10 || scannerState == 0x11;
                     status.RealTimeEnabled = status.AntivirusEnabled;
                     status.SignatureVersion = definitionState == 0x00 ? "Up to date" : "Outdated";
-                    status.LastScan = "Unknown";
                     status.StatusText = status.AntivirusEnabled
                         ? $"{name} is protecting this PC."
                         : $"{name} is installed but protection is turned off.";
@@ -157,19 +152,6 @@ public sealed class DefenderStatusService : IDefenderStatusService
         catch (Exception)
         {
             return string.Empty;
-        }
-    }
-
-    private static string GetDate(ManagementBaseObject obj, string property)
-    {
-        try
-        {
-            object? value = obj[property];
-            return value is null ? "Unknown" : Convert.ToDateTime(value).ToString("yyyy-MM-dd HH:mm");
-        }
-        catch (Exception)
-        {
-            return "Unknown";
         }
     }
 }

@@ -30,8 +30,6 @@ public sealed class StartupAppViewModel : ObservableObject
 
     public string Command => Model.Command;
 
-    public bool IsSystem => Model.IsSystem;
-
     /// <summary>Built-in Windows tasks are shown but cannot be toggled.</summary>
     public bool CanToggle => !Model.IsSystem;
 
@@ -64,13 +62,13 @@ public sealed class StartupAppViewModel : ObservableObject
         {
             OperationResult result = await _processService.SetStartupAppEnabledAsync(Model, enabled);
 
-            if (!result.Success)
+            if (result.Success)
             {
-                Revert(enabled);
+                Model.IsEnabled = enabled;
             }
             else
             {
-                Model.IsEnabled = enabled;
+                Revert(enabled);
             }
 
             _report(result.Message);

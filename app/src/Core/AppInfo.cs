@@ -13,9 +13,6 @@ public static class AppInfo
     /// <summary>Name shown in the window title, tray tooltip and About card.</summary>
     public const string ProductName = "Farmanullah PC Manager";
 
-    /// <summary>Assembly / executable name (FarmanullahPCManager.exe).</summary>
-    public const string ExecutableName = "FarmanullahPCManager";
-
     /// <summary>Per-user AppUserModelID used for taskbar grouping and notifications.</summary>
     public const string AppUserModelId = "FarmanullahPCManager.Desktop.8A4F2C1E";
 
@@ -27,9 +24,6 @@ public static class AppInfo
 
     /// <summary>Folder name under %LOCALAPPDATA%.</summary>
     public const string DataFolderName = "FarmanullahPCManager";
-
-    /// <summary>HKCU root for every value this app writes.</summary>
-    public const string RegistryRoot = @"Software\FarmanullahPCManager";
 
     /// <summary>Value name used under the per-user Run key (never "PCManager").</summary>
     public const string RunValueName = "FarmanullahPCManager";
@@ -51,8 +45,6 @@ public static class AppInfo
     /// <summary>%LOCALAPPDATA%\FarmanullahPCManager\logs</summary>
     public static string LogFolder => Path.Combine(DataFolder, "logs");
 
-    /// <summary>%LOCALAPPDATA%\FarmanullahPCManager\cache</summary>
-    public static string CacheFolder => Path.Combine(DataFolder, "cache");
 
     /// <summary>Process names that must never be trimmed or terminated by this app.</summary>
     public static readonly string[] ProtectedProcessNames =

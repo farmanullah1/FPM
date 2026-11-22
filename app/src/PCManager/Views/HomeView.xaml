@@ -61,7 +61,7 @@
             <!-- Quick actions -->
             <TextBlock Text="Quick actions" Style="{StaticResource SectionTitle}" Margin="0,6,0,10" />
             <UniformGrid Columns="2" Rows="2">
-                <Button Style="{StaticResource ActionCard}" Command="{Binding OpenHealthCommand}">
+                <Button Style="{StaticResource ActionCard}" Command="{Binding OpenProtectionCommand}">
                     <StackPanel>
                         <Path Data="{DynamicResource Icon.Health}" Fill="{DynamicResource App.Accent}"
                               Width="24" Height="24" Stretch="Uniform" HorizontalAlignment="Left" />

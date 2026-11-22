@@ -17,6 +17,21 @@
         <WindowChrome CaptionHeight="0" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0" />
     </WindowChrome.WindowChrome>
 
+    <Window.Resources>
+        <!-- Shared by both rail lists (main tabs and the pinned Settings entry). -->
+        <DataTemplate x:Key="NavigationItemTemplate">
+            <StackPanel Orientation="Horizontal">
+                <Path Data="{Binding IconKey, Converter={StaticResource IconKeyConverter}}"
+                      Fill="{DynamicResource App.Text}"
+                      Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" />
+                <StackPanel Margin="12,0,0,0">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" />
+                    <TextBlock Text="{Binding Subtitle}" Style="{StaticResource CaptionText}" />
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="44" />
@@ -67,21 +82,8 @@
                         <Border Height="1" Background="{DynamicResource App.Border}" Margin="6,8,6,8" />
                         <ListBox Style="{StaticResource NavList}"
                                  ItemsSource="{Binding SettingsItems}"
-                                 SelectedItem="{Binding SelectedPage, Mode=TwoWay}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Data="{Binding IconKey, Converter={StaticResource IconKeyConverter}}"
-                                              Fill="{DynamicResource App.Text}"
-                                              Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" />
-                                        <StackPanel Margin="12,0,0,0">
-                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" />
-                                            <TextBlock Text="{Binding Subtitle}" Style="{StaticResource CaptionText}" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                                 ItemTemplate="{StaticResource NavigationItemTemplate}"
+                                 SelectedItem="{Binding SelectedPage, Mode=TwoWay}" />
 
                         <TextBlock Text="{Binding VersionText}" Style="{StaticResource CaptionText}" Margin="12,8,0,0" />
                     </StackPanel>
@@ -89,21 +91,8 @@
                     <!-- Main tabs -->
                     <ListBox Style="{StaticResource NavList}"
                              ItemsSource="{Binding Pages}"
-                             SelectedItem="{Binding SelectedPage, Mode=TwoWay}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Path Data="{Binding IconKey, Converter={StaticResource IconKeyConverter}}"
-                                          Fill="{DynamicResource App.Text}"
-                                          Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center" />
-                                    <StackPanel Margin="12,0,0,0">
-                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" />
-                                        <TextBlock Text="{Binding Subtitle}" Style="{StaticResource CaptionText}" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                             ItemTemplate="{StaticResource NavigationItemTemplate}"
+                             SelectedItem="{Binding SelectedPage, Mode=TwoWay}" />
                 </DockPanel>
             </Border>
 

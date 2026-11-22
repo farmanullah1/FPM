@@ -28,7 +28,6 @@ public sealed class ProcessManager : IProcessManager
         var results = new List<ProcessInfo>();
         var alive = new HashSet<int>();
         DateTime now = DateTime.UtcNow;
-        ulong totalRam = GetTotalRam();
 
         foreach (Process process in Process.GetProcesses())
         {
@@ -38,24 +37,12 @@ public sealed class ProcessManager : IProcessManager
                 alive.Add(pid);
 
                 string name = process.ProcessName;
-                string path = string.Empty;
-                int threads = 0;
-                DateTime? startTime = null;
                 long memory = 0;
                 double cpu = 0;
                 int sessionId;
 
-                try { threads = process.Threads.Count; } catch { /* exiting */ }
-                try { startTime = process.StartTime; } catch { /* access denied */ }
                 try { memory = process.WorkingSet64; } catch { /* exiting */ }
                 try { sessionId = process.SessionId; } catch { sessionId = 1; }
-
-                try
-                {
-                    // MainModule throws for protected and cross-bitness processes.
-                    path = process.MainModule?.FileName ?? string.Empty;
-                }
-                catch (Exception) { }
 
                 try
                 {
@@ -82,12 +69,8 @@ public sealed class ProcessManager : IProcessManager
                 {
                     ProcessId = pid,
                     Name = name,
-                    Path = path,
                     CpuPercent = Math.Round(cpu, 1),
                     MemoryBytes = memory,
-                    MemoryPercent = totalRam == 0 ? 0 : Math.Round((double)memory / totalRam * 100.0, 2),
-                    StartTime = startTime,
-                    ThreadCount = threads,
                     // Our own process and Microsoft PC Manager are flagged as system so the
                     // Apps page never offers an End button for them.
                     IsSystem = sessionId == 0 || ProtectedNames.Contains(name) || AppInfo.IsProtectedProcessName(name)
@@ -161,15 +144,5 @@ public sealed class ProcessManager : IProcessManager
         {
             return OperationResult.Fail(ex.Message);
         }
-    }
-
-    private static ulong GetTotalRam()
-    {
-        var status = new Interop.NativeMethods.MEMORYSTATUSEX
-        {
-            dwLength = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Interop.NativeMethods.MEMORYSTATUSEX>()
-        };
-
-        return Interop.NativeMethods.GlobalMemoryStatusEx(ref status) ? status.ullTotalPhys : 0;
     }
 }

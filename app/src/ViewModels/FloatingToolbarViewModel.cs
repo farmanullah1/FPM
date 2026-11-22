@@ -11,7 +11,7 @@ namespace PCManager.ViewModels;
 /// The always-on-top pill: live memory load, one-click Boost, screenshot, notepad and
 /// calculator. It reuses the same services as the main window, so nothing is duplicated.
 /// </summary>
-public sealed class FloatingToolbarViewModel : ObservableObject, IDisposable
+public sealed partial class FloatingToolbarViewModel : ObservableObject, IDisposable
 {
     private readonly IPcBoostService _boost;
     private readonly IToolboxService _toolbox;
@@ -28,6 +28,7 @@ public sealed class FloatingToolbarViewModel : ObservableObject, IDisposable
         CalculatorCommand = new AsyncRelayCommand(() => RunToolAsync("calculator"));
 
         Refresh();
+
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
         _timer.Tick += (_, _) => Refresh();
         _timer.Start();
@@ -38,34 +39,17 @@ public sealed class FloatingToolbarViewModel : ObservableObject, IDisposable
     public AsyncRelayCommand NotepadCommand { get; }
     public AsyncRelayCommand CalculatorCommand { get; }
 
+    [ObservableProperty]
     private string _loadText = "-";
-    public string LoadText
-    {
-        get => _loadText;
-        private set => SetProperty(ref _loadText, value);
-    }
 
+    [ObservableProperty]
     private string _freeText = string.Empty;
-    public string FreeText
-    {
-        get => _freeText;
-        private set => SetProperty(ref _freeText, value);
-    }
-
-    private string _resultText = "Ready";
-    public string ResultText
-    {
-        get => _resultText;
-        private set => SetProperty(ref _resultText, value);
-    }
 
     private void Refresh()
     {
         try
         {
-            MemorySnapshot snapshot = _boost.GetMemorySnapshot();
-            LoadText = $"{snapshot.LoadPercent:0}%";
-            FreeText = $"{ByteFormatter.Format((long)snapshot.AvailableBytes)} free";
+            ApplySnapshot(_boost.GetMemorySnapshot());
         }
         catch (Exception)
         {
@@ -77,21 +61,20 @@ public sealed class FloatingToolbarViewModel : ObservableObject, IDisposable
     {
         try
         {
-            MemorySnapshot snapshot = await _boost.OptimizeAsync();
-            LoadText = $"{snapshot.LoadPercent:0}%";
-            ResultText = $"{ByteFormatter.Format(snapshot.ReclaimedBytes)} reclaimed";
-            Refresh();
+            ApplySnapshot(await _boost.OptimizeAsync());
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ResultText = ex.Message;
+            LoadText = "-";
         }
     }
 
-    private async Task RunToolAsync(string toolId)
+    private Task RunToolAsync(string toolId) => _toolbox.LaunchAsync(toolId);
+
+    private void ApplySnapshot(MemorySnapshot snapshot)
     {
-        OperationResult result = await _toolbox.LaunchAsync(toolId);
-        ResultText = result.Message;
+        LoadText = $"{snapshot.LoadPercent:0}%";
+        FreeText = $"{ByteFormatter.Format((long)snapshot.AvailableBytes)} free";
     }
 
     public void Dispose() => _timer.Stop();

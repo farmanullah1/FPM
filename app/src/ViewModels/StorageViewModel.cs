@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCManager.Core.Formatting;
 using PCManager.Core.Models;
@@ -8,21 +9,21 @@ using PCManager.Services.Abstractions;
 namespace PCManager.ViewModels;
 
 /// <summary>Wraps a cleanup category so the checkbox can write straight back to the model.</summary>
-public sealed class CleanupCategoryViewModel : ViewModelBaseItem
+public sealed class CleanupCategoryViewModel : ObservableObject
 {
     private readonly Action _changed;
 
-    public CleanupCategoryViewModel(CleanupCategory category, Action changed) : base(category)
+    public CleanupCategoryViewModel(CleanupCategory model, Action changed)
     {
+        Model = model;
         _changed = changed;
     }
 
-    public CleanupCategory Model => (CleanupCategory)Inner;
+    public CleanupCategory Model { get; }
 
     public string Title => Model.Title;
     public string Description => Model.Description;
     public string SizeText => Model.SizeText;
-    public bool IsCleaned => Model.IsCleaned;
 
     public bool IsSelected
     {
@@ -40,52 +41,42 @@ public sealed class CleanupCategoryViewModel : ViewModelBaseItem
         }
     }
 
+    /// <summary>Re-reads the measured size and selection after a cleanup run.</summary>
     public void Refresh()
     {
         OnPropertyChanged(nameof(SizeText));
         OnPropertyChanged(nameof(IsSelected));
-        OnPropertyChanged(nameof(IsCleaned));
     }
-}
-
-/// <summary>Base for view models that wrap one model instance.</summary>
-public abstract class ViewModelBaseItem : System.ComponentModel.INotifyPropertyChanged
-{
-    protected ViewModelBaseItem(object inner) => Inner = inner;
-
-    protected object Inner { get; }
-
-    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-
-    protected void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
 }
 
 /// <summary>
 /// Storage: system-drive usage, deep cleanup with per-category byte counts, the large-file
 /// scanner with size filters, duplicate detection and the Storage Sense switch.
 /// </summary>
-public sealed class StorageViewModel : ViewModelBase
+public sealed partial class StorageViewModel : ViewModelBase
 {
     private readonly IStorageService _storage;
     private readonly IDeepCleanupService _cleanup;
     private readonly IDuplicateFinderService _duplicates;
     private readonly ISettingsService _settings;
+    private readonly IToolLauncher _launcher;
     private readonly IAppLogger _logger;
 
-    private long _largeFileThresholdBytes = 100L * 1024 * 1024;
+    private long _largeFileThresholdBytes;
 
     public StorageViewModel(
         IStorageService storage,
         IDeepCleanupService cleanup,
         IDuplicateFinderService duplicates,
         ISettingsService settings,
+        IToolLauncher launcher,
         IAppLogger logger)
     {
         _storage = storage;
         _cleanup = cleanup;
         _duplicates = duplicates;
         _settings = settings;
+        _launcher = launcher;
         _logger = logger;
 
         ScanCleanupCommand = new AsyncRelayCommand(ScanCleanupAsync, () => !IsBusy);
@@ -95,9 +86,6 @@ public sealed class StorageViewModel : ViewModelBase
         OpenScanFolderCommand = new RelayCommand(OpenScanFolder);
 
         _scanPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        _largeFileFilterText = "> 100 MB";
-
-        // Remember the last size filter across sessions.
         _largeFileThresholdBytes = Math.Max(10L * 1024 * 1024, settings.Current.LargeFileThresholdBytes);
     }
 
@@ -111,94 +99,46 @@ public sealed class StorageViewModel : ViewModelBase
     public AsyncRelayCommand FindDuplicatesCommand { get; }
     public RelayCommand OpenScanFolderCommand { get; }
 
-    // ---------------------------------------------------------------- drive
+    [ObservableProperty]
     private string _systemDriveName = "C:";
-    public string SystemDriveName
-    {
-        get => _systemDriveName;
-        private set => SetProperty(ref _systemDriveName, value);
-    }
 
+    [ObservableProperty]
     private string _driveSummary = "Reading drive information...";
-    public string DriveSummary
-    {
-        get => _driveSummary;
-        private set => SetProperty(ref _driveSummary, value);
-    }
 
+    [ObservableProperty]
     private double _driveUsedPercent;
-    public double DriveUsedPercent
-    {
-        get => _driveUsedPercent;
-        private set => SetProperty(ref _driveUsedPercent, value);
-    }
 
+    [ObservableProperty]
     private string _driveUsedText = "-";
-    public string DriveUsedText
-    {
-        get => _driveUsedText;
-        private set => SetProperty(ref _driveUsedText, value);
-    }
 
+    [ObservableProperty]
     private string _driveFreeText = "-";
-    public string DriveFreeText
-    {
-        get => _driveFreeText;
-        private set => SetProperty(ref _driveFreeText, value);
-    }
 
-    // ---------------------------------------------------------------- cleanup
+    [ObservableProperty]
     private string _cleanupTotalText = "-";
-    public string CleanupTotalText
-    {
-        get => _cleanupTotalText;
-        private set => SetProperty(ref _cleanupTotalText, value);
-    }
 
-    // ---------------------------------------------------------------- large files
+    [ObservableProperty]
     private string _scanPath;
-    public string ScanPath
-    {
-        get => _scanPath;
-        set => SetProperty(ref _scanPath, value);
-    }
 
-    private string _largeFileFilterText;
-    public string LargeFileFilterText
-    {
-        get => _largeFileFilterText;
-        private set => SetProperty(ref _largeFileFilterText, value);
-    }
-
+    [ObservableProperty]
     private string _largeFileSummary = "Choose a size filter to scan for large files.";
-    public string LargeFileSummary
-    {
-        get => _largeFileSummary;
-        private set => SetProperty(ref _largeFileSummary, value);
-    }
 
-    // ---------------------------------------------------------------- duplicates
+    [ObservableProperty]
     private string _duplicateSummary = "Scan for identical files to see what can be removed.";
-    public string DuplicateSummary
-    {
-        get => _duplicateSummary;
-        private set => SetProperty(ref _duplicateSummary, value);
-    }
 
-    // ---------------------------------------------------------------- storage sense
+    [ObservableProperty]
     private bool _storageSenseEnabled;
+
     private bool _initialisingSense;
 
-    public bool StorageSenseEnabled
-    {
-        get => _storageSenseEnabled;
-        set
-        {
-            if (!SetProperty(ref _storageSenseEnabled, value) || _initialisingSense)
-            {
-                return;
-            }
+    public string LargeFileFilterText => _largeFileThresholdBytes >= 1024L * 1024 * 1024
+        ? $"> {_largeFileThresholdBytes / (1024L * 1024 * 1024)} GB"
+        : $"> {_largeFileThresholdBytes / (1024 * 1024)} MB";
 
+    partial void OnStorageSenseEnabledChanged(bool value)
+    {
+        if (!_initialisingSense)
+        {
             StatusMessage = _storage.SetStorageSenseEnabled(value).Message;
         }
     }
@@ -241,7 +181,7 @@ public sealed class StorageViewModel : ViewModelBase
             DriveUsedPercent = system.UsedPercent;
             DriveUsedText = $"{ByteFormatter.Format(system.UsedBytes)} used";
             DriveFreeText = $"{ByteFormatter.Format(system.FreeBytes)} free";
-            DriveSummary = $"{system.Format} · {system.TotalText} total · {system.SizeSummary}";
+            DriveSummary = $"{system.Format} · {system.SizeSummary}";
         }
         catch (Exception ex)
         {
@@ -325,7 +265,7 @@ public sealed class StorageViewModel : ViewModelBase
         }
 
         _largeFileThresholdBytes = mb * 1024 * 1024;
-        LargeFileFilterText = mb >= 1024 ? $"> {mb / 1024} GB" : $"> {mb} MB";
+        OnPropertyChanged(nameof(LargeFileFilterText));
 
         _settings.Current.LargeFileThresholdBytes = _largeFileThresholdBytes;
         _settings.Save();
@@ -394,14 +334,7 @@ public sealed class StorageViewModel : ViewModelBase
     {
         try
         {
-            if (Directory.Exists(ScanPath))
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{ScanPath}\"") { UseShellExecute = true });
-            }
-            else
-            {
-                StatusMessage = "That folder does not exist.";
-            }
+            _launcher.OpenFolder(ScanPath);
         }
         catch (Exception ex)
         {

@@ -1,6 +1,6 @@
 using System.Windows.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PCManager.Core;
 using PCManager.Core.Formatting;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
@@ -11,7 +11,7 @@ namespace PCManager.ViewModels;
 /// Home: the PC Boost hero card (live memory load + temporary-file size), the Boost
 /// action, the Smart Boost switch and the four quick-action cards.
 /// </summary>
-public sealed class HomeViewModel : ViewModelBase, IDisposable
+public sealed partial class HomeViewModel : ViewModelBase, IDisposable
 {
     private readonly IPcBoostService _boost;
     private readonly ITempFileCleaner _tempCleaner;
@@ -36,8 +36,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         _logger = logger;
 
         BoostCommand = new AsyncRelayCommand(BoostAsync, () => !IsBusy);
-        RefreshCommand = new RelayCommand(RefreshMemory);
-        OpenHealthCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Protection));
+        OpenProtectionCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Protection));
         OpenProcessesCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Apps));
         OpenCleanupCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Storage));
         OpenStartupCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Apps));
@@ -51,49 +50,28 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     }
 
     public AsyncRelayCommand BoostCommand { get; }
-    public RelayCommand RefreshCommand { get; }
-    public RelayCommand OpenHealthCommand { get; }
+    public RelayCommand OpenProtectionCommand { get; }
     public RelayCommand OpenProcessesCommand { get; }
     public RelayCommand OpenCleanupCommand { get; }
     public RelayCommand OpenStartupCommand { get; }
 
+    [ObservableProperty]
     private double _loadPercent;
-    public double LoadPercent
-    {
-        get => _loadPercent;
-        private set
-        {
-            if (SetProperty(ref _loadPercent, value))
-            {
-                OnPropertyChanged(nameof(LoadText));
-                OnPropertyChanged(nameof(AvailableText));
-            }
-        }
-    }
+
+    [ObservableProperty]
+    private string _availableText = "-";
+
+    [ObservableProperty]
+    private string _tempFilesText = "-";
+
+    [ObservableProperty]
+    private string _resultText = "Nothing has been optimised yet.";
 
     public string LoadText => $"{LoadPercent:0}%";
 
-    private string _availableText = "-";
-    public string AvailableText
-    {
-        get => _availableText;
-        private set => SetProperty(ref _availableText, value);
-    }
+    partial void OnLoadPercentChanged(double value) => OnPropertyChanged(nameof(LoadText));
 
-    private string _tempFilesText = "-";
-    public string TempFilesText
-    {
-        get => _tempFilesText;
-        private set => SetProperty(ref _tempFilesText, value);
-    }
-
-    private string _resultText = "Nothing has been optimised yet.";
-    public string ResultText
-    {
-        get => _resultText;
-        private set => SetProperty(ref _resultText, value);
-    }
-
+    /// <summary>True when Smart Boost should trim automatically (settings-backed).</summary>
     public bool SmartBoostEnabled
     {
         get => _settings.Current.SmartBoostEnabled;
@@ -150,9 +128,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            MemorySnapshot snapshot = _boost.GetMemorySnapshot();
-            LoadPercent = snapshot.LoadPercent;
-            AvailableText = $"{ByteFormatter.Format((long)snapshot.AvailableBytes)} free of {ByteFormatter.Format((long)snapshot.TotalPhysicalBytes)}";
+            ApplySnapshot(_boost.GetMemorySnapshot());
         }
         catch (Exception ex)
         {
@@ -164,8 +140,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            long bytes = await Task.Run(_tempCleaner.GetReclaimableBytes);
-            TempFilesText = ByteFormatter.Format(bytes);
+            TempFilesText = ByteFormatter.Format(await Task.Run(_tempCleaner.GetReclaimableBytes));
         }
         catch (Exception ex)
         {
@@ -174,7 +149,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task BoostAsync() => await BoostAsync(smart: false);
+    private Task BoostAsync() => BoostAsync(smart: false);
 
     private async Task BoostAsync(bool smart)
     {
@@ -184,8 +159,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         try
         {
             MemorySnapshot snapshot = await _boost.OptimizeAsync();
-            LoadPercent = snapshot.LoadPercent;
-            AvailableText = $"{ByteFormatter.Format((long)snapshot.AvailableBytes)} free of {ByteFormatter.Format((long)snapshot.TotalPhysicalBytes)}";
+            ApplySnapshot(snapshot);
 
             long tempFreed = await _boost.CleanTempFilesAsync();
             await RefreshTempAsync();
@@ -203,6 +177,12 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         {
             IsBusy = false;
         }
+    }
+
+    private void ApplySnapshot(MemorySnapshot snapshot)
+    {
+        LoadPercent = snapshot.LoadPercent;
+        AvailableText = $"{ByteFormatter.Format((long)snapshot.AvailableBytes)} free of {ByteFormatter.Format((long)snapshot.TotalPhysicalBytes)}";
     }
 
     public void Dispose() => _timer.Stop();

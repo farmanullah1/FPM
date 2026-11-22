@@ -104,13 +104,11 @@ public sealed class StartupManager : IStartupManager
                     Id = $"run:{scope}:{keyPath}:{valueName}",
                     Name = valueName,
                     Command = command,
-                    Path = ExtractExecutablePath(command),
                     IsEnabled = IsRegistryEntryEnabled(scope, approvedKeyPath, valueName),
                     Source = source,
                     Scope = scope,
                     Location = keyPath,
-                    EntryName = valueName,
-                    Impact = StartupImpact.NotMeasured
+                    EntryName = valueName
                 });
             }
         }
@@ -187,13 +185,11 @@ public sealed class StartupManager : IStartupManager
                     Name = Path.GetFileName(file).Replace(".lnk.disabled", string.Empty, StringComparison.OrdinalIgnoreCase)
                                                      .Replace(".lnk", string.Empty, StringComparison.OrdinalIgnoreCase),
                     Command = file,
-                    Path = file,
                     IsEnabled = !disabled,
                     Source = StartupSource.StartupFolder,
                     Scope = scope,
                     Location = folder,
-                    EntryName = Path.GetFileName(file),
-                    Impact = StartupImpact.NotMeasured
+                    EntryName = Path.GetFileName(file)
                 });
             }
         }
@@ -272,14 +268,12 @@ Get-ScheduledTask | ForEach-Object {
                     Id = $"task:{path}{name}",
                     Name = name,
                     Command = path + name,
-                    Path = path,
                     IsEnabled = !state.Equals("Disabled", StringComparison.OrdinalIgnoreCase),
                     Source = StartupSource.TaskScheduler,
                     Scope = "TASK",
                     Location = path,
                     EntryName = name,
-                    IsSystem = path.StartsWith(@"\Microsoft\", StringComparison.OrdinalIgnoreCase),
-                    Impact = StartupImpact.NotMeasured
+                    IsSystem = path.StartsWith(@"\Microsoft\", StringComparison.OrdinalIgnoreCase)
                 });
             }
         }
@@ -312,26 +306,5 @@ $ErrorActionPreference = 'Stop'
         return result.Success
             ? OperationResult.Ok($"{app.Name} will {(enabled ? "run" : "not run")} at logon.")
             : OperationResult.Fail(result.Message);
-    }
-
-    // ------------------------------------------------------------------
-
-    /// <summary>
-    /// Pulls the executable out of a command line:
-    ///   "C:\Program Files\App\app.exe" --startup  ->  C:\Program Files\App\app.exe
-    ///   C:\Tools\tool.exe /bg                     ->  C:\Tools\tool.exe
-    /// </summary>
-    private static string ExtractExecutablePath(string command)
-    {
-        command = command.Trim();
-
-        if (command.StartsWith('"'))
-        {
-            int closing = command.IndexOf('"', 1);
-            return closing > 0 ? command[1..closing] : command.Trim('"');
-        }
-
-        int space = command.IndexOf(' ');
-        return space > 0 ? command[..space] : command;
     }
 }
