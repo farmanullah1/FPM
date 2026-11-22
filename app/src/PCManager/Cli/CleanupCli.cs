@@ -159,15 +159,24 @@ internal static class CleanupCli
     {
         try
         {
-            if (AttachConsole(AttachParentProcess))
-            {
-                var stdout = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
-                Console.SetOut(stdout);
-            }
+            // A GUI-subsystem executable starts without a console. Attach to the caller's
+            // when there is one; when stdout is already redirected, the inherited handle
+            // works without attaching.
+            AttachConsole(AttachParentProcess);
         }
         catch
         {
             // No parent console: the process still runs and writes the cleanup log.
+        }
+
+        try
+        {
+            var stdout = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
+            Console.SetOut(stdout);
+        }
+        catch
+        {
+            // Output is not available; the cleanup log still records every action.
         }
     }
 }
