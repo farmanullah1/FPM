@@ -17,7 +17,7 @@ public sealed class PcBoostService : IPcBoostService
 
     public MemorySnapshot GetMemorySnapshot() => _optimizer.GetSnapshot();
 
-    public Task<MemorySnapshot> OptimizeAsync(CancellationToken cancellationToken = default)
+    public Task<MemoryTrimResult> OptimizeAsync(CancellationToken cancellationToken = default)
         => Task.Run(_optimizer.Optimize, cancellationToken);
 
     public Task<long> CleanTempFilesAsync(CancellationToken cancellationToken = default)

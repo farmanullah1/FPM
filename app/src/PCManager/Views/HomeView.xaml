@@ -54,7 +54,8 @@
                                    HorizontalAlignment="Right" VerticalAlignment="Center" MaxWidth="420" />
                     </Grid>
 
-                    <TextBlock Text="{Binding ResultText}" Style="{StaticResource CaptionText}" Margin="0,12,0,0" />
+                    <TextBlock Text="{Binding ResultText}" Style="{StaticResource CaptionText}"
+                               TextWrapping="Wrap" Margin="0,12,0,0" />
                 </StackPanel>
             </Border>
 

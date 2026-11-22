@@ -164,9 +164,9 @@ public partial class App : Application
 
         try
         {
-            var snapshot = await boost.OptimizeAsync();
+            var trim = await boost.OptimizeAsync();
             _tray?.ShowBalloonTip(3000, AppInfo.ProductName,
-                $"Boost complete: {Core.Formatting.ByteFormatter.Format(snapshot.ReclaimedBytes)} reclaimed.",
+                $"{trim.WorkingSetsTrimmed} working sets trimmed. Available memory {trim.AvailableDeltaText}.",
                 System.Windows.Forms.ToolTipIcon.Info);
         }
         catch (Exception ex)

@@ -158,15 +158,17 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
 
         try
         {
-            MemorySnapshot snapshot = await _boost.OptimizeAsync();
-            ApplySnapshot(snapshot);
+            MemoryTrimResult trim = await _boost.OptimizeAsync();
+            ApplySnapshot(trim.After);
 
             long tempFreed = await _boost.CleanTempFilesAsync();
             await RefreshTempAsync();
 
-            ResultText = $"Trimmed {snapshot.WorkingSetsTrimmed} processes · reclaimed {ByteFormatter.Format(snapshot.ReclaimedBytes)} memory · removed {ByteFormatter.Format(tempFreed)} temporary files.";
+            // Trimming working sets does not free memory; report what the OS actually did.
+            ResultText = DescribeBoost(trim, tempFreed);
             StatusMessage = smart ? "Smart Boost finished." : "Boost complete.";
-            _logger.Info($"Boost: {snapshot.WorkingSetsTrimmed} working sets, {snapshot.ReclaimedBytes} bytes reclaimed, {tempFreed} bytes of temp removed.");
+            _logger.Info(
+                $"Boost: {trim.WorkingSetsTrimmed} working sets trimmed, available {trim.Before.AvailableBytes} -> {trim.After.AvailableBytes} bytes ({trim.AvailableDeltaBytes}), {tempFreed} bytes of temp removed.");
         }
         catch (Exception ex)
         {
@@ -177,6 +179,18 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         {
             IsBusy = false;
         }
+    }
+
+    private static string DescribeBoost(MemoryTrimResult trim, long tempFreed)
+    {
+        string trimmed = trim.WorkingSetsTrimmed == 1
+            ? "1 working set trimmed"
+            : $"{trim.WorkingSetsTrimmed} working sets trimmed";
+
+        string memory =
+            $"available memory {ByteFormatter.Format((long)trim.Before.AvailableBytes)} → {ByteFormatter.Format((long)trim.After.AvailableBytes)} ({trim.AvailableDeltaText})";
+
+        return $"{trimmed}; {memory}; {ByteFormatter.Format(tempFreed)} of temporary files removed.";
     }
 
     private void ApplySnapshot(MemorySnapshot snapshot)

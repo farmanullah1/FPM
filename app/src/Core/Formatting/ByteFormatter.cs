@@ -21,4 +21,9 @@ public static class ByteFormatter
             ? $"{sign}{value:0} {Units[unit]}"
             : $"{sign}{value:0.##} {Units[unit]}";
     }
+
+    /// <summary>
+    /// Formats a signed change, always showing the direction ("+1.2 GB", "-480 MB", "+0 B").
+    /// </summary>
+    public static string FormatDelta(long bytes) => bytes >= 0 ? $"+{Format(bytes)}" : Format(bytes);
 }

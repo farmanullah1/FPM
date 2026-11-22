@@ -2,12 +2,15 @@ using PCManager.Core.Models;
 
 namespace PCManager.Services.Abstractions;
 
-/// <summary>Physical memory measurements and working-set trimming.</summary>
+/// <summary>Memory readings and working-set trimming.</summary>
 public interface IMemoryOptimizer
 {
-    /// <summary>Reads GlobalMemoryStatusEx.</summary>
+    /// <summary>Current physical memory figures (fast, safe to poll from a timer).</summary>
     MemorySnapshot GetSnapshot();
 
-    /// <summary>Trims every trimmable process working set and reports the difference.</summary>
-    MemorySnapshot Optimize();
+    /// <summary>
+    /// Asks Windows to trim the working set of every eligible process and reports the before
+    /// and after memory readings plus the signed available-memory delta.
+    /// </summary>
+    MemoryTrimResult Optimize();
 }

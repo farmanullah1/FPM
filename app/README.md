@@ -78,9 +78,9 @@ which is what makes each feature testable and replaceable.
 
 | Page | View model | What is real |
 | --- | --- | --- |
-| Home | `HomeViewModel` | Live memory usage and temp-file size, one-click Boost (working-set trim + temp/cache clean-up, reporting the memory actually freed), Smart Boost auto-trim above the saved threshold, and four quick-action cards. |
+| Home | `HomeViewModel` | Live memory usage and temp-file size, one-click Boost (working-set trim + temp purge, reporting the measured available-memory delta and the bytes actually removed), Smart Boost auto-trim above the saved threshold, and four quick-action cards. |
 | Protection | `ProtectionViewModel` | Defender real-time/antivirus state and signature version, Windows Update service and pending restart, plus pop-up management, default browser, Explorer restart and default-apps cards. |
-| Storage | `StorageViewModel` | Drive usage from `DriveInfo`, deep cleanup over update cache, system logs/temp, recycle bin, user temp and browser caches with measured sizes, large-file filter (10/50/100 MB, 1 GB), duplicate finder (size + sampled SHA-256) and Storage Sense. |
+| Storage | `StorageViewModel` | Drive usage from `DriveInfo`, deep cleanup over update cache, system logs/temp, `$PatchCache$`, recycle bin, user temp, Edge/Chrome/Brave and Firefox caches, npm, NuGet and pip/Yarn/pnpm stores with measured sizes (Firefox is skipped while it runs), large-file filter (10/50/100 MB, 1 GB), duplicate finder (size + sampled SHA-256) and Storage Sense. |
 | Apps | `AppsViewModel` | Live application list with RAM and CPU plus per-row End Task (this process and `MSPCManager*` are refused), startup entries from `Run`/`StartupApproved`/Startup folder/scheduled tasks with working toggles, and installed apps (HKLM/HKCU Uninstall keys) with search and uninstall. |
 | Toolbox | `ToolboxViewModel` | Floating always-on-top toolbar toggle, multi-monitor screenshot via GDI, screen recorder (Game Bar with `psr.exe` fallback), calculator, notepad, `ipconfig /flushdns` and quick web links. |
 | Settings | `SettingsViewModel` | Start with Windows (own `HKCU\...\Run` value), Smart Boost on/off and threshold, Light/Dark theme, and the About block with data/log paths. |

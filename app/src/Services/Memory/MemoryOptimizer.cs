@@ -38,7 +38,7 @@ public sealed class MemoryOptimizer : IMemoryOptimizer
         };
     }
 
-    public MemorySnapshot Optimize()
+    public MemoryTrimResult Optimize()
     {
         MemorySnapshot before = GetSnapshot();
         int trimmed = 0;
@@ -95,12 +95,13 @@ public sealed class MemoryOptimizer : IMemoryOptimizer
             }
         }
 
-        MemorySnapshot after = GetSnapshot();
-        after.WorkingSetsTrimmed = trimmed;
-        after.ReclaimedBytes = after.AvailableBytes > before.AvailableBytes
-            ? (long)(after.AvailableBytes - before.AvailableBytes)
-            : 0;
-
-        return after;
+        // The only honest outcome measure: did available physical memory actually change?
+        // It can fall when the machine is busy, and the caller is told so.
+        return new MemoryTrimResult
+        {
+            Before = before,
+            After = GetSnapshot(),
+            WorkingSetsTrimmed = trimmed
+        };
     }
 }

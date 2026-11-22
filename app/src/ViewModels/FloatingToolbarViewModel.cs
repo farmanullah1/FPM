@@ -61,7 +61,7 @@ public sealed partial class FloatingToolbarViewModel : ObservableObject, IDispos
     {
         try
         {
-            ApplySnapshot(await _boost.OptimizeAsync());
+            ApplySnapshot((await _boost.OptimizeAsync()).After);
         }
         catch (Exception)
         {

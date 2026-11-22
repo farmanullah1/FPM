@@ -40,11 +40,12 @@ Default apps, since Windows blocks programmatic changes), taskbar repair (restar
 and restore default apps.
 
 ### Storage
-System-drive usage bar, then **Deep cleanup** with five independently measured categories —
-Windows Update cache, system logs and Windows Temp, Recycle Bin, user temporary files and
-browser caches (Edge/Chrome/Brave; cookies, history and passwords are never touched) — each
+System-drive usage bar, then **Deep cleanup** with ten independently measured categories —
+Windows Update cache, system logs and Windows Temp, the installer patch cache (`$PatchCache$`),
+Recycle Bin, user temporary files, browser caches (Edge/Chrome/Brave; cookies, history and
+passwords are never touched), Firefox `cache2`, npm, NuGet, and the pip/Yarn/pnpm stores — each
 with its real size, a running selected total, and a per-category skip when Windows refuses an
-unelevated delete. **Manage large files** scans any folder with `> 10 MB / 50 MB / 100 MB / 1 GB`
+unelevated delete or the owning browser is running. **Manage large files** scans any folder with `> 10 MB / 50 MB / 100 MB / 1 GB`
 filters, **Duplicate files** groups identical files by size then sampled SHA-256 and reports the
 wasted bytes, and a **Storage Sense** switch reads and writes the Windows setting.
 

@@ -10,11 +10,12 @@ public interface IPcBoostService
 
     /// <summary>
     /// Trims the working set of every non-system process with
-    /// <c>SetProcessWorkingSetSizeEx(h, -1, -1)</c> and returns the resulting snapshot,
-    /// including how many working sets were trimmed and how much memory came back.
+    /// <c>SetProcessWorkingSetSizeEx(h, -1, -1)</c>. The result carries the before/after
+    /// memory readings and the signed available-memory delta — trimming does not "free"
+    /// memory, so no reclaimed-bytes figure is reported.
     /// </summary>
-    Task<MemorySnapshot> OptimizeAsync(CancellationToken cancellationToken = default);
+    Task<MemoryTrimResult> OptimizeAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>Deletes temporary files older than 48 hours, returns bytes freed.</summary>
+    /// <summary>Deletes temporary files older than 48 hours and returns the bytes actually removed.</summary>
     Task<long> CleanTempFilesAsync(CancellationToken cancellationToken = default);
 }
