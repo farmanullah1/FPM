@@ -48,7 +48,10 @@ caches of Antigravity, Freebuff, Cursor, VS Code and Windsurf. Every row shows i
 size, file count, age, tier and identity confidence. Nothing is deleted until an approval command
 (`proceed`, `only 1, 2`, `keep 1, 2`, ranges allowed) is reviewed and confirmed; a dry-run mode,
 a 15-minute plan expiry, a runtime safety guard, `cleanup_log.txt` and a measured before/after
-report sit behind that gate. **Manage large files** scans any folder with
+report sit behind that gate. Machine-wide rows (Windows temp/update/logs/Prefetch/`$PatchCache$`)
+run through a separate `requireAdministrator` helper on demand, with UAC only when the approved
+plan reaches them; a restore-point checkbox asks for a checkpoint before Caution/Opt-In plans.
+**Manage large files** scans any folder with
 `> 10 MB / 50 MB / 100 MB / 500 MB / 1 GB` filters, **Duplicate files** groups identical files by
 size then sampled SHA-256 and reports the wasted bytes, and a **Storage Sense** switch reads and
 writes the Windows setting.
@@ -75,12 +78,13 @@ showing the data folder and today's log path with buttons to open them.
 
 ## Architecture
 
-Four projects with a one-way dependency chain:
+Five projects with a one-way dependency chain:
 
 ```
-PCManager.Core            models, formatting, identity constants      (no Windows UI)
-      ▲
-PCManager.Services        all system access behind interfaces
+PCManager.Core            models, formatting, identity, helper protocol (no Windows UI)
+      ▲                         ▲
+PCManager.Services        PCManager.Helper
+system access, UI-free    elevated, fixed-command worker
       ▲
 PCManager.ViewModels      page and shell view models
       ▲
@@ -91,7 +95,8 @@ PCManager                 WPF shell, styles, views  →  FarmanullahPCManager.ex
 | --- | --- | --- |
 | `Core` | Plain models, byte formatting and app identity (`ProductName`, data folder, Run value, protected process names) | `AppInfo.cs`, `Models/*.cs`, `Formatting/ByteFormatter.cs` |
 | `Services` | One interface per capability in `Abstractions/`, implementations grouped by feature (`Boost`, `Cleaners`, `Cleanup`, `Process`, `Storage`, `Protection`, `Toolbox`, `Settings`, `Startup`), shared helpers in `Infrastructure/` | `DependencyInjection/ServiceCollectionExtensions.cs`, `Cleanup/CleanupScanner.cs`, `Cleanup/SafetyGuard.cs`, `Process/StartupManager.cs` |
-| `Tests` | Parser and safety-guard tests, no production references | `app/tests/PCManager.Tests` |
+| `Helper` | Separate `requireAdministrator` WinExe; one typed request over a current-user-only pipe, fixed targets only, no path from the client | `app/src/Helper/Program.cs`, `app/src/Helper/app.manifest` |
+| `Tests` | Parser, safety-guard and helper-contract tests | `app/tests/PCManager.Tests` |
 | `ViewModels` | Six page view models plus the shell; no Win32 calls, only `Services.Abstractions` | `MainViewModel.cs`, `HomeViewModel.cs`, `StorageViewModel.cs` |
 | `PCManager` | XAML views, themed styles, converters, DI composition root, tray icon, floating toolbar window | `App.xaml(.cs)`, `Views/*.xaml`, `Styles/*` |
 
@@ -123,6 +128,7 @@ The same executable exposes the cleanup engine from a terminal:
 ```powershell
 FarmanullahPCManager.exe --scan                    # read-only, prints the numbered table
 FarmanullahPCManager.exe --clean --ids 1,2 --dry-run
+FarmanullahPCManager.exe --clean --ids 1,2 --restore-point
 FarmanullahPCManager.exe --clean --ids 1,2
 ```
 

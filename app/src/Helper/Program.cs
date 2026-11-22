@@ -379,8 +379,11 @@ internal static class Program
             }
 
             service.Stop();
-            service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20));
+
+            // Record it before waiting: if the wait times out, the finally block must still
+            // attempt to start it again rather than leave Windows Update stopped.
             stopped.Add(service);
+            service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20));
             Log($"Stopped service {name}.");
         }
         catch (Exception ex)

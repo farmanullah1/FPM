@@ -42,9 +42,10 @@ app/
 ├── PCManager.sln
 ├── global.json                 SDK pin
 ├── screenshots/                One capture per page plus the floating toolbar
-├── tests/PCManager.Tests/      xunit tests for the approval parser and safety guard
+├── tests/PCManager.Tests/      xunit tests for the approval parser, safety guard and helper contract
 └── src/
     ├── Core/                   Models + formatting, no Windows dependencies
+    │   ├── Elevation/          Closed helper protocol + fixed machine-wide cleanup targets
     │   ├── Models/             Process, startup, storage, cleanup, settings and toolbox models
     │   └── Formatting/         ByteFormatter
     ├── Services/               All system access; one interface per tool/cleaner
@@ -65,6 +66,7 @@ app/
     │   ├── Startup/            AppStartupService (HKCU Run value)
     │   └── DependencyInjection/ServiceCollectionExtensions.cs   ← single registration point
     ├── ViewModels/             One view model per page + shell, theme abstraction, item wrappers
+    ├── Helper/                 Separate requireAdministrator WinExe: one typed request per launch
     └── PCManager/              WPF shell
         ├── App.xaml(.cs)       DI composition root, DataTemplates mapping view model → view
         ├── Converters/         Icon/status/bool converters
@@ -102,17 +104,24 @@ The Storage page and the CLI use one engine, split so that measuring cannot dele
 | Executor | `Services/Cleanup/CleanupExecutor.cs` | Deletes only an approved, unexpired plan; logs and re-measures |
 | Log | `Services/Cleanup/CleanupLog.cs` | `logs\cleanup_log.txt`, append-only, 5 MB rotation |
 | Whitelist | `Services/Cleanup/WhitelistService.cs` | `whitelist.json`, always wins over a rule |
+| Elevation client | `Services/Elevation/ElevationService.cs` | Starts the helper with `runas` only for an approved elevated rule; one request over a current-user-only pipe |
+| Helper | `Helper/Program.cs` | Fixed targets only, one shot, stops/restarts update services, logs to `helper-YYYYMMDD.log` |
+| Restore point | `Services/Elevation/ElevationService.cs` | Fixed `Checkpoint-Computer` command; UI checkbox and `--restore-point` |
 
 Flow: **scan → numbered table → approval command → confirm → execute → verify**. A plan is
 valid for 15 minutes and is discarded when a new scan runs. Opt-in rows (currently
 `$PatchCache$`) are never included implicitly. Browsers must be closed; the row is unselected and
-the executor re-checks the process before deleting.
+the executor re-checks the process before deleting. Machine-wide rows show a UAC prompt only when
+the plan actually reaches them; declining is reported as a skip, never retried in a loop.
+Caution/Opt-In plans tick "Create a System Restore point first" by default; the result is stated
+in the report whether or not Windows allowed it.
 
 CLI (same executable):
 
 ```powershell
 FarmanullahPCManager.exe --scan
 FarmanullahPCManager.exe --clean --ids 1,2 --dry-run
+FarmanullahPCManager.exe --clean --ids 1,2 --restore-point
 FarmanullahPCManager.exe --clean --ids 1,2
 ```
 
@@ -145,16 +154,18 @@ cannot delete something outside its intended roots.
 
 ## Administrator rights
 
-`app.manifest` requests `asInvoker`: the app runs unelevated and reports "access denied"
-instead of forcing a UAC prompt at launch. Operations that need elevation therefore fail
-gracefully or partially:
+The UI's `app.manifest` requests `asInvoker`, so launching it never prompts for UAC. The separate
+`FarmanullahPCManager.Helper.exe` requests `requireAdministrator` and is started on demand only
+when an approved plan includes a machine-wide rule or the restore-point box is ticked.
 
-- `%SystemRoot%\Temp` and other machine-wide temp folders — user temp is cleaned, system temp is skipped and reported as `SKIPPED_ELEVATION` by the cleanup executor.
-- `HKLM\...\Run` and `HKLM\...\StartupApproved` entries — visible, but toggling them returns access denied.
-- Machine-wide scheduled tasks — `Enable-/Disable-ScheduledTask` may need an elevated shell.
-- Windows Update / Defender WMI queries — some counters need elevation.
+- Cleanup of `%WINDIR%\Temp`, Update downloads, Windows logs, Prefetch and `$PatchCache$` goes
+  through the helper; declining UAC leaves the item as `SKIPPED_ELEVATION`.
+- The helper's command set is closed: `CleanRule` with one of five fixed ids, or
+  `CreateRestorePoint`. No path or command line is accepted from the client.
+- Still unelevated and graceful-failure only: `HKLM\...\Run`/`StartupApproved` toggles,
+  machine-wide scheduled tasks, and some Windows Update/Defender WMI counters.
 
-Run `PCManager.exe` from an elevated terminal if you want the full set.
+Run the app from an elevated terminal if you want those remaining operations to succeed.
 
 ## Deliberately not automated
 
@@ -171,7 +182,12 @@ opens the matching Settings page instead (documented at the call site):
 - Boost's temp purge only considers items older than **48 hours** (matches the original
   product); the Cleanup Center's temp rule uses **24 hours** and still skips open files.
 - Cleanup scans cap each root at 250 000 files, skip reparse points/system files and use 2–4
-  workers. A 16-row scan measured 4.64 GB in about 18.5 s on the test machine.
+  workers. A 16-row scan measured 4.64 GB in 18.5–22.8 s across runs on the test machine.
+- The helper is a second executable copied next to the UI by the build. It exits after one reply;
+  only one request per UAC consent, and no long-lived elevated service is installed.
+- The helper was smoke-tested with `RunAsInvoker` (unknown rule rejected). No UAC-approved
+  elevated deletion or restore-point creation has been run, so those paths are implemented but
+  unverified end-to-end.
 - The scanner and executor live in one assembly; the rule roots and the runtime safety guard,
   not assembly boundaries, are what prevent deletion outside a rule.
 - Startup toggles use the `StartupApproved` 12-byte binary blob (first byte even = enabled,

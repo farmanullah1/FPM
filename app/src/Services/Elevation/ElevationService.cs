@@ -22,14 +22,14 @@ public sealed class ElevationService : IElevationService
 
     private readonly IAppLogger _logger;
     private readonly string _helperPath;
-    private readonly string _pipeName;
+    private readonly string _pipePrefix;
 
     public ElevationService(IAppLogger logger, string? helperPath = null)
     {
         _logger = logger;
         _helperPath = helperPath ??
                       Path.Combine(AppContext.BaseDirectory, "FarmanullahPCManager.Helper.exe");
-        _pipeName = BuildPipeName();
+        _pipePrefix = BuildPipePrefix();
     }
 
     public bool IsHelperAvailable => File.Exists(_helperPath);
@@ -44,6 +44,10 @@ public sealed class ElevationService : IElevationService
             return ElevationOutcome.Failed(
                 "The elevated helper is missing from the application folder. Rebuild or reinstall the app.");
         }
+
+        // A fresh random pipe name per launch prevents another same-user process from
+        // squatting on a predictable name and answering for the elevated helper.
+        string pipeName = $"{_pipePrefix}.{Guid.NewGuid():N}";
 
         var request = new HelperRequest
         {
@@ -65,7 +69,8 @@ public sealed class ElevationService : IElevationService
             };
 
             // The pipe name is derived from the signed-in user's SID, never from user input.
-            startInfo.ArgumentList.Add(_pipeName);
+            // Shell-execute (runas) needs Arguments; the value is validated again by the helper.
+            startInfo.Arguments = $"\"{pipeName}\"";
             process = Process.Start(startInfo);
 
             if (process is null)
@@ -75,7 +80,7 @@ public sealed class ElevationService : IElevationService
 
             using var client = new NamedPipeClientStream(
                 ".",
-                _pipeName,
+                pipeName,
                 PipeDirection.InOut,
                 PipeOptions.Asynchronous);
 
@@ -177,7 +182,7 @@ public sealed class ElevationService : IElevationService
         }
     }
 
-    private static string BuildPipeName()
+    private static string BuildPipePrefix()
     {
         string sid;
 
