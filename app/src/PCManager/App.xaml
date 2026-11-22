@@ -15,6 +15,7 @@
 
             <conv:IconKeyToGeometryConverter x:Key="IconKeyConverter" />
             <conv:HealthyToBrushConverter x:Key="HealthyToBrush" />
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
             <!-- View location: page view models are hosted by the shell's ContentControl. -->
             <DataTemplate DataType="{x:Type vm:HomeViewModel}">

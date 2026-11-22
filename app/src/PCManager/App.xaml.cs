@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using PCManager.Cli;
 using PCManager.Core;
 using PCManager.Services;
 using PCManager.Services.Abstractions;
@@ -73,6 +74,23 @@ public partial class App : Application
         collection.AddSingleton<FloatingToolbarWindow>();
 
         _services = collection.BuildServiceProvider();
+
+        // Cleanup CLI shares the exact same engine as the UI. --scan deletes nothing;
+        // --clean requires an explicit --ids list.
+        if (CleanupCli.IsCleanupCommand(e.Args))
+        {
+            int exitCode = CleanupCli.RunAsync(
+                    e.Args,
+                    _services.GetRequiredService<ICleanupScanner>(),
+                    _services.GetRequiredService<ICleanupCommandParser>(),
+                    _services.GetRequiredService<ICleanupExecutor>(),
+                    _services.GetRequiredService<ICleanupLog>())
+                .GetAwaiter()
+                .GetResult();
+
+            Shutdown(exitCode);
+            return;
+        }
 
         EnableDiagnostics();
 

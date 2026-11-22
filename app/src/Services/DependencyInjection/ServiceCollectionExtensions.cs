@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PCManager.Services.Abstractions;
 using PCManager.Services.Boost;
 using PCManager.Services.Cleaners;
+using PCManager.Services.Cleanup;
 using PCManager.Services.Infrastructure;
 using PCManager.Services.Memory;
 using PCManager.Services.Processes;
@@ -35,7 +36,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IStartupManager, StartupManager>();
         services.AddSingleton<IStorageAnalyzer, StorageAnalyzer>();
         services.AddSingleton<IStorageSenseService, StorageSenseService>();
-        services.AddSingleton<IDeepCleanupService, DeepCleanupService>();
         services.AddSingleton<IDuplicateFinderService, DuplicateFinderService>();
         services.AddSingleton<IInstalledAppService, InstalledAppService>();
         services.AddSingleton<ISystemRepairService, SystemRepairService>();
@@ -43,6 +43,15 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IWindowsUpdateStatusService, WindowsUpdateStatusService>();
         services.AddSingleton<IToolLauncher, ToolLauncher>();
         services.AddSingleton<IDefaultBrowserService, DefaultBrowserService>();
+
+        // --- Two-phase cleanup engine (Phase 1 read-only, Phase 2 approved) ---
+        services.AddSingleton<IWhitelistService, WhitelistService>();
+        services.AddSingleton<ISafetyGuard, SafetyGuard>();
+        services.AddSingleton<ICleanupRuleCatalog, CleanupRuleCatalog>();
+        services.AddSingleton<ICleanupScanner, CleanupScanner>();
+        services.AddSingleton<ICleanupCommandParser, CleanupCommandParser>();
+        services.AddSingleton<ICleanupExecutor, CleanupExecutor>();
+        services.AddSingleton<ICleanupLog, CleanupLog>();
 
         // --- Page facades -------------------------------------------------
         services.AddSingleton<IPcBoostService, PcBoostService>();
