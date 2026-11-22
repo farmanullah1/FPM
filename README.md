@@ -5,23 +5,68 @@ deep disk cleanup, process and startup control, protection checks, a toolbox and
 always-on-top quick bar.
 
 The application lives in [`app/`](app/) — see [`app/README.md`](app/README.md) for build
-details and the behaviour of every page.
+details and the internals of every service.
 
 ## Tech stack
 
 | Area | What the code actually uses |
 | --- | --- |
 | Runtime | .NET 8 (`net8.0` for the model project, `net8.0-windows` for the rest), C# 12, nullable reference types enabled |
-| UI framework | WPF with hand-written Fluent-inspired XAML — **no third-party UI library** (there is no `Wpf.Ui` or `MahApps` dependency anywhere) |
-| Look and feel | `Styles/Themes/Light.xaml` and `Dark.xaml` define the same brush keys and are swapped at index 0 of the merged dictionaries by `ThemeService`; `Styles/Controls.xaml` holds templated controls (cards, buttons, toggle switch, slider, pills); `Styles/Icons.xaml` holds original 24×24 `Geometry` icons |
-| Windowing | Borderless shell with a custom title bar via `WindowChrome`; `FloatingToolbarWindow` is a transparent, topmost pill |
+| UI framework | WPF only. The Fluent look is hand-written XAML — there is **no third-party UI framework package** in the solution |
+| Look and feel | `Styles/Themes/Light.xaml` and `Dark.xaml` declare the same brush keys and are swapped at index 0 of the merged dictionaries by `ThemeService`; `Styles/Controls.xaml` holds templated cards, buttons, toggle switch, slider and pills; `Styles/Icons.xaml` holds original 24×24 `Geometry` icons |
+| Windowing | Borderless shell with a custom title bar via `WindowChrome`; the floating toolbar is a transparent, topmost pill window |
 | MVVM | `CommunityToolkit.Mvvm` 8.3.2 — `ObservableObject`, `[ObservableProperty]`, `RelayCommand`, `AsyncRelayCommand` |
-| Composition | `Microsoft.Extensions.DependencyInjection` 8.0.1 with a single registration point (`Services/DependencyInjection/ServiceCollectionExtensions.cs`); WPF-only services are registered in `App.xaml.cs` |
+| Composition | `Microsoft.Extensions.DependencyInjection` 8.0.1 with one registration point (`Services/DependencyInjection/ServiceCollectionExtensions.cs`); WPF-only services are registered in `App.xaml.cs` |
 | System access | Win32 P/Invoke (`Services/Interop/NativeMethods.cs`), WMI via `System.Management`, `Microsoft.Win32.Registry`, `ServiceController`, `System.Drawing.Common` for screen capture |
 | State | JSON settings and rolling logs under `%LOCALAPPDATA%\FarmanullahPCManager`; `Core/AppInfo.cs` is the single source of identity, paths and protected process names |
 
 `UseWindowsForms` is enabled in the shell project for one reason only — the tray
 `NotifyIcon`. Everything the user sees is WPF.
+
+## What shipped: six screens
+
+### Home
+Hero card with live physical-memory usage (percent, used and total) and the current
+temporary-file size, a **Boost** button that trims process working sets and removes temp files
+older than 48 hours, and a **Smart Boost** switch that trims automatically once memory load
+crosses the saved threshold (at most once a minute). Four quick-action cards jump to
+Protection, Apps (processes), Storage (deep cleanup) and Apps (startup).
+
+### Protection
+Status banner driven by Defender real-time/antivirus state and Windows Update service state
+(restart-pending aware), with Defender signature version and the update status spelled out.
+Four tools: pop-up management (notifications settings), default browser detection (opens
+Default apps, since Windows blocks programmatic changes), taskbar repair (restarts Explorer)
+and restore default apps.
+
+### Storage
+System-drive usage bar, then **Deep cleanup** with five independently measured categories —
+Windows Update cache, system logs and Windows Temp, Recycle Bin, user temporary files and
+browser caches (Edge/Chrome/Brave; cookies, history and passwords are never touched) — each
+with its real size, a running selected total, and a per-category skip when Windows refuses an
+unelevated delete. **Manage large files** scans any folder with `> 10 MB / 50 MB / 100 MB / 1 GB`
+filters, **Duplicate files** groups identical files by size then sampled SHA-256 and reports the
+wasted bytes, and a **Storage Sense** switch reads and writes the Windows setting.
+
+### Apps
+**Process management** lists running user applications with CPU, RAM and a per-row End button
+(60 rows, largest first; this app and every `MSPCManager*` process are refused, as are
+session-0 processes). **Startup apps** reads Run/RunOnce keys, Startup folders and Task
+Scheduler, with working toggles through `StartupApproved`, `.lnk` renaming and
+`Enable/Disable-ScheduledTask`; built-in `\Microsoft\` tasks are shown read-only. **App
+management** lists installed Win32 apps from the HKLM/HKCU Uninstall keys with search,
+version, size and uninstall (Store packages open Settings).
+
+### Toolbox
+Floating-toolbar switch (always-on-top pill with live RAM, Boost, screenshot, notepad,
+calculator) plus a six-tool grid: screenshot of all monitors to a PNG in Pictures, screen
+recorder (Game Bar, falling back to Steps Recorder), calculator, notepad, DNS flush
+(`ipconfig /flushdns`) and quick web links.
+
+### Settings
+Start with Windows through this app's own `HKCU\...\Run` value, Smart Boost on/off with a
+50–95 % threshold slider and reset, Light/Dark theme applied instantly, and an About block
+showing the data folder and today's log path with buttons to open them.
 
 ## Architecture
 
@@ -68,17 +113,6 @@ dotnet run --project src/PCManager/PCManager.csproj
 Windows 10/11 with the .NET 8 SDK (`app/global.json` pins the feature band). The executable
 is `app/src/PCManager/bin/Debug/net8.0-windows/FarmanullahPCManager.exe`.
 
-## Pages
-
-| Page | What it does |
-| --- | --- |
-| Home | Live memory usage, temporary-file size, one-click Boost and Smart Boost auto-trim, four quick actions. |
-| Protection | Defender and Windows Update status plus pop-up, browser, Explorer-restart and default-apps repair cards. |
-| Storage | Drive usage, deep cleanup with measured sizes, large-file filters, duplicate finder and Storage Sense. |
-| Apps | Running applications with End Task, startup entries with real toggles, installed apps with search and uninstall. |
-| Toolbox | Floating toolbar toggle, screenshot, screen recorder, calculator, notepad, DNS flush, quick links. |
-| Settings | Start with Windows, Smart Boost threshold, Light/Dark theme, About and data/log paths. |
-
 ## Side-by-side with Microsoft PC Manager
 
 Everything about the identity is distinct so both utilities can be installed at once:
@@ -89,7 +123,7 @@ process.
 
 ## Screenshots
 
-`app/screenshots/` contains a capture of each page and of the floating toolbar.
+`app/screenshots/` contains a capture of each screen and of the floating toolbar.
 
 ## License & attribution
 
