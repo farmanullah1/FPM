@@ -115,7 +115,7 @@ public sealed class CleanupCandidate
 
             if (FolderCount > 0)
             {
-                parts.Add($"{FolderCount:N0} folders");
+                parts.Add($"{FolderCount:N0} subfolders");
             }
 
             if (OldestWriteUtc is { } oldest)

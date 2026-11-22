@@ -27,8 +27,10 @@ usage.json
 build-activity.log
 
 
-FARMANULLAH_PC_MANAGER_MASTER_PROMPT_v2.md
-Farmanullah_PC_Manager_Master_Prompt_v3_Expanded.md
+# Documentation / specs / prompts (keep README.md only)
+/*.md
+!/README.md
+!/app/**/*.md
 
 # Local scratch
 *.log

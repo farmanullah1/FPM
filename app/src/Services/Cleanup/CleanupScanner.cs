@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
@@ -11,24 +12,29 @@ namespace PCManager.Services.Cleanup;
 ///
 /// Only rule roots that exist and are not whitelisted are measured. Files younger than a
 /// rule's minimum age are excluded so the displayed size matches what the executor may
-/// actually remove.
+/// actually remove. Independent rules are measured with bounded parallelism; four workers
+/// keep a large npm cache from serialising the whole scan.
 /// </summary>
 public sealed class CleanupScanner : ICleanupScanner
 {
-    private const int MaxDirectoriesPerRoot = 20_000;
+    private const int MaxFilesPerRoot = 250_000;
+    private const int MaxTopLevelSubfolders = 5_000;
 
     private readonly ICleanupRuleCatalog _catalog;
     private readonly IWhitelistService _whitelist;
     private readonly IRecycleBinService _recycleBin;
+    private readonly IAppLogger _logger;
 
     public CleanupScanner(
         ICleanupRuleCatalog catalog,
         IWhitelistService whitelist,
-        IRecycleBinService recycleBin)
+        IRecycleBinService recycleBin,
+        IAppLogger logger)
     {
         _catalog = catalog;
         _whitelist = whitelist;
         _recycleBin = recycleBin;
+        _logger = logger;
     }
 
     public Task<CleanupScanResult> ScanAsync(CancellationToken cancellationToken = default)
@@ -36,76 +42,108 @@ public sealed class CleanupScanner : ICleanupScanner
 
     private CleanupScanResult Scan(CancellationToken cancellationToken)
     {
-        var items = new List<CleanupCandidate>();
-        int number = 0;
+        var items = new ConcurrentBag<CleanupCandidate>();
+        IReadOnlyList<CleanupRule> rules = _catalog.GetRules();
 
-        foreach (CleanupRule rule in _catalog.GetRules())
+        long recycleBytes = TryMeasureRecycleBin();
+
+        if (recycleBytes > 0)
+        {
+            items.Add(new CleanupCandidate
+            {
+                Rule = rules.First(rule => rule.Action == CleanupActionKind.EmptyRecycleBin),
+                Bytes = recycleBytes,
+                IsSelected = true
+            });
+        }
+
+        var options = new ParallelOptions
+        {
+            CancellationToken = cancellationToken,
+            MaxDegreeOfParallelism = Math.Max(2, Math.Min(4, Environment.ProcessorCount))
+        };
+
+        Parallel.ForEach(rules, options, rule =>
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (rule.Action == CleanupActionKind.EmptyRecycleBin)
+            CleanupCandidate? candidate = ScanRule(rule, cancellationToken);
+
+            if (candidate is not null)
             {
-                long recycleBytes = TryMeasureRecycleBin();
-
-                if (recycleBytes <= 0)
-                {
-                    continue;
-                }
-
-                items.Add(new CleanupCandidate
-                {
-                    Number = ++number,
-                    Rule = rule,
-                    Bytes = recycleBytes,
-                    FileCount = 0,
-                    IsSelected = rule.Tier == CleanupTier.Safe,
-                    OldestWriteUtc = null,
-                    NewestWriteUtc = null
-                });
-
-                continue;
+                items.Add(candidate);
             }
+        });
 
-            string[] roots = rule.Roots
-                .Where(Directory.Exists)
-                .Where(root => !_whitelist.IsWhitelisted(root))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+        Dictionary<string, int> order = rules
+            .Select((rule, index) => (rule.Id, index))
+            .ToDictionary(entry => entry.Id, entry => entry.index, StringComparer.OrdinalIgnoreCase);
 
-            if (roots.Length == 0)
-            {
-                continue;
-            }
+        List<CleanupCandidate> ordered = items
+            .OrderBy(item => order.TryGetValue(item.Rule.Id, out int index) ? index : int.MaxValue)
+            .ToList();
 
-            Measurement measurement = Measure(roots, rule.MinimumAge, cancellationToken);
+        int number = 0;
 
-            if (measurement.Bytes == 0 && measurement.FileCount == 0)
-            {
-                continue;
-            }
-
-            bool running = rule.RequiresAppClosed && IsRunning(rule.ProcessName);
-
-            items.Add(new CleanupCandidate
-            {
-                Number = ++number,
-                Rule = rule,
-                Roots = roots,
-                Bytes = measurement.Bytes,
-                FileCount = measurement.FileCount,
-                FolderCount = measurement.FolderCount,
-                OldestWriteUtc = measurement.Oldest,
-                NewestWriteUtc = measurement.Newest,
-                IsSelected = rule.Tier == CleanupTier.Safe && !running,
-                IsRunning = running
-            });
+        foreach (CleanupCandidate item in ordered)
+        {
+            item.Number = ++number;
         }
 
         return new CleanupScanResult
         {
-            Items = items,
+            Items = ordered,
             Notes = _catalog.GetDiscoveryNotes(),
             ScannedUtc = DateTime.UtcNow
+        };
+    }
+
+    private CleanupCandidate? ScanRule(CleanupRule rule, CancellationToken cancellationToken)
+    {
+        if (rule.Action == CleanupActionKind.EmptyRecycleBin)
+        {
+            // Already measured once before the parallel pass.
+            return null;
+        }
+
+        string[] roots = rule.Roots
+            .Where(Directory.Exists)
+            .Where(root => !_whitelist.IsWhitelisted(root))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (roots.Length == 0)
+        {
+            return null;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        _logger.Info($"Cleanup scan: starting {rule.Id} ({roots.Length} root(s)).");
+        Trace($"start {rule.Id} roots={string.Join(" ; ", roots)}");
+        Measurement measurement = Measure(roots, rule.MinimumAge, cancellationToken);
+        stopwatch.Stop();
+
+        _logger.Info($"Cleanup scan: finished {rule.Id} in {stopwatch.ElapsedMilliseconds} ms.");
+        Trace($"done {rule.Id} {stopwatch.ElapsedMilliseconds}ms");
+
+        if (measurement.Bytes == 0 && measurement.FileCount == 0)
+        {
+            return null;
+        }
+
+        bool running = rule.RequiresAppClosed && IsRunning(rule.ProcessName);
+
+        return new CleanupCandidate
+        {
+            Rule = rule,
+            Roots = roots,
+            Bytes = measurement.Bytes,
+            FileCount = measurement.FileCount,
+            FolderCount = measurement.FolderCount,
+            OldestWriteUtc = measurement.Oldest,
+            NewestWriteUtc = measurement.Newest,
+            IsSelected = rule.Tier == CleanupTier.Safe && !running,
+            IsRunning = running
         };
     }
 
@@ -137,7 +175,7 @@ public sealed class CleanupScanner : ICleanupScanner
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            foreach (FileInfo file in SafeFileSystem.EnumerateFiles(root, recurse: true))
+            foreach (FileInfo file in SafeFileSystem.EnumerateFiles(root, recurse: true, maxFiles: MaxFilesPerRoot))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -169,29 +207,37 @@ public sealed class CleanupScanner : ICleanupScanner
                 }
             }
 
-            folders += CountDirectories(root);
+            folders += CountTopLevelSubfolders(root);
         }
 
         return new Measurement(bytes, files, folders, oldest, newest);
     }
 
-    private static int CountDirectories(string root)
+    private static int CountTopLevelSubfolders(string root)
     {
         try
         {
-            return new DirectoryInfo(root)
-                .EnumerateDirectories("*", new EnumerationOptions
-                {
-                    RecurseSubdirectories = true,
-                    IgnoreInaccessible = true,
-                    AttributesToSkip = FileAttributes.ReparsePoint | FileAttributes.System
-                })
-                .Take(MaxDirectoriesPerRoot)
+            return Directory.EnumerateDirectories(root)
+                .Take(MaxTopLevelSubfolders)
                 .Count();
         }
         catch
         {
             return 0;
+        }
+    }
+
+    private static void Trace(string message)
+    {
+        try
+        {
+            File.AppendAllText(
+                Path.Combine(Path.GetTempPath(), "pcmanager-scan-trace.log"),
+                $"{DateTime.Now:HH:mm:ss.fff} {message}{Environment.NewLine}");
+        }
+        catch
+        {
+            // Diagnostics only.
         }
     }
 
