@@ -1,0 +1,31 @@
+# Build output - never commit compiled artifacts
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.pdb
+*.dll
+
+# Vendor installer packages: Microsoft PC Manager MSIX is proprietary and not redistributable,
+# and the raw package is far above GitHub's 100 MB per-file limit
+*.msixbundle
+*.msix
+*.appxbundle
+*.appx
+
+# Investigation / craft workspace artifacts (not part of the application)
+.freebuff/
+investigation.cany/
+capture/
+reference/
+inbox/
+craft.json
+feed.json
+transcript.json
+usage.json
+build-activity.log
+
+# Local scratch
+*.log
+*.tmp

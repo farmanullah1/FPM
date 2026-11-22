@@ -1,0 +1,94 @@
+<UserControl x:Class="PCManager.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,22,28,28">
+        <StackPanel>
+
+            <Grid Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Settings" Style="{StaticResource PageTitle}" />
+                    <TextBlock Style="{StaticResource CaptionText}"
+                               Text="Preferences, automation and where this app keeps its files." />
+                </StackPanel>
+            </Grid>
+
+            <!-- Start with Windows -->
+            <Border Style="{StaticResource Card}" Padding="20">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="Start with Windows" FontSize="17" FontWeight="SemiBold" />
+                        <TextBlock Style="{StaticResource CaptionText}"
+                                   Text="Registers this app under its own Run value so it never touches Microsoft PC Manager's entry." />
+                        <TextBlock Text="{Binding RunValueText}" Style="{StaticResource CaptionText}"
+                                   FontFamily="Consolas" Margin="0,6,0,0" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" Content="Start with Windows"
+                              HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding StartWithWindows, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <!-- Smart Boost -->
+            <Border Style="{StaticResource Card}" Padding="20">
+                <StackPanel>
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Smart Boost" FontSize="17" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding SmartBoostThresholdText}" Style="{StaticResource CaptionText}" />
+                        </StackPanel>
+                        <CheckBox Style="{StaticResource ToggleSwitch}" Content="Enabled"
+                                  HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,120,0"
+                                  IsChecked="{Binding SmartBoostEnabled, Mode=TwoWay}" />
+                    </Grid>
+
+                    <Slider Style="{StaticResource FluentSlider}" Minimum="50" Maximum="95"
+                            TickFrequency="1" IsSnapToTickEnabled="True"
+                            Value="{Binding SmartBoostThreshold, Mode=TwoWay}" Margin="0,16,0,0" MaxWidth="520"
+                            HorizontalAlignment="Left" Width="520" />
+                    <Button Content="Reset to 75%" Style="{StaticResource PillButton}"
+                            HorizontalAlignment="Left" Margin="0,10,0,0" Command="{Binding ResetThresholdCommand}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Appearance -->
+            <Border Style="{StaticResource Card}" Padding="20">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="Appearance" FontSize="17" FontWeight="SemiBold" />
+                        <TextBlock Style="{StaticResource CaptionText}">
+                            <Run Text="Current theme: " /><Run Text="{Binding ThemeLabel, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" Content="Dark theme"
+                              HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding IsDark, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <!-- About -->
+            <Border Style="{StaticResource Card}" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="About" FontSize="17" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding ProductName}" FontSize="22" FontWeight="SemiBold"
+                               Foreground="{DynamicResource App.Accent}" Margin="0,8,0,0" />
+                    <TextBlock Text="{Binding VersionText}" Style="{StaticResource CaptionText}" />
+
+                    <TextBlock Text="Settings and logs" Style="{StaticResource SectionTitle}" Margin="0,16,0,6" />
+                    <TextBlock Text="{Binding DataFolderPath}" Style="{StaticResource CaptionText}" FontFamily="Consolas" />
+                    <TextBlock Text="{Binding LogFilePath}" Style="{StaticResource CaptionText}" FontFamily="Consolas" Margin="0,2,0,0" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="Open data folder" Style="{StaticResource SecondaryButton}"
+                                Command="{Binding OpenDataFolderCommand}" />
+                        <Button Content="Open logs" Style="{StaticResource SecondaryButton}"
+                                Margin="8,0,0,0" Command="{Binding OpenLogFolderCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" />
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

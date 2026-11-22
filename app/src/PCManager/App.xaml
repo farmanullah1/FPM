@@ -1,0 +1,43 @@
+<Application x:Class="PCManager.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PCManager.ViewModels;assembly=PCManager.ViewModels"
+             xmlns:views="clr-namespace:PCManager.Views"
+             xmlns:conv="clr-namespace:PCManager.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Index 0 is always the theme dictionary; ThemeService swaps it. -->
+                <ResourceDictionary Source="Styles/Themes/Light.xaml" />
+                <ResourceDictionary Source="Styles/Icons.xaml" />
+                <ResourceDictionary Source="Styles/Controls.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+            <conv:IconKeyToGeometryConverter x:Key="IconKeyConverter" />
+            <conv:StatusToBrushConverter x:Key="StatusToBrush" />
+            <conv:HealthyToBrushConverter x:Key="HealthyToBrush" />
+            <conv:InverseBooleanConverter x:Key="InverseBoolean" />
+
+            <!-- View location: page view models are hosted by the shell's ContentControl. -->
+            <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+                <views:HomeView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ProtectionViewModel}">
+                <views:ProtectionView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:StorageViewModel}">
+                <views:StorageView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:AppsViewModel}">
+                <views:AppsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ToolboxViewModel}">
+                <views:ToolboxView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+                <views:SettingsView />
+            </DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

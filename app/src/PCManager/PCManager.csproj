@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>PCManager</RootNamespace>
+    <!-- Distinct executable name: never FarmanullahPCManager.exe vs MSPCManager.exe collision. -->
+    <AssemblyName>FarmanullahPCManager</AssemblyName>
+    <Product>Farmanullah PC Manager</Product>
+    <AssemblyTitle>Farmanullah PC Manager</AssemblyTitle>
+    <Version>3.23.3.0</Version>
+    <!-- AssemblyVersion must be set explicitly, otherwise it stays 1.0.0.0 and the
+         sidebar version label reads "Version 1.0.0". -->
+    <AssemblyVersion>3.23.3.0</AssemblyVersion>
+    <FileVersion>3.23.3.0</FileVersion>
+    <Company>PCManager</Company>
+    <Description>Farmanullah PC Manager - Windows 11 cleaner, booster and toolbox.</Description>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>AnyCPU;x64</Platforms>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <!-- WinForms is referenced only for the tray icon (NotifyIcon). Drop its global using so
+       UserControl/Application keep resolving to the WPF types. -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\PCManager.Core.csproj" />
+    <ProjectReference Include="..\Services\PCManager.Services.csproj" />
+    <ProjectReference Include="..\ViewModels\PCManager.ViewModels.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+  </ItemGroup>
+
+</Project>
