@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using PCManager.Core.Elevation;
 using PCManager.Core.Formatting;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
@@ -19,17 +20,20 @@ public sealed class CleanupExecutor : ICleanupExecutor
     private readonly ICleanupLog _log;
     private readonly IAppLogger _logger;
     private readonly IRecycleBinService _recycleBin;
+    private readonly IElevationService _elevation;
 
     public CleanupExecutor(
         ISafetyGuard guard,
         ICleanupLog log,
         IAppLogger logger,
-        IRecycleBinService recycleBin)
+        IRecycleBinService recycleBin,
+        IElevationService elevation)
     {
         _guard = guard;
         _log = log;
         _logger = logger;
         _recycleBin = recycleBin;
+        _elevation = elevation;
     }
 
     public Task<CleanupReport> ExecuteAsync(CleanupPlan plan, bool dryRun, CancellationToken cancellationToken = default)
@@ -193,6 +197,13 @@ public sealed class CleanupExecutor : ICleanupExecutor
             }
         }
 
+        // Machine-wide rules are delegated to the fixed-command helper. No path crosses the
+        // pipe and the helper repeats the same path and age checks with an administrator token.
+        if (item.RequiresElevation && !dryRun)
+        {
+            return ExecuteElevated(item, cancellationToken);
+        }
+
         long deletedBytes = 0;
         int deletedFiles = 0;
         int skippedLocked = 0;
@@ -340,6 +351,88 @@ public sealed class CleanupExecutor : ICleanupExecutor
             dryRun ? 0 : deletedFiles,
             skippedLocked + skippedProtected + skippedElevation + failed,
             remainingBytes,
+            message);
+    }
+
+    private CleanupItemResult ExecuteElevated(CleanupPlanItem item, CancellationToken cancellationToken)
+    {
+        if (!_elevation.IsHelperAvailable)
+        {
+            _log.Write(item, CleanupItemOutcome.SkippedElevation, 0, "elevated helper is missing");
+            return Result(item, CleanupItemOutcome.SkippedElevation, 0, 0, 0, item.Bytes,
+                "Skipped: the elevated helper is missing from the application folder.");
+        }
+
+        ElevationOutcome outcome;
+
+        try
+        {
+            outcome = _elevation
+                .RunAsync(HelperCommand.CleanRule, item.RuleId, cancellationToken)
+                .GetAwaiter()
+                .GetResult();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Elevated cleanup failed for {item.RuleId}.", ex);
+            _log.Write(item, CleanupItemOutcome.Failed, 0, ex.Message);
+            return Result(item, CleanupItemOutcome.Failed, 0, 0, 0, item.Bytes,
+                $"Failed: {ex.Message}");
+        }
+
+        if (outcome.Cancelled)
+        {
+            _log.Write(item, CleanupItemOutcome.SkippedElevation, 0, outcome.Message);
+            return Result(item, CleanupItemOutcome.SkippedElevation, 0, 0, 0, item.Bytes,
+                $"Skipped: {outcome.Message}");
+        }
+
+        if (!outcome.Success)
+        {
+            _log.Write(item, CleanupItemOutcome.Failed, 0, outcome.Message);
+            return Result(item, CleanupItemOutcome.Failed, 0, 0, outcome.FilesSkipped, item.Bytes,
+                $"Failed: {outcome.Message}");
+        }
+
+        CleanupItemOutcome itemOutcome;
+
+        if (outcome.BytesFreed > 0 && outcome.FilesSkipped > 0)
+        {
+            itemOutcome = CleanupItemOutcome.PartiallyDeleted;
+        }
+        else if (outcome.BytesFreed > 0)
+        {
+            itemOutcome = CleanupItemOutcome.Deleted;
+        }
+        else if (outcome.FilesSkipped > 0)
+        {
+            itemOutcome = CleanupItemOutcome.SkippedLocked;
+        }
+        else
+        {
+            itemOutcome = CleanupItemOutcome.Deleted;
+        }
+
+        long remaining = CleanupScanner.Measure(item.Roots, TimeSpan.Zero, cancellationToken).Bytes;
+        string message = outcome.Message;
+
+        _log.Write(
+            item,
+            itemOutcome,
+            outcome.BytesFreed,
+            $"elevated helper: {message}");
+
+        return Result(
+            item,
+            itemOutcome,
+            outcome.BytesFreed,
+            outcome.FilesDeleted,
+            outcome.FilesSkipped,
+            remaining,
             message);
     }
 

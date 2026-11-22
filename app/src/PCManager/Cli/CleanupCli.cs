@@ -1,6 +1,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using PCManager.Core;
+using PCManager.Core.Elevation;
 using PCManager.Core.Formatting;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
@@ -13,6 +14,7 @@ namespace PCManager.Cli;
 /// FarmanullahPCManager.exe --scan
 /// FarmanullahPCManager.exe --clean --ids 1,2
 /// FarmanullahPCManager.exe --clean --ids 1,2 --dry-run
+/// FarmanullahPCManager.exe --clean --ids 1,2 --restore-point
 /// FarmanullahPCManager.exe --auto-clean
 /// </code>
 /// <c>--scan</c> deletes nothing. <c>--clean</c> requires an explicit id list, so a typo
@@ -37,7 +39,8 @@ internal static class CleanupCli
         ICleanupScanner scanner,
         ICleanupCommandParser parser,
         ICleanupExecutor executor,
-        ICleanupLog log)
+        ICleanupLog log,
+        IRestorePointService restorePoint)
     {
         TryAttachConsole();
 
@@ -57,7 +60,7 @@ internal static class CleanupCli
             {
                 Console.WriteLine();
                 Console.WriteLine("Nothing was deleted. To clean, review the numbers and run:");
-                Console.WriteLine("  FarmanullahPCManager.exe --clean --ids 1,2   (add --dry-run to log only)");
+                Console.WriteLine("  FarmanullahPCManager.exe --clean --ids 1,2   (add --dry-run or --restore-point)");
                 return 0;
             }
 
@@ -87,6 +90,16 @@ internal static class CleanupCli
             }
 
             Console.WriteLine(approval.Message);
+
+            if (HasFlag(args, "--restore-point") && !dryRun)
+            {
+                Console.WriteLine("Creating a System Restore point...");
+                ElevationOutcome restore = await restorePoint.CreateAsync();
+                Console.WriteLine(restore.Success
+                    ? restore.Message
+                    : "Restore point not created: " + restore.Message + " Continuing.");
+            }
+
             Console.WriteLine(dryRun ? "Dry run: no file will be removed." : "Executing the approved plan...");
 
             CleanupReport report = await executor.ExecuteAsync(approval.Plan, dryRun);

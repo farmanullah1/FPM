@@ -2,26 +2,6 @@ using PCManager.Core.Formatting;
 
 namespace PCManager.Core.Models;
 
-/// <summary>One selectable row of the Storage page's deep cleanup.</summary>
-public sealed class CleanupCategory
-{
-    public string Id { get; init; } = string.Empty;
-    public string Title { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
-
-    /// <summary>Bytes that were found by the scan.</summary>
-    public long Bytes { get; set; }
-
-    public bool IsSelected { get; set; } = true;
-
-    public bool IsCleaned { get; set; }
-
-    public string SizeText => ByteFormatter.Format(Bytes);
-}
-
-/// <summary>Result of a deep cleanup run.</summary>
-public sealed record CleanupOutcome(long FreedBytes, int Cleaned, int Skipped, string Message);
-
 /// <summary>A set of files that are byte-for-byte identical.</summary>
 public sealed class DuplicateGroup
 {

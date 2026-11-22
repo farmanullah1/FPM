@@ -3,6 +3,7 @@ using PCManager.Services.Abstractions;
 using PCManager.Services.Boost;
 using PCManager.Services.Cleaners;
 using PCManager.Services.Cleanup;
+using PCManager.Services.Elevation;
 using PCManager.Services.Infrastructure;
 using PCManager.Services.Memory;
 using PCManager.Services.Processes;
@@ -52,6 +53,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICleanupCommandParser, CleanupCommandParser>();
         services.AddSingleton<ICleanupExecutor, CleanupExecutor>();
         services.AddSingleton<ICleanupLog, CleanupLog>();
+
+        // --- Elevated helper (one fixed command per request, UAC on demand) ---
+        services.AddSingleton<IElevationService>(sp =>
+            new ElevationService(sp.GetRequiredService<IAppLogger>()));
+        services.AddSingleton<IRestorePointService, RestorePointService>();
 
         // --- Page facades -------------------------------------------------
         services.AddSingleton<IPcBoostService, PcBoostService>();

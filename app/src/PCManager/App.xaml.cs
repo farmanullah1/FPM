@@ -79,16 +79,28 @@ public partial class App : Application
         // --clean requires an explicit --ids list.
         if (CleanupCli.IsCleanupCommand(e.Args))
         {
-            int exitCode = CleanupCli.RunAsync(
+            // Run on the thread pool: awaiting on the UI thread would capture the WPF
+            // dispatcher context and deadlock before the first continuation.
+            int exitCode = Task.Run(() => CleanupCli.RunAsync(
                     e.Args,
                     _services.GetRequiredService<ICleanupScanner>(),
                     _services.GetRequiredService<ICleanupCommandParser>(),
                     _services.GetRequiredService<ICleanupExecutor>(),
-                    _services.GetRequiredService<ICleanupLog>())
+                    _services.GetRequiredService<ICleanupLog>(),
+                    _services.GetRequiredService<IRestorePointService>()))
                 .GetAwaiter()
                 .GetResult();
 
-            Shutdown(exitCode);
+            try
+            {
+                Console.Out.Flush();
+            }
+            catch
+            {
+                // No console attached.
+            }
+
+            Environment.Exit(exitCode);
             return;
         }
 

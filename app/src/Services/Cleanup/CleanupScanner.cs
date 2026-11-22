@@ -42,6 +42,7 @@ public sealed class CleanupScanner : ICleanupScanner
 
     private CleanupScanResult Scan(CancellationToken cancellationToken)
     {
+        var total = Stopwatch.StartNew();
         var items = new ConcurrentBag<CleanupCandidate>();
         IReadOnlyList<CleanupRule> rules = _catalog.GetRules();
 
@@ -90,6 +91,9 @@ public sealed class CleanupScanner : ICleanupScanner
             item.Number = ++number;
         }
 
+        total.Stop();
+        _logger.Info($"Cleanup scan finished: {ordered.Count} row(s) in {total.ElapsedMilliseconds} ms.");
+
         return new CleanupScanResult
         {
             Items = ordered,
@@ -118,13 +122,13 @@ public sealed class CleanupScanner : ICleanupScanner
         }
 
         var stopwatch = Stopwatch.StartNew();
-        _logger.Info($"Cleanup scan: starting {rule.Id} ({roots.Length} root(s)).");
-        Trace($"start {rule.Id} roots={string.Join(" ; ", roots)}");
         Measurement measurement = Measure(roots, rule.MinimumAge, cancellationToken);
         stopwatch.Stop();
 
-        _logger.Info($"Cleanup scan: finished {rule.Id} in {stopwatch.ElapsedMilliseconds} ms.");
-        Trace($"done {rule.Id} {stopwatch.ElapsedMilliseconds}ms");
+        if (stopwatch.ElapsedMilliseconds > 2_000)
+        {
+            _logger.Info($"Cleanup scan: {rule.Id} measured in {stopwatch.ElapsedMilliseconds} ms.");
+        }
 
         if (measurement.Bytes == 0 && measurement.FileCount == 0)
         {
@@ -224,20 +228,6 @@ public sealed class CleanupScanner : ICleanupScanner
         catch
         {
             return 0;
-        }
-    }
-
-    private static void Trace(string message)
-    {
-        try
-        {
-            File.AppendAllText(
-                Path.Combine(Path.GetTempPath(), "pcmanager-scan-trace.log"),
-                $"{DateTime.Now:HH:mm:ss.fff} {message}{Environment.NewLine}");
-        }
-        catch
-        {
-            // Diagnostics only.
         }
     }
 

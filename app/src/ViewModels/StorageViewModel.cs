@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PCManager.Core.Elevation;
 using PCManager.Core.Formatting;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
@@ -68,6 +69,7 @@ public sealed partial class StorageViewModel : ViewModelBase
     private readonly ICleanupCommandParser _cleanupParser;
     private readonly ICleanupExecutor _cleanupExecutor;
     private readonly ICleanupLog _cleanupLog;
+    private readonly IRestorePointService _restorePoint;
     private readonly IDuplicateFinderService _duplicates;
     private readonly ISettingsService _settings;
     private readonly IToolLauncher _launcher;
@@ -83,6 +85,7 @@ public sealed partial class StorageViewModel : ViewModelBase
         ICleanupCommandParser cleanupParser,
         ICleanupExecutor cleanupExecutor,
         ICleanupLog cleanupLog,
+        IRestorePointService restorePoint,
         IDuplicateFinderService duplicates,
         ISettingsService settings,
         IToolLauncher launcher,
@@ -93,6 +96,7 @@ public sealed partial class StorageViewModel : ViewModelBase
         _cleanupParser = cleanupParser;
         _cleanupExecutor = cleanupExecutor;
         _cleanupLog = cleanupLog;
+        _restorePoint = restorePoint;
         _duplicates = duplicates;
         _settings = settings;
         _launcher = launcher;
@@ -161,6 +165,9 @@ public sealed partial class StorageViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isDryRun;
+
+    [ObservableProperty]
+    private bool _createRestorePoint = true;
 
     [ObservableProperty]
     private string _cleanupReportText = string.Empty;
@@ -346,6 +353,8 @@ public sealed partial class StorageViewModel : ViewModelBase
 
             _pendingPlan = result.Plan;
             HasPendingPlan = true;
+            CreateRestorePoint = result.Plan.Items.Any(item =>
+                item.Tier is CleanupTier.Caution or CleanupTier.OptIn);
 
             int optIn = result.Plan.Items.Count(item => item.Tier == CleanupTier.OptIn);
 
@@ -378,11 +387,32 @@ public sealed partial class StorageViewModel : ViewModelBase
             : "Executing the approved plan...";
 
         CleanupReport? report = null;
+        string restoreNote = string.Empty;
+
+        if (!IsDryRun && CreateRestorePoint)
+        {
+            StatusMessage = "Creating a System Restore point (administrator prompt may appear)...";
+
+            try
+            {
+                ElevationOutcome restore = await _restorePoint.CreateAsync();
+                restoreNote = restore.Success
+                    ? "Restore point: " + restore.Message
+                    : "Restore point not created: " + restore.Message;
+
+                _logger.Info(restoreNote);
+            }
+            catch (Exception ex)
+            {
+                restoreNote = "Restore point failed: " + ex.Message;
+                _logger.Error("Restore point creation failed.", ex);
+            }
+        }
 
         try
         {
             report = await _cleanupExecutor.ExecuteAsync(plan, IsDryRun);
-            CleanupReportText = BuildReport(report);
+            CleanupReportText = BuildReport(report, restoreNote);
             HasCleanupReport = true;
             StatusMessage = report.Summary;
             _logger.Info($"Cleanup plan {plan.PlanId}: {report.Summary}");
@@ -412,9 +442,15 @@ public sealed partial class StorageViewModel : ViewModelBase
         }
     }
 
-    private string BuildReport(CleanupReport report)
+    private string BuildReport(CleanupReport report, string restoreNote)
     {
         var text = new StringBuilder();
+
+        if (!string.IsNullOrWhiteSpace(restoreNote))
+        {
+            text.AppendLine(restoreNote);
+            text.AppendLine();
+        }
 
         text.AppendLine(report.Summary);
         text.AppendLine();

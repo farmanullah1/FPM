@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>PCManager.Helper</RootNamespace>
+    <AssemblyName>FarmanullahPCManager.Helper</AssemblyName>
+    <Product>Farmanullah PC Manager Helper</Product>
+    <Version>3.23.3.0</Version>
+    <AssemblyVersion>3.23.3.0</AssemblyVersion>
+    <FileVersion>3.23.3.0</FileVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>AnyCPU;x64</Platforms>
+    <!-- No console window: the helper is launched by UAC and talks over a pipe. -->
+    <UseWindowsForms>false</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\PCManager.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

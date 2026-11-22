@@ -20,6 +20,7 @@ Requirements: Windows 10/11 and the .NET 8 SDK (`global.json` pins the SDK featu
 ```powershell
 cd app
 dotnet build PCManager.sln
+dotnet test tests/PCManager.Tests/PCManager.Tests.csproj
 dotnet run --project src/PCManager/PCManager.csproj
 ```
 
@@ -41,19 +42,22 @@ app/
 ├── PCManager.sln
 ├── global.json                 SDK pin
 ├── screenshots/                One capture per page plus the floating toolbar
+├── tests/PCManager.Tests/      xunit tests for the approval parser and safety guard
 └── src/
     ├── Core/                   Models + formatting, no Windows dependencies
     │   ├── Models/             Process, startup, storage, cleanup, settings and toolbox models
     │   └── Formatting/         ByteFormatter
     ├── Services/               All system access; one interface per tool/cleaner
-    │   ├── Abstractions/       ITempFileCleaner, IProcessService, IDeepCleanupService, ...
+    │   ├── Abstractions/       ITempFileCleaner, IProcessService, ICleanupScanner, ...
+    │   ├── Cleanup/            Rule catalog, read-only scanner, command parser, safety guard,
+    │   │                        approved-plan executor, whitelist and cleanup log
     │   ├── Interop/            NativeMethods (P/Invoke signatures + documented constants)
-    │   ├── Infrastructure/     SafeFileSystem (guarded deletion), ProcessRunner, AppLogger
+    │   ├── Infrastructure/     SafeFileSystem (guarded enumeration), ProcessRunner, AppLogger
     │   ├── Cleaners/           TempFileCleaner, BrowserCacheCleaner, RecycleBinService
     │   ├── Boost/              PcBoostService (memory trim + temp purge)
     │   ├── Process/            ProcessService, ProcessManager, StartupManager
-    │   ├── Storage/            StorageService, StorageAnalyzer, DeepCleanupService,
-    │   │                        DuplicateFinderService, StorageSenseService
+    │   ├── Storage/            StorageService, StorageAnalyzer, DuplicateFinderService,
+    │   │                        StorageSenseService
     │   ├── Protection/         Defender + Windows Update status
     │   ├── Toolbox/            ToolboxService, ToolLauncher, InstalledAppService,
     │   │                        SystemRepairService, DefaultBrowserService
@@ -80,10 +84,40 @@ which is what makes each feature testable and replaceable.
 | --- | --- | --- |
 | Home | `HomeViewModel` | Live memory usage and temp-file size, one-click Boost (working-set trim + temp purge, reporting the measured available-memory delta and the bytes actually removed), Smart Boost auto-trim above the saved threshold, and four quick-action cards. |
 | Protection | `ProtectionViewModel` | Defender real-time/antivirus state and signature version, Windows Update service and pending restart, plus pop-up management, default browser, Explorer restart and default-apps cards. |
-| Storage | `StorageViewModel` | Drive usage from `DriveInfo`, deep cleanup over update cache, system logs/temp, `$PatchCache$`, recycle bin, user temp, Edge/Chrome/Brave and Firefox caches, npm, NuGet and pip/Yarn/pnpm stores with measured sizes (Firefox is skipped while it runs), large-file filter (10/50/100 MB, 1 GB), duplicate finder (size + sampled SHA-256) and Storage Sense. |
+| Storage | `StorageViewModel` | Drive usage from `DriveInfo`; Cleanup Center with a read-only numbered scan, tiered rows, typed approval gate (`proceed`/`only`/`keep`, ranges), dry run, safety-guarded execution, `cleanup_log.txt` and a measured before/after report; large-file filter (10/50/100/500 MB, 1 GB); duplicate finder (size + sampled SHA-256); Storage Sense. |
 | Apps | `AppsViewModel` | Live application list with RAM and CPU plus per-row End Task (this process and `MSPCManager*` are refused), startup entries from `Run`/`StartupApproved`/Startup folder/scheduled tasks with working toggles, and installed apps (HKLM/HKCU Uninstall keys) with search and uninstall. |
 | Toolbox | `ToolboxViewModel` | Floating always-on-top toolbar toggle, multi-monitor screenshot via GDI, screen recorder (Game Bar with `psr.exe` fallback), calculator, notepad, `ipconfig /flushdns` and quick web links. |
 | Settings | `SettingsViewModel` | Start with Windows (own `HKCU\...\Run` value), Smart Boost on/off and threshold, Light/Dark theme, and the About block with data/log paths. |
+
+## Cleanup engine
+
+The Storage page and the CLI use one engine, split so that measuring cannot delete:
+
+| Piece | File | Job |
+| --- | --- | --- |
+| Rule catalog | `Services/Cleanup/CleanupRuleCatalog.cs` | Fixed roots, tiers, minimum age, rebuild impact, app detection evidence |
+| Scanner | `Services/Cleanup/CleanupScanner.cs` | Read-only measurement with bounded parallelism; no delete/move API |
+| Parser | `Services/Cleanup/CleanupCommandParser.cs` | `proceed`, `only 1, 2`, `keep 1, 2`, ranges; rejects everything else |
+| Safety guard | `Services/Cleanup/SafetyGuard.cs` | Allow-list roots, deny-list, reparse refusal, whitelist precedence |
+| Executor | `Services/Cleanup/CleanupExecutor.cs` | Deletes only an approved, unexpired plan; logs and re-measures |
+| Log | `Services/Cleanup/CleanupLog.cs` | `logs\cleanup_log.txt`, append-only, 5 MB rotation |
+| Whitelist | `Services/Cleanup/WhitelistService.cs` | `whitelist.json`, always wins over a rule |
+
+Flow: **scan → numbered table → approval command → confirm → execute → verify**. A plan is
+valid for 15 minutes and is discarded when a new scan runs. Opt-in rows (currently
+`$PatchCache$`) are never included implicitly. Browsers must be closed; the row is unselected and
+the executor re-checks the process before deleting.
+
+CLI (same executable):
+
+```powershell
+FarmanullahPCManager.exe --scan
+FarmanullahPCManager.exe --clean --ids 1,2 --dry-run
+FarmanullahPCManager.exe --clean --ids 1,2
+```
+
+`--scan` always exits without deleting. `--clean` refuses to run without an explicit `--ids`
+list, so a typo cannot approve everything.
 
 ## Adding a feature
 
@@ -115,7 +149,7 @@ cannot delete something outside its intended roots.
 instead of forcing a UAC prompt at launch. Operations that need elevation therefore fail
 gracefully or partially:
 
-- `%SystemRoot%\Temp` and other machine-wide temp folders — user temp is cleaned, system temp is skipped.
+- `%SystemRoot%\Temp` and other machine-wide temp folders — user temp is cleaned, system temp is skipped and reported as `SKIPPED_ELEVATION` by the cleanup executor.
 - `HKLM\...\Run` and `HKLM\...\StartupApproved` entries — visible, but toggling them returns access denied.
 - Machine-wide scheduled tasks — `Enable-/Disable-ScheduledTask` may need an elevated shell.
 - Windows Update / Defender WMI queries — some counters need elevation.
@@ -134,8 +168,12 @@ opens the matching Settings page instead (documented at the call site):
 
 ## Behaviour notes worth knowing
 
-- Temporary-file cleaning only considers items older than **48 hours** (matches the original
-  product) so files in active use are not touched.
+- Boost's temp purge only considers items older than **48 hours** (matches the original
+  product); the Cleanup Center's temp rule uses **24 hours** and still skips open files.
+- Cleanup scans cap each root at 250 000 files, skip reparse points/system files and use 2–4
+  workers. A 16-row scan measured 4.64 GB in about 18.5 s on the test machine.
+- The scanner and executor live in one assembly; the rule roots and the runtime safety guard,
+  not assembly boundaries, are what prevent deletion outside a rule.
 - Startup toggles use the `StartupApproved` 12-byte binary blob (first byte even = enabled,
   odd = disabled), `.lnk` → `.lnk.disabled` renaming for the Startup folder, and
   `Disable-ScheduledTask` for scheduled tasks — never by localized display name.

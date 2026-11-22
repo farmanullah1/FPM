@@ -132,6 +132,10 @@
 
                             <StackPanel Visibility="{Binding HasPendingPlan, Converter={StaticResource BoolToVisibility}}"
                                         Margin="0,8,0,0">
+                                <CheckBox Content="Create a System Restore point first (administrator approval)"
+                                          IsChecked="{Binding CreateRestorePoint, Mode=TwoWay}" Margin="0,0,0,2" />
+                                <TextBlock Text="Windows may skip it if a restore point was created in the last 24 hours; the report states what happened. Ignored for dry runs."
+                                           Style="{StaticResource CaptionText}" Margin="0,0,0,8" />
                                 <CheckBox Content="Dry run (record what would be removed, delete nothing)"
                                           IsChecked="{Binding IsDryRun, Mode=TwoWay}" Margin="0,0,0,8" />
                                 <StackPanel Orientation="Horizontal">

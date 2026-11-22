@@ -40,14 +40,18 @@ Default apps, since Windows blocks programmatic changes), taskbar repair (restar
 and restore default apps.
 
 ### Storage
-System-drive usage bar, then **Deep cleanup** with ten independently measured categories —
-Windows Update cache, system logs and Windows Temp, the installer patch cache (`$PatchCache$`),
-Recycle Bin, user temporary files, browser caches (Edge/Chrome/Brave; cookies, history and
-passwords are never touched), Firefox `cache2`, npm, NuGet, and the pip/Yarn/pnpm stores — each
-with its real size, a running selected total, and a per-category skip when Windows refuses an
-unelevated delete or the owning browser is running. **Manage large files** scans any folder with `> 10 MB / 50 MB / 100 MB / 1 GB`
-filters, **Duplicate files** groups identical files by size then sampled SHA-256 and reports the
-wasted bytes, and a **Storage Sense** switch reads and writes the Windows setting.
+System-drive usage bar, then the **Cleanup Center**: a read-only scan builds a numbered table of
+sixteen measured targets — Windows Update cache, user/Windows temp, Windows logs, error reports,
+shader caches, Prefetch, the installer patch cache (`$PatchCache$`), Recycle Bin, every detected
+Edge/Chrome/Brave profile and Firefox `cache2`, npm, NuGet, pip, Yarn, pnpm, and the detected
+caches of Antigravity, Freebuff, Cursor, VS Code and Windsurf. Every row shows its exact path,
+size, file count, age, tier and identity confidence. Nothing is deleted until an approval command
+(`proceed`, `only 1, 2`, `keep 1, 2`, ranges allowed) is reviewed and confirmed; a dry-run mode,
+a 15-minute plan expiry, a runtime safety guard, `cleanup_log.txt` and a measured before/after
+report sit behind that gate. **Manage large files** scans any folder with
+`> 10 MB / 50 MB / 100 MB / 500 MB / 1 GB` filters, **Duplicate files** groups identical files by
+size then sampled SHA-256 and reports the wasted bytes, and a **Storage Sense** switch reads and
+writes the Windows setting.
 
 ### Apps
 **Process management** lists running user applications with CPU, RAM and a per-row End button
@@ -86,7 +90,8 @@ PCManager                 WPF shell, styles, views  →  FarmanullahPCManager.ex
 | Layer | Responsibility | Key files |
 | --- | --- | --- |
 | `Core` | Plain models, byte formatting and app identity (`ProductName`, data folder, Run value, protected process names) | `AppInfo.cs`, `Models/*.cs`, `Formatting/ByteFormatter.cs` |
-| `Services` | One interface per capability in `Abstractions/`, implementations grouped by feature (`Boost`, `Cleaners`, `Process`, `Storage`, `Protection`, `Toolbox`, `Settings`, `Startup`), shared helpers in `Infrastructure/` | `DependencyInjection/ServiceCollectionExtensions.cs`, `Storage/DeepCleanupService.cs`, `Process/StartupManager.cs` |
+| `Services` | One interface per capability in `Abstractions/`, implementations grouped by feature (`Boost`, `Cleaners`, `Cleanup`, `Process`, `Storage`, `Protection`, `Toolbox`, `Settings`, `Startup`), shared helpers in `Infrastructure/` | `DependencyInjection/ServiceCollectionExtensions.cs`, `Cleanup/CleanupScanner.cs`, `Cleanup/SafetyGuard.cs`, `Process/StartupManager.cs` |
+| `Tests` | Parser and safety-guard tests, no production references | `app/tests/PCManager.Tests` |
 | `ViewModels` | Six page view models plus the shell; no Win32 calls, only `Services.Abstractions` | `MainViewModel.cs`, `HomeViewModel.cs`, `StorageViewModel.cs` |
 | `PCManager` | XAML views, themed styles, converters, DI composition root, tray icon, floating toolbar window | `App.xaml(.cs)`, `Views/*.xaml`, `Styles/*` |
 
@@ -97,18 +102,28 @@ How a page is composed:
    shell's `ContentControl` needs no code-behind switching.
 2. Pages never reference the shell: quick-action cards call `INavigationService`, whose
    `NavigationService` broker forwards the page key to `MainViewModel`.
-3. A page talks only to interfaces (`IStorageService`, `IDeepCleanupService`, …). The facade
-   implementations move enumeration, WMI and registry work onto the thread pool with
-   `Task.Run`, so the dispatcher stays responsive.
-4. Anything destructive goes through `Infrastructure/SafeFileSystem` and the per-feature
-   cleaners, which return the bytes actually released instead of assuming success.
+3. A page talks only to interfaces (`IStorageService`, `ICleanupScanner`, `ICleanupExecutor`, …).
+   The implementations move enumeration, WMI and registry work onto the thread pool, so the
+   dispatcher stays responsive.
+4. Anything destructive goes through the approved-plan executor, `ISafetyGuard` and
+   `Infrastructure/SafeFileSystem`; each action returns the bytes actually released instead of
+   assuming success.
 
 ## Quick start
 
 ```powershell
 cd app
 dotnet build PCManager.sln
+dotnet test tests/PCManager.Tests/PCManager.Tests.csproj
 dotnet run --project src/PCManager/PCManager.csproj
+```
+
+The same executable exposes the cleanup engine from a terminal:
+
+```powershell
+FarmanullahPCManager.exe --scan                    # read-only, prints the numbered table
+FarmanullahPCManager.exe --clean --ids 1,2 --dry-run
+FarmanullahPCManager.exe --clean --ids 1,2
 ```
 
 Windows 10/11 with the .NET 8 SDK (`app/global.json` pins the feature band). The executable
@@ -124,7 +139,8 @@ process.
 
 ## Screenshots
 
-`app/screenshots/` contains a capture of each screen and of the floating toolbar.
+`app/screenshots/` contains a capture of each screen and of the floating toolbar. The Storage
+capture predates the Cleanup Center; the new table and approval gate have not been captured yet.
 
 ## License & attribution
 

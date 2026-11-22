@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using PCManager.Core.Elevation;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
 
@@ -64,6 +65,14 @@ public sealed class CleanupRuleCatalog : ICleanupRuleCatalog
     {
         var rules = new List<CleanupRule>();
 
+        // Machine-wide rules share their roots and age with the elevated helper. The helper can
+        // only ever receive these ids, so the review table and the deletion cannot drift apart.
+        ElevatedCleanTarget systemTemp = ElevatedCleanTargets.Get("windows.system-temp");
+        ElevatedCleanTarget updateCache = ElevatedCleanTargets.Get("windows.update-cache");
+        ElevatedCleanTarget windowsLogs = ElevatedCleanTargets.Get("windows.logs");
+        ElevatedCleanTarget prefetch = ElevatedCleanTargets.Get("windows.prefetch");
+        ElevatedCleanTarget patchCache = ElevatedCleanTargets.Get("windows.patchcache");
+
         // ------------------------- Windows temp & diagnostics -------------------------
         rules.Add(new CleanupRule
         {
@@ -89,8 +98,8 @@ public sealed class CleanupRuleCatalog : ICleanupRuleCatalog
             SafetyNote = "Removing files here usually needs administrator rights; refused files are reported.",
             RebuildImpact = "Recreated on demand.",
             Tier = CleanupTier.Safe,
-            Roots = new[] { Path.Combine(WindowsFolder, "Temp") },
-            MinimumAge = TempMinimumAge,
+            Roots = systemTemp.Roots,
+            MinimumAge = systemTemp.MinimumAge,
             RequiresElevation = true,
             Evidence = WindowsFolder
         });
@@ -105,7 +114,8 @@ public sealed class CleanupRuleCatalog : ICleanupRuleCatalog
             SafetyNote = "Only the Download folder. Installed updates and update history stay.",
             RebuildImpact = "Windows downloads the payload again when an update needs it.",
             Tier = CleanupTier.Safe,
-            Roots = new[] { Path.Combine(WindowsFolder, "SoftwareDistribution", "Download") },
+            Roots = updateCache.Roots,
+            MinimumAge = updateCache.MinimumAge,
             RequiresElevation = true,
             Evidence = WindowsFolder
         });
@@ -120,7 +130,8 @@ public sealed class CleanupRuleCatalog : ICleanupRuleCatalog
             SafetyNote = "Only the Logs folder. Live event logs are stored elsewhere and are untouched.",
             RebuildImpact = "New logs are written as Windows works. Old diagnostics are lost.",
             Tier = CleanupTier.Caution,
-            Roots = new[] { Path.Combine(WindowsFolder, "Logs") },
+            Roots = windowsLogs.Roots,
+            MinimumAge = windowsLogs.MinimumAge,
             RequiresElevation = true,
             Evidence = WindowsFolder
         });
@@ -173,7 +184,8 @@ public sealed class CleanupRuleCatalog : ICleanupRuleCatalog
             SafetyNote = "Needs administrator rights. Windows rebuilds the traces.",
             RebuildImpact = "The first launches after cleaning may be slightly slower.",
             Tier = CleanupTier.Caution,
-            Roots = new[] { Path.Combine(WindowsFolder, "Prefetch") },
+            Roots = prefetch.Roots,
+            MinimumAge = prefetch.MinimumAge,
             RequiresElevation = true,
             Evidence = WindowsFolder
         });
@@ -188,7 +200,8 @@ public sealed class CleanupRuleCatalog : ICleanupRuleCatalog
             SafetyNote = "Needs administrator rights. Repairing or uninstalling an older update may need the patch again.",
             RebuildImpact = "Windows may have to re-download a patch during repair or uninstall.",
             Tier = CleanupTier.OptIn,
-            Roots = new[] { Path.Combine(WindowsFolder, "Installer", "$PatchCache$") },
+            Roots = patchCache.Roots,
+            MinimumAge = patchCache.MinimumAge,
             RequiresElevation = true,
             Evidence = WindowsFolder
         });
