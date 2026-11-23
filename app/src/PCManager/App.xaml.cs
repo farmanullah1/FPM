@@ -65,6 +65,7 @@ public partial class App : Application
         collection.AddSingleton<StorageViewModel>();
         collection.AddSingleton<AppsViewModel>();
         collection.AddSingleton<ToolboxViewModel>();
+        collection.AddSingleton<MemoryViewModel>();
         collection.AddSingleton<SettingsViewModel>();
 
         collection.AddSingleton<MainViewModel>();
