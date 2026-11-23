@@ -68,7 +68,9 @@ Scheduler, with working toggles through `StartupApproved`, `.lnk` renaming and
 management** lists installed Win32 apps from the HKLM/HKCU Uninstall keys with search,
 version, size and uninstall, then Store/MSIX packages from `Get-AppxPackage` with framework,
 system and Microsoft PC Manager packages hidden. Both uninstall buttons ask before acting;
-Store removal is current-user only and re-checks the exact package first.
+Store removal is current-user only and re-checks the exact package first. A desktop uninstall
+waits for the uninstaller, confirms the app left the registry, refreshes the list and reports
+any leftover install folder without deleting it.
 
 ### Toolbox
 Floating-toolbar switch (always-on-top pill with live RAM, Boost, screenshot, notepad,

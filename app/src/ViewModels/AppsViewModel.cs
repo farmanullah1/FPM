@@ -308,8 +308,13 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
             return;
         }
 
+        StatusMessage = $"The uninstaller for {app.Name} is starting. Waiting for it to finish...";
+
         OperationResult result = await _installedApps.UninstallAsync(app.App);
         StatusMessage = result.Message;
+
+        // The uninstaller may have changed the list even when it did not finish cleanly.
+        await LoadInstalledAsync();
     }
 
     private async Task UninstallStoreAsync(StoreAppViewModel app)
