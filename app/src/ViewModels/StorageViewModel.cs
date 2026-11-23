@@ -73,6 +73,7 @@ public sealed partial class StorageViewModel : ViewModelBase
     private readonly ICleanupHistoryService _history;
     private readonly ICleanupReportExporter _exporter;
     private readonly IDuplicateFinderService _duplicates;
+    private readonly IDuplicateRemovalService _duplicateRemoval;
     private readonly ISettingsService _settings;
     private readonly IToolLauncher _launcher;
     private readonly IAppLogger _logger;
@@ -94,6 +95,7 @@ public sealed partial class StorageViewModel : ViewModelBase
         ICleanupHistoryService history,
         ICleanupReportExporter exporter,
         IDuplicateFinderService duplicates,
+        IDuplicateRemovalService duplicateRemoval,
         ISettingsService settings,
         IToolLauncher launcher,
         IAppLogger logger,
@@ -109,6 +111,7 @@ public sealed partial class StorageViewModel : ViewModelBase
         _history = history;
         _exporter = exporter;
         _duplicates = duplicates;
+        _duplicateRemoval = duplicateRemoval;
         _settings = settings;
         _launcher = launcher;
         _logger = logger;
@@ -127,6 +130,9 @@ public sealed partial class StorageViewModel : ViewModelBase
         OpenReportsCommand = new RelayCommand(OpenReportsFolder);
         FilterLargeFilesCommand = new AsyncRelayCommand<string>(FilterLargeFilesAsync, _ => !IsBusy);
         FindDuplicatesCommand = new AsyncRelayCommand(FindDuplicatesAsync, () => !IsBusy);
+        RecycleDuplicateExtrasCommand = new AsyncRelayCommand<DuplicateGroup>(
+            RecycleDuplicateExtrasAsync, _ => !IsBusy);
+        OpenRecycleBinCommand = new RelayCommand(OpenRecycleBin);
         OpenScanFolderCommand = new RelayCommand(OpenScanFolder);
         RestoreQuarantineCommand = new RelayCommand<string>(RestoreQuarantine);
         PurgeQuarantineCommand = new RelayCommand(PurgeQuarantine);
@@ -155,6 +161,8 @@ public sealed partial class StorageViewModel : ViewModelBase
     public RelayCommand OpenReportsCommand { get; }
     public AsyncRelayCommand<string> FilterLargeFilesCommand { get; }
     public AsyncRelayCommand FindDuplicatesCommand { get; }
+    public AsyncRelayCommand<DuplicateGroup> RecycleDuplicateExtrasCommand { get; }
+    public RelayCommand OpenRecycleBinCommand { get; }
     public RelayCommand OpenScanFolderCommand { get; }
     public RelayCommand<string> RestoreQuarantineCommand { get; }
     public RelayCommand PurgeQuarantineCommand { get; }
@@ -289,6 +297,7 @@ public sealed partial class StorageViewModel : ViewModelBase
         CancelPlanCommand.NotifyCanExecuteChanged();
         FilterLargeFilesCommand.NotifyCanExecuteChanged();
         FindDuplicatesCommand.NotifyCanExecuteChanged();
+        RecycleDuplicateExtrasCommand.NotifyCanExecuteChanged();
     }
 
     private async Task RefreshDriveAsync()
@@ -826,6 +835,83 @@ public sealed partial class StorageViewModel : ViewModelBase
         {
             StatusMessage = "Could not empty the quarantine: " + ex.Message;
             _logger.Error("Quarantine purge failed.", ex);
+        }
+    }
+
+    private async Task RecycleDuplicateExtrasAsync(DuplicateGroup? group)
+    {
+        if (group is null || group.Paths.Count < 2)
+        {
+            return;
+        }
+
+        IReadOnlyList<string> extras = group.ExtraPaths;
+        string keep = string.IsNullOrWhiteSpace(group.KeepPath) ? group.Paths[0] : group.KeepPath;
+
+        if (!_confirmation.Confirm(
+                "Recycle duplicate copies",
+                $"Move {extras.Count} file(s), {group.WasteText}, to the Recycle Bin and keep:\n{keep}\n\n" +
+                "Each file is re-hashed first; anything that changed, is whitelisted or is in a " +
+                "protected location is skipped. Files can be restored from the Recycle Bin."))
+        {
+            return;
+        }
+
+        IsBusy = true;
+        StatusMessage = "Re-hashing the duplicate copies before recycling...";
+
+        try
+        {
+            DuplicateRemovalResult result =
+                await _duplicateRemoval.MoveExtrasToRecycleBinAsync(group, keep);
+
+            StatusMessage = result.Summary;
+
+            if (result.Messages.Count > 0)
+            {
+                StatusMessage += " " + string.Join(" ", result.Messages.Take(3)) +
+                                 (result.Messages.Count > 3 ? $" (+{result.Messages.Count - 3} more)" : string.Empty);
+            }
+
+            if (result.MovedFiles > 0)
+            {
+                if (result.SkippedFiles == 0)
+                {
+                    DuplicateGroups.Remove(group);
+                }
+
+                DuplicateSummary = DuplicateGroups.Count == 0
+                    ? "No duplicate files are left in the current results."
+                    : $"{DuplicateGroups.Count} duplicate sets · " +
+                      $"{ByteFormatter.Format(DuplicateGroups.Sum(candidate => candidate.WasteBytes))} still listed";
+
+                _logger.Info("Duplicate removal: " + result.Summary);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Duplicate removal was cancelled. Files already recycled stay in the Recycle Bin.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Duplicate removal failed: " + ex.Message;
+            _logger.Error("Duplicate removal failed.", ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void OpenRecycleBin()
+    {
+        try
+        {
+            _launcher.OpenUri("shell:RecycleBinFolder");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = ex.Message;
         }
     }
 

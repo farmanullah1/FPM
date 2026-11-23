@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Security.Cryptography;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
@@ -6,17 +7,14 @@ using PCManager.Services.Infrastructure;
 namespace PCManager.Services.Storage;
 
 /// <summary>
-/// Two-stage duplicate detection, which is the same strategy tools such as Duplicate
-/// Cleaner use:
+/// Two-stage duplicate detection:
 ///   1. group candidates by exact size (cheap, no I/O beyond metadata),
-///   2. hash the first and last 32 KB plus the length for groups with more than one file.
-/// Hashing the edges is enough to tell real duplicates apart without reading gigabytes,
-/// and identical edges + identical size is a safe duplicate signal for cache/backup use.
+///   2. hash the full contents with SHA-256 for groups with more than one file.
+/// Only files that share a size are read, and the hash is cancellable, so a large scan can be
+/// stopped without leaving the UI frozen. The kept copy is the oldest by write time.
 /// </summary>
 public sealed class DuplicateFinderService : IDuplicateFinderService
 {
-    private const int EdgeBytes = 32 * 1024;
-
     public Task<IReadOnlyList<DuplicateGroup>> FindDuplicatesAsync(
         string root,
         long minimumFileSizeBytes = 1024 * 1024,
@@ -64,7 +62,7 @@ public sealed class DuplicateFinderService : IDuplicateFinderService
 
             foreach (string path in candidates)
             {
-                string? hash = TryHashEdges(path, size, cancellationToken);
+                string? hash = TryHashFull(path, cancellationToken);
                 if (hash is null)
                 {
                     continue;
@@ -81,7 +79,18 @@ public sealed class DuplicateFinderService : IDuplicateFinderService
 
             foreach (List<string> duplicates in byHash.Values.Where(list => list.Count > 1))
             {
-                groups.Add(new DuplicateGroup { FileSize = size, Paths = duplicates });
+                List<string> ordered = duplicates
+                    .OrderBy(TryLastWriteUtc)
+                    .ThenBy(path => path.Length)
+                    .ThenBy(path => path, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                groups.Add(new DuplicateGroup
+                {
+                    FileSize = size,
+                    Paths = ordered,
+                    KeepPath = ordered[0]
+                });
             }
         }
 
@@ -91,37 +100,50 @@ public sealed class DuplicateFinderService : IDuplicateFinderService
             .ToList();
     }, cancellationToken);
 
-    private static string? TryHashEdges(string path, long size, CancellationToken cancellationToken)
+    private static string? TryHashFull(string path, CancellationToken cancellationToken)
     {
         try
         {
             using FileStream stream = File.OpenRead(path);
-            using var sha = SHA256.Create();
+            using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
 
-            byte[] lengthBytes = BitConverter.GetBytes(size);
-            sha.TransformBlock(lengthBytes, 0, lengthBytes.Length, null, 0);
-
-            int bufferSize = (int)Math.Min(EdgeBytes, size);
-            byte[] buffer = new byte[bufferSize];
-
-            int read = stream.Read(buffer, 0, bufferSize);
-            sha.TransformBlock(buffer, 0, read, null, 0);
-
-            if (size > EdgeBytes * 2L)
+            try
             {
-                stream.Seek(-bufferSize, SeekOrigin.End);
-                read = stream.Read(buffer, 0, bufferSize);
-                sha.TransformBlock(buffer, 0, read, null, 0);
+                int read;
+
+                while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    hash.AppendData(buffer, 0, read);
+                }
+
+                return Convert.ToHexString(hash.GetHashAndReset());
             }
-
-            sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-            cancellationToken.ThrowIfCancellationRequested();
-
-            return Convert.ToHexString(sha.Hash ?? Array.Empty<byte>());
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
-        catch (Exception)
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
         {
             return null;
+        }
+    }
+
+    private static DateTime TryLastWriteUtc(string path)
+    {
+        try
+        {
+            return File.GetLastWriteTimeUtc(path);
+        }
+        catch
+        {
+            return DateTime.MaxValue;
         }
     }
 }

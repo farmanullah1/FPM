@@ -81,6 +81,39 @@ internal static class NativeMethods
     internal const uint SHERB_NOPROGRESSUI = 0x00000002;
     internal const uint SHERB_NOSOUND = 0x00000004;
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct SHFILEOPSTRUCT
+    {
+        public IntPtr hwnd;
+        public uint wFunc;
+
+        /// <summary>Double-null-terminated list of source paths.</summary>
+        public string pFrom;
+
+        [MarshalAs(UnmanagedType.LPWStr)]
+        public string? pTo;
+
+        public ushort fFlags;
+
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool fAnyOperationsAborted;
+
+        public IntPtr hNameMappings;
+
+        [MarshalAs(UnmanagedType.LPWStr)]
+        public string? lpszProgressTitle;
+    }
+
+    /// <summary>FO_DELETE with FOF_ALLOWUNDO moves the given files to the Recycle Bin.</summary>
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern int SHFileOperation(ref SHFILEOPSTRUCT lpFileOp);
+
+    internal const uint FO_DELETE = 0x0003;
+    internal const ushort FOF_SILENT = 0x0004;
+    internal const ushort FOF_NOCONFIRMATION = 0x0010;
+    internal const ushort FOF_ALLOWUNDO = 0x0040;
+    internal const ushort FOF_NOERRORUI = 0x0400;
+
     // ---------------------------------------------------------------------
     // user32: virtual screen bounds (multi-monitor aware)
     // ---------------------------------------------------------------------

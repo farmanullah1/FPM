@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:core="clr-namespace:PCManager.Core.Models;assembly=PCManager.Core">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,22,28,28">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12,10,12,14">
         <StackPanel>
 
             <Grid Margin="0,0,0,16">
@@ -21,7 +21,7 @@
             </Grid>
 
             <!-- System drive -->
-            <Border Style="{StaticResource Card}" Padding="20">
+            <Border Style="{StaticResource Card}" Padding="12">
                 <StackPanel>
                     <Grid>
                         <TextBlock Text="System drive" Style="{StaticResource CaptionText}" />
@@ -39,18 +39,16 @@
             </Border>
 
             <!-- Cleanup Center: phase 1 scan, phase 2 approval -->
-            <Border Style="{StaticResource Card}" Padding="20">
+            <Border Style="{StaticResource Card}" Padding="12">
                 <StackPanel>
-                    <Grid Margin="0,0,0,6">
-                        <StackPanel Margin="0,0,16,0">
-                            <TextBlock Text="Cleanup Center" FontSize="17" FontWeight="SemiBold" />
-                            <TextBlock Style="{StaticResource CaptionText}"
-                                       Text="The scan only measures. Tick rows or type an approval command; deletion starts after you confirm." />
-                        </StackPanel>
+                    <StackPanel Margin="0,0,0,6">
+                        <TextBlock Text="Cleanup Center" FontSize="14" FontWeight="SemiBold" />
+                        <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,2,0,0"
+                                   Text="The scan only measures. Tick rows or type an approval command; deletion starts after you confirm." />
                         <Button Content="Scan cleanup targets" Style="{StaticResource PrimaryButton}"
-                                HorizontalAlignment="Right" VerticalAlignment="Center"
+                                HorizontalAlignment="Left" Margin="0,6,0,0"
                                 Command="{Binding ScanCleanupCommand}" />
-                    </Grid>
+                    </StackPanel>
 
                     <TextBlock Text="{Binding CleanupSummary}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" />
                     <TextBlock Text="{Binding CleanupTotalText}" FontWeight="SemiBold" Margin="0,4,0,0" />
@@ -77,29 +75,29 @@
                     <ItemsControl ItemsSource="{Binding CleanupItems}" Style="{StaticResource CardList}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Style="{StaticResource RowCard}" Padding="12" Margin="0,0,0,8">
+                                <Border Style="{StaticResource RowCard}" Padding="10" Margin="0,0,0,6">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
-                                        <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Top" Margin="0,2,0,0" />
-
-                                        <TextBlock Grid.Column="1" Text="{Binding NumberText}" FontWeight="SemiBold"
-                                                   Margin="12,1,10,0" VerticalAlignment="Top" />
-
-                                        <StackPanel Grid.Column="2">
-                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                                                <TextBlock Text="{Binding NumberText}" FontWeight="SemiBold"
+                                                           Margin="7,1,0,0" VerticalAlignment="Top" />
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"
+                                                           Margin="7,0,0,0" />
+                                            </StackPanel>
                                             <TextBlock Text="{Binding PathText}" Style="{StaticResource CaptionText}"
-                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding PathText}" />
-                                            <TextBlock Text="{Binding DetailText}" Style="{StaticResource CaptionText}" />
-                                            <TextBlock Text="{Binding SafetyText}" Style="{StaticResource CaptionText}" />
+                                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding PathText}" Margin="0,2,0,0" />
+                                            <TextBlock Text="{Binding DetailText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding SafetyText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="3" Margin="12,0,0,0" HorizontalAlignment="Right">
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0" HorizontalAlignment="Right">
                                             <TextBlock Text="{Binding SizeText}" FontWeight="SemiBold" HorizontalAlignment="Right" />
                                             <TextBlock Text="{Binding TierText}" FontSize="11" FontWeight="SemiBold"
                                                        HorizontalAlignment="Right" Margin="0,2,0,0">
@@ -132,19 +130,16 @@
                             <TextBlock Text="Approval gate" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding ApprovalHint}" Style="{StaticResource CaptionText}" Margin="0,2,0,8" />
 
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox Text="{Binding ApprovalCommand, UpdateSourceTrigger=PropertyChanged}"
-                                         ToolTip="proceed | only 1, 2 | keep 1, 2" />
-                                <Button Grid.Column="1" Content="Review command" Style="{StaticResource PrimaryButton}"
-                                        Margin="8,0,0,0" Command="{Binding ReviewApprovalCommand}" />
-                                <Button Grid.Column="2" Content="Review ticked rows" Style="{StaticResource SecondaryButton}"
-                                        Margin="8,0,0,0" Command="{Binding ReviewSelectedCommand}" />
-                            </Grid>
+                                                            <StackPanel>
+                                    <TextBox Text="{Binding ApprovalCommand, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="proceed | only 1, 2 | keep 1, 2" />
+                                    <WrapPanel Margin="0,6,0,0">
+                                        <Button Content="Review command" Style="{StaticResource PrimaryButton}"
+                                                Command="{Binding ReviewApprovalCommand}" Margin="0,0,6,4" />
+                                        <Button Content="Review ticked rows" Style="{StaticResource SecondaryButton}"
+                                                Command="{Binding ReviewSelectedCommand}" Margin="0,0,0,4" />
+                                    </WrapPanel>
+                                </StackPanel>
 
                             <TextBlock Text="{Binding ApprovalReviewText}" Style="{StaticResource CaptionText}" Margin="0,8,0,0" />
 
@@ -174,17 +169,17 @@
                     <Border Visibility="{Binding HasCleanupReport, Converter={StaticResource BoolToVisibility}}"
                             Style="{StaticResource RowCard}" Margin="0,10,0,0">
                         <StackPanel>
-                            <Grid>
+                            <StackPanel>
                                 <TextBlock Text="Last cleanup report" FontWeight="SemiBold" />
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <WrapPanel Margin="0,4,0,0">
                                     <Button Content="Export Markdown" Style="{StaticResource PillButton}"
-                                            Command="{Binding ExportMarkdownCommand}" />
+                                            Command="{Binding ExportMarkdownCommand}" Margin="0,0,6,4" />
                                     <Button Content="Export CSV" Style="{StaticResource PillButton}"
-                                            Command="{Binding ExportCsvCommand}" Margin="6,0,0,0" />
+                                            Command="{Binding ExportCsvCommand}" Margin="0,0,6,4" />
                                     <Button Content="Open log folder" Style="{StaticResource PillButton}"
-                                            Command="{Binding OpenCleanupLogCommand}" Margin="6,0,0,0" />
-                                </StackPanel>
-                            </Grid>
+                                            Command="{Binding OpenCleanupLogCommand}" Margin="0,0,0,4" />
+                                </WrapPanel>
+                            </StackPanel>
                             <ScrollViewer MaxHeight="240" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
                                 <TextBlock Text="{Binding CleanupReportText}" Style="{StaticResource CaptionText}" />
                             </ScrollViewer>
@@ -195,34 +190,32 @@
 
             <!-- Cleanup history -->
             <Border Visibility="{Binding HasCleanupHistory, Converter={StaticResource BoolToVisibility}}"
-                    Style="{StaticResource Card}" Padding="20" Margin="0,10,0,0">
+                    Style="{StaticResource Card}" Padding="12" Margin="0,10,0,0">
                 <StackPanel>
-                    <Grid>
-                        <TextBlock Text="Cleanup history" FontSize="17" FontWeight="SemiBold" />
+                    <StackPanel>
+                        <TextBlock Text="Cleanup history" FontSize="14" FontWeight="SemiBold" />
                         <Button Content="Open reports folder" Style="{StaticResource PillButton}"
-                                HorizontalAlignment="Right" Command="{Binding OpenReportsCommand}" />
-                    </Grid>
+                                HorizontalAlignment="Left" Margin="0,4,0,0" Command="{Binding OpenReportsCommand}" />
+                    </StackPanel>
                     <TextBlock Text="{Binding CleanupHistoryText}" Style="{StaticResource CaptionText}"
                                TextWrapping="Wrap" Margin="0,6,0,0" />
                 </StackPanel>
             </Border>
 
             <!-- Quarantine -->
-            <Border Style="{StaticResource Card}" Padding="20" Margin="0,10,0,0">
+            <Border Style="{StaticResource Card}" Padding="12" Margin="0,10,0,0">
                 <StackPanel>
-                    <Grid>
-                        <StackPanel Margin="0,0,16,0">
-                            <TextBlock Text="Quarantine" FontSize="17" FontWeight="SemiBold" />
-                            <TextBlock Text="{Binding QuarantineSummary}" Style="{StaticResource CaptionText}"
-                                       TextWrapping="Wrap" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="Quarantine" FontSize="14" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding QuarantineSummary}" Style="{StaticResource CaptionText}"
+                                   TextWrapping="Wrap" />
+                        <WrapPanel Margin="0,4,0,0">
                             <Button Content="Open folder" Style="{StaticResource PillButton}"
-                                    Command="{Binding OpenQuarantineFolderCommand}" />
+                                    Command="{Binding OpenQuarantineFolderCommand}" Margin="0,0,6,4" />
                             <Button Content="Delete quarantined files" Style="{StaticResource PillButton}"
-                                    Margin="6,0,0,0" Command="{Binding PurgeQuarantineCommand}" />
-                        </StackPanel>
-                    </Grid>
+                                    Command="{Binding PurgeQuarantineCommand}" Margin="0,0,0,4" />
+                        </WrapPanel>
+                    </StackPanel>
 
                     <ItemsControl ItemsSource="{Binding QuarantineEntries}" Margin="0,10,0,0">
                         <ItemsControl.ItemTemplate>
@@ -259,9 +252,9 @@
             </Border>
 
             <!-- Large files -->
-            <Border Style="{StaticResource Card}" Padding="20">
+            <Border Style="{StaticResource Card}" Padding="12">
                 <StackPanel>
-                    <TextBlock Text="Manage large files" FontSize="17" FontWeight="SemiBold" />
+                    <TextBlock Text="Manage large files" FontSize="14" FontWeight="SemiBold" />
                     <TextBlock Text="Scan a folder or drive and filter by size."
                                Style="{StaticResource CaptionText}" Margin="0,2,0,10" />
 
@@ -275,20 +268,20 @@
                                 Margin="8,0,0,0" Command="{Binding OpenScanFolderCommand}" />
                     </Grid>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <WrapPanel Margin="0,0,0,8">
                         <Button Content="&gt; 10 MB" Style="{StaticResource PillButton}"
-                                Command="{Binding FilterLargeFilesCommand}" CommandParameter="10" Margin="0,0,8,0" />
+                                Command="{Binding FilterLargeFilesCommand}" CommandParameter="10" Margin="0,0,6,4" />
                         <Button Content="&gt; 50 MB" Style="{StaticResource PillButton}"
-                                Command="{Binding FilterLargeFilesCommand}" CommandParameter="50" Margin="0,0,8,0" />
+                                Command="{Binding FilterLargeFilesCommand}" CommandParameter="50" Margin="0,0,6,4" />
                         <Button Content="&gt; 100 MB" Style="{StaticResource PillButton}"
-                                Command="{Binding FilterLargeFilesCommand}" CommandParameter="100" Margin="0,0,8,0" />
+                                Command="{Binding FilterLargeFilesCommand}" CommandParameter="100" Margin="0,0,6,4" />
                         <Button Content="&gt; 500 MB" Style="{StaticResource PillButton}"
-                                Command="{Binding FilterLargeFilesCommand}" CommandParameter="500" Margin="0,0,8,0" />
+                                Command="{Binding FilterLargeFilesCommand}" CommandParameter="500" Margin="0,0,6,4" />
                         <Button Content="&gt; 1 GB" Style="{StaticResource PillButton}"
-                                Command="{Binding FilterLargeFilesCommand}" CommandParameter="1024" />
+                                Command="{Binding FilterLargeFilesCommand}" CommandParameter="1024" Margin="0,0,6,4" />
                         <TextBlock Text="{Binding LargeFileFilterText}" Style="{StaticResource CaptionText}"
-                                   VerticalAlignment="Center" Margin="12,0,0,0" />
-                    </StackPanel>
+                                   VerticalAlignment="Center" Margin="0,0,0,4" />
+                    </WrapPanel>
 
                     <TextBlock Text="{Binding LargeFileSummary}" Style="{StaticResource CaptionText}" Margin="0,0,0,8" />
 
@@ -312,17 +305,20 @@
             </Border>
 
             <!-- Duplicates -->
-            <Border Style="{StaticResource Card}" Padding="20">
+            <Border Style="{StaticResource Card}" Padding="12">
                 <StackPanel>
-                    <Grid>
-                        <StackPanel>
-                            <TextBlock Text="Duplicate files" FontSize="17" FontWeight="SemiBold" />
-                            <TextBlock Text="{Binding DuplicateSummary}" Style="{StaticResource CaptionText}" />
-                        </StackPanel>
-                        <Button Content="Find duplicates" Style="{StaticResource SecondaryButton}"
-                                HorizontalAlignment="Right" VerticalAlignment="Center"
-                                Command="{Binding FindDuplicatesCommand}" />
-                    </Grid>
+                    <StackPanel>
+                        <TextBlock Text="Duplicate files" FontSize="14" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding DuplicateSummary}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                        <TextBlock Style="{StaticResource CaptionText}" Margin="0,2,0,0" TextWrapping="Wrap"
+                                   Text="Full SHA-256 check. The oldest copy is kept; extras go to the Recycle Bin, never permanent delete." />
+                        <WrapPanel Margin="0,6,0,0">
+                            <Button Content="Open Recycle Bin" Style="{StaticResource PillButton}"
+                                    Command="{Binding OpenRecycleBinCommand}" Margin="0,0,6,4" />
+                            <Button Content="Find duplicates" Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding FindDuplicatesCommand}" Margin="0,0,0,4" />
+                        </WrapPanel>
+                    </StackPanel>
 
                     <ItemsControl ItemsSource="{Binding DuplicateGroups}" Margin="0,12,0,0" MaxHeight="240">
                         <ItemsControl.ItemTemplate>
@@ -333,14 +329,21 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                         <StackPanel>
                                             <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{Binding Paths[0]}" Style="{StaticResource CaptionText}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding KeepText}" Style="{StaticResource CaptionText}"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding KeepPath}" />
                                         </StackPanel>
                                         <TextBlock Grid.Column="1" Text="{Binding CountText}" Style="{StaticResource CaptionText}"
                                                    VerticalAlignment="Center" Margin="12,0" />
-                                        <TextBlock Grid.Column="2" Text="{Binding WasteText}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" Text="{Binding WasteText}" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" Margin="0,0,10,0" />
+                                        <Button Grid.Column="3" Content="Recycle extras" Style="{StaticResource PillButton}"
+                                                VerticalAlignment="Center"
+                                                Command="{Binding DataContext.RecycleDuplicateExtrasCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -350,17 +353,15 @@
             </Border>
 
             <!-- Storage Sense -->
-            <Border Style="{StaticResource Card}" Padding="20">
-                <Grid>
-                    <StackPanel>
-                        <TextBlock Text="Storage Sense" FontSize="17" FontWeight="SemiBold" />
-                        <TextBlock Style="{StaticResource CaptionText}"
+            <Border Style="{StaticResource Card}" Padding="12">
+                                    <StackPanel>
+                        <TextBlock Text="Storage Sense" FontSize="14" FontWeight="SemiBold" />
+                        <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap"
                                    Text="Lets Windows remove temporary files and empty the recycle bin automatically." />
+                        <CheckBox Style="{StaticResource ToggleSwitch}" Content="Enable Storage Sense"
+                                  HorizontalAlignment="Left" Margin="0,6,0,0"
+                                  IsChecked="{Binding StorageSenseEnabled, Mode=TwoWay}" />
                     </StackPanel>
-                    <CheckBox Style="{StaticResource ToggleSwitch}" Content="Enable Storage Sense"
-                              HorizontalAlignment="Right" VerticalAlignment="Center"
-                              IsChecked="{Binding StorageSenseEnabled, Mode=TwoWay}" />
-                </Grid>
             </Border>
 
             <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" />

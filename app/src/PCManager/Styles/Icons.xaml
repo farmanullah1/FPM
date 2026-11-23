@@ -26,5 +26,9 @@
     <Geometry x:Key="Icon.Startup">M12,2 C15.5,4.5 18,8 18,12 L18,15 H14.5 L14.5,19 H9.5 L9.5,15 H6 L6,12 C6,8 8.5,4.5 12,2 Z M10.4,10.2 A1.6,1.6 0 1 0 13.6,10.2 A1.6,1.6 0 1 0 10.4,10.2 Z M8,20.5 H16 V22 H8 Z</Geometry>
     <Geometry x:Key="Icon.Pill">M4,8.5 H20 A3.5,3.5 0 0 1 20,15.5 H4 A3.5,3.5 0 0 1 4,8.5 Z M12,8.5 V15.5 Z</Geometry>
     <Geometry x:Key="Icon.Shield">M12,2 L20,5 V11.5 C20,16.4 16.6,20.6 12,22 C7.4,20.6 4,16.4 4,11.5 V5 Z</Geometry>
+    <Geometry x:Key="Icon.Pin">M15,2 L22,9 L19,10.2 L14.6,14.6 V18.2 L11.4,15 L5,21.4 L2.6,19 L9,12.6 L5.8,9.4 H9.4 L13.8,5 Z</Geometry>
+    <Geometry x:Key="Icon.Bolt">M13,2 L4.5,13.2 H10.4 L8.8,22 L19.5,9.4 H12.4 Z</Geometry>
+    <Geometry x:Key="Icon.Speed">M12,3 A9,9 0 0 1 21,12 H17.8 A5.8,5.8 0 0 0 6.2,12 H3 A9,9 0 0 1 12,3 Z M12,14.2 A2.1,2.1 0 1 0 12,18.4 A2.1,2.1 0 1 0 12,14.2 Z M13.2,13.4 L18,6.2 L12,11.8 Z</Geometry>
+    <Geometry x:Key="Icon.Window">M3,4.5 H21 V19.5 H3 Z M5,6.5 H19 V9.5 H5 Z M6.5,11.5 H10.5 V13.5 H6.5 Z M12,11.5 H17.5 V13.5 H12 Z M6.5,15 H10.5 V17 H6.5 Z</Geometry>
 
 </ResourceDictionary>

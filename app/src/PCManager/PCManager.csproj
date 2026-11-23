@@ -21,6 +21,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>AnyCPU;x64</Platforms>
+    <!-- The WPF shell must stay crisp at 125% display scaling; the WinForms tray needs the
+         same mode. This property emits the awareness into the generated manifest. -->
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
 

@@ -7,11 +7,13 @@
     <SolidColorBrush x:Key="App.Card" Color="#2B2721" />
     <SolidColorBrush x:Key="App.CardHover" Color="#35302A" />
     <SolidColorBrush x:Key="App.Border" Color="#443C2E" />
+    <SolidColorBrush x:Key="App.WindowBorder" Color="#463E30" />
     <SolidColorBrush x:Key="App.Text" Color="#FFF8E7" />
     <SolidColorBrush x:Key="App.Subtle" Color="#C9BFA6" />
     <SolidColorBrush x:Key="App.Accent" Color="#F2C14E" />
     <SolidColorBrush x:Key="App.AccentSoft" Color="#3A3020" />
     <SolidColorBrush x:Key="App.AccentText" Color="#241C0C" />
+    <SolidColorBrush x:Key="App.AccentLabel" Color="#FBBF24" />
     <SolidColorBrush x:Key="App.Success" Color="#9BC46A" />
     <SolidColorBrush x:Key="App.Warning" Color="#F2C14E" />
     <SolidColorBrush x:Key="App.Critical" Color="#FF9A8F" />

@@ -38,6 +38,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IStorageAnalyzer, StorageAnalyzer>();
         services.AddSingleton<IStorageSenseService, StorageSenseService>();
         services.AddSingleton<IDuplicateFinderService, DuplicateFinderService>();
+        services.AddSingleton<IFileRecycler, ShellFileRecycler>();
+        services.AddSingleton<IDuplicateRemovalService, DuplicateRemovalService>();
         services.AddSingleton<IInstalledAppService, InstalledAppService>();
         services.AddSingleton<IAppxPackageService, AppxPackageService>();
         services.AddSingleton<ISystemRepairService, SystemRepairService>();

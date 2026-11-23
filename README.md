@@ -60,8 +60,9 @@ sets the retention and size cap. Completed runs are kept in `cleanup_history.jso
 as Markdown or CSV. **Manage large
 files** scans any folder with
 `> 10 MB / 50 MB / 100 MB / 500 MB / 1 GB` filters, **Duplicate files** groups identical files by
-size then sampled SHA-256 and reports the wasted bytes, and a **Storage Sense** switch reads and
-writes the Windows setting.
+size then **full SHA-256**, keeps the oldest copy and recycles the extras to the Recycle Bin after
+a confirmation and a fresh hash check (whitelisted and protected paths are refused; there is no
+permanent-delete path), and a **Storage Sense** switch reads and writes the Windows setting.
 
 ### Apps
 **Process management** lists running user applications with CPU, RAM and a per-row End button
