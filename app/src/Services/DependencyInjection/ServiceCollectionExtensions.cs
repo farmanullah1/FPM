@@ -53,6 +53,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICleanupCommandParser, CleanupCommandParser>();
         services.AddSingleton<ICleanupExecutor, CleanupExecutor>();
         services.AddSingleton<ICleanupLog, CleanupLog>();
+        services.AddSingleton<ICleanupHistoryService, CleanupHistoryService>();
+        services.AddSingleton<ICleanupReportExporter, CleanupReportExporter>();
 
         // --- Elevated helper (one fixed command per request, UAC on demand) ---
         services.AddSingleton<IElevationService>(sp =>

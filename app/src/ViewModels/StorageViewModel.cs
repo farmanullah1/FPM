@@ -70,6 +70,8 @@ public sealed partial class StorageViewModel : ViewModelBase
     private readonly ICleanupExecutor _cleanupExecutor;
     private readonly ICleanupLog _cleanupLog;
     private readonly IRestorePointService _restorePoint;
+    private readonly ICleanupHistoryService _history;
+    private readonly ICleanupReportExporter _exporter;
     private readonly IDuplicateFinderService _duplicates;
     private readonly ISettingsService _settings;
     private readonly IToolLauncher _launcher;
@@ -78,6 +80,7 @@ public sealed partial class StorageViewModel : ViewModelBase
     private long _largeFileThresholdBytes;
     private CleanupScanResult? _scan;
     private CleanupPlan? _pendingPlan;
+    private CleanupReport? _lastReport;
 
     public StorageViewModel(
         IStorageService storage,
@@ -86,6 +89,8 @@ public sealed partial class StorageViewModel : ViewModelBase
         ICleanupExecutor cleanupExecutor,
         ICleanupLog cleanupLog,
         IRestorePointService restorePoint,
+        ICleanupHistoryService history,
+        ICleanupReportExporter exporter,
         IDuplicateFinderService duplicates,
         ISettingsService settings,
         IToolLauncher launcher,
@@ -97,6 +102,8 @@ public sealed partial class StorageViewModel : ViewModelBase
         _cleanupExecutor = cleanupExecutor;
         _cleanupLog = cleanupLog;
         _restorePoint = restorePoint;
+        _history = history;
+        _exporter = exporter;
         _duplicates = duplicates;
         _settings = settings;
         _launcher = launcher;
@@ -108,6 +115,9 @@ public sealed partial class StorageViewModel : ViewModelBase
         ExecutePlanCommand = new AsyncRelayCommand(ExecutePlanAsync, () => !IsBusy && HasPendingPlan);
         CancelPlanCommand = new RelayCommand(CancelPlan, () => HasPendingPlan);
         OpenCleanupLogCommand = new RelayCommand(OpenCleanupLogFolder);
+        ExportMarkdownCommand = new RelayCommand(ExportMarkdown, () => HasCleanupReport);
+        ExportCsvCommand = new RelayCommand(ExportCsv, () => HasCleanupReport);
+        OpenReportsCommand = new RelayCommand(OpenReportsFolder);
         FilterLargeFilesCommand = new AsyncRelayCommand<string>(FilterLargeFilesAsync, _ => !IsBusy);
         FindDuplicatesCommand = new AsyncRelayCommand(FindDuplicatesAsync, () => !IsBusy);
         OpenScanFolderCommand = new RelayCommand(OpenScanFolder);
@@ -126,6 +136,9 @@ public sealed partial class StorageViewModel : ViewModelBase
     public AsyncRelayCommand ExecutePlanCommand { get; }
     public RelayCommand CancelPlanCommand { get; }
     public RelayCommand OpenCleanupLogCommand { get; }
+    public RelayCommand ExportMarkdownCommand { get; }
+    public RelayCommand ExportCsvCommand { get; }
+    public RelayCommand OpenReportsCommand { get; }
     public AsyncRelayCommand<string> FilterLargeFilesCommand { get; }
     public AsyncRelayCommand FindDuplicatesCommand { get; }
     public RelayCommand OpenScanFolderCommand { get; }
@@ -176,6 +189,12 @@ public sealed partial class StorageViewModel : ViewModelBase
     private bool _hasCleanupReport;
 
     [ObservableProperty]
+    private string _cleanupHistoryText = "No cleanup runs recorded yet.";
+
+    [ObservableProperty]
+    private bool _hasCleanupHistory;
+
+    [ObservableProperty]
     private string _scanPath;
 
     [ObservableProperty]
@@ -211,8 +230,15 @@ public sealed partial class StorageViewModel : ViewModelBase
         CancelPlanCommand.NotifyCanExecuteChanged();
     }
 
+    partial void OnHasCleanupReportChanged(bool value)
+    {
+        ExportMarkdownCommand.NotifyCanExecuteChanged();
+        ExportCsvCommand.NotifyCanExecuteChanged();
+    }
+
     public override async Task LoadAsync()
     {
+        RefreshHistory();
         await RefreshDriveAsync();
         await ScanCleanupCoreAsync();
 
@@ -412,10 +438,17 @@ public sealed partial class StorageViewModel : ViewModelBase
         try
         {
             report = await _cleanupExecutor.ExecuteAsync(plan, IsDryRun);
+            _lastReport = report;
             CleanupReportText = BuildReport(report, restoreNote);
             HasCleanupReport = true;
             StatusMessage = report.Summary;
             _logger.Info($"Cleanup plan {plan.PlanId}: {report.Summary}");
+
+            if (!report.Expired)
+            {
+                _history.Add(report);
+                RefreshHistory();
+            }
         }
         catch (OperationCanceledException)
         {
@@ -435,10 +468,84 @@ public sealed partial class StorageViewModel : ViewModelBase
         HasPendingPlan = false;
         ApprovalCommand = string.Empty;
         ApprovalReviewText = string.Empty;
+        ExportMarkdownCommand.NotifyCanExecuteChanged();
+        ExportCsvCommand.NotifyCanExecuteChanged();
 
         if (report is not null && !report.Expired)
         {
             await ScanCleanupCoreAsync();
+        }
+    }
+
+    private void RefreshHistory()
+    {
+        try
+        {
+            IReadOnlyList<CleanupHistoryEntry> entries = _history.GetRecent(5);
+            HasCleanupHistory = entries.Count > 0;
+            CleanupHistoryText = entries.Count == 0
+                ? "No cleanup runs recorded yet."
+                : string.Join(Environment.NewLine, entries.Select(entry => entry.DisplayText));
+        }
+        catch (Exception ex)
+        {
+            HasCleanupHistory = false;
+            CleanupHistoryText = "Cleanup history could not be read: " + ex.Message;
+            _logger.Error("Could not read cleanup history.", ex);
+        }
+    }
+
+    private void ExportMarkdown()
+    {
+        if (_lastReport is null)
+        {
+            return;
+        }
+
+        try
+        {
+            string path = _exporter.ExportMarkdown(_lastReport);
+            StatusMessage = "Markdown report exported: " + path;
+            _launcher.OpenFolder(Path.GetDirectoryName(path) ?? _exporter.ReportsFolder);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Could not export the Markdown report: " + ex.Message;
+            _logger.Error("Markdown report export failed.", ex);
+        }
+    }
+
+    private void ExportCsv()
+    {
+        if (_lastReport is null)
+        {
+            return;
+        }
+
+        try
+        {
+            string path = _exporter.ExportCsv(_lastReport);
+            StatusMessage = "CSV report exported: " + path;
+            _launcher.OpenFolder(Path.GetDirectoryName(path) ?? _exporter.ReportsFolder);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Could not export the CSV report: " + ex.Message;
+            _logger.Error("CSV report export failed.", ex);
+        }
+    }
+
+    private void OpenReportsFolder()
+    {
+        try
+        {
+            Directory.CreateDirectory(_exporter.ReportsFolder);
+            _launcher.OpenFolder(_exporter.ReportsFolder);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Could not open the reports folder: " + ex.Message;
+            _logger.Error("Opening the reports folder failed.", ex);
         }
     }
 

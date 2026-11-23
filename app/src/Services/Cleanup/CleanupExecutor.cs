@@ -49,6 +49,7 @@ public sealed class CleanupExecutor : ICleanupExecutor
                 EstimatedBytes = plan.TotalBytes,
                 DryRun = dryRun,
                 Expired = true,
+                PlanId = plan.PlanId,
                 Summary = "The approval expired after 15 minutes. Nothing was deleted. Scan again and approve a fresh plan."
             };
         }
@@ -147,6 +148,8 @@ public sealed class CleanupExecutor : ICleanupExecutor
             FilesSkipped = filesSkipped,
             Duration = stopwatch.Elapsed,
             DryRun = dryRun,
+            PlanId = plan.PlanId,
+            CompletedUtc = DateTime.UtcNow,
             DriveChanges = driveChanges,
             Summary = summary
         };
@@ -157,6 +160,13 @@ public sealed class CleanupExecutor : ICleanupExecutor
         bool dryRun,
         CancellationToken cancellationToken)
     {
+        if (!dryRun && ExplainStaleness(item, cancellationToken) is { } changed)
+        {
+            _log.Write(item, CleanupItemOutcome.ChangedSinceScan, 0, changed);
+            return Result(item, CleanupItemOutcome.ChangedSinceScan, 0, 0, 0, item.Bytes,
+                $"Skipped: {changed}");
+        }
+
         if (item.RequiresAppClosed && IsRunning(item.ProcessName))
         {
             _log.Write(item, CleanupItemOutcome.SkippedRunning, 0, "application is running");
@@ -352,6 +362,45 @@ public sealed class CleanupExecutor : ICleanupExecutor
             skippedLocked + skippedProtected + skippedElevation + failed,
             remainingBytes,
             message);
+    }
+
+    private string? ExplainStaleness(CleanupPlanItem item, CancellationToken cancellationToken)
+    {
+        long actualBytes;
+        int actualFiles;
+
+        try
+        {
+            if (item.Action == CleanupActionKind.EmptyRecycleBin)
+            {
+                actualBytes = TryRecycleSize();
+                actualFiles = 0;
+            }
+            else
+            {
+                CleanupScanner.Measurement measurement =
+                    CleanupScanner.Measure(item.Roots, item.MinimumAge, cancellationToken);
+                actualBytes = measurement.Bytes;
+                actualFiles = measurement.FileCount;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Could not re-measure {item.Name} before execution.", ex);
+            return "the folder could not be measured again, so the approval was not used. Scan again.";
+        }
+
+        if (!CleanupPlanFreshness.IsStale(item.Bytes, item.FileCount, actualBytes, actualFiles))
+        {
+            return null;
+        }
+
+        return $"the folder changed after the scan ({ByteFormatter.Format(item.Bytes)} / {item.FileCount:N0} files " +
+               $"→ {ByteFormatter.Format(actualBytes)} / {actualFiles:N0} files). Scan again and approve a fresh plan.";
     }
 
     private CleanupItemResult ExecuteElevated(CleanupPlanItem item, CancellationToken cancellationToken)

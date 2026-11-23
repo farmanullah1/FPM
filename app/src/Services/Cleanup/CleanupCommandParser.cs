@@ -89,6 +89,7 @@ public sealed class CleanupCommandParser : ICleanupCommandParser
                 candidate.Rule.Name,
                 candidate.Roots,
                 candidate.Bytes,
+                candidate.FileCount,
                 candidate.Rule.Tier,
                 candidate.Rule.Action,
                 candidate.Rule.MinimumAge,

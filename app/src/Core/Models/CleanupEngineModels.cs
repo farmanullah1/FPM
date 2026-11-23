@@ -35,6 +35,7 @@ public enum CleanupItemOutcome
     SkippedLocked,
     SkippedElevation,
     SkippedRunning,
+    ChangedSinceScan,
     Failed
 }
 
@@ -166,6 +167,7 @@ public sealed record CleanupPlanItem(
     string Name,
     IReadOnlyList<string> Roots,
     long Bytes,
+    int FileCount,
     CleanupTier Tier,
     CleanupActionKind Action,
     TimeSpan MinimumAge,
@@ -224,6 +226,7 @@ public sealed class CleanupItemResult
         CleanupItemOutcome.SkippedLocked => "SKIPPED_LOCKED",
         CleanupItemOutcome.SkippedElevation => "SKIPPED_ELEVATION",
         CleanupItemOutcome.SkippedRunning => "SKIPPED_RUNNING",
+        CleanupItemOutcome.ChangedSinceScan => "CHANGED_SINCE_SCAN",
         _ => "FAILED"
     };
 }
@@ -239,6 +242,8 @@ public sealed class CleanupReport
     public TimeSpan Duration { get; init; }
     public bool DryRun { get; init; }
     public bool Expired { get; init; }
+    public string PlanId { get; init; } = string.Empty;
+    public DateTime CompletedUtc { get; init; } = DateTime.UtcNow;
     public IReadOnlyList<string> DriveChanges { get; init; } = Array.Empty<string>();
     public required string Summary { get; init; }
 
@@ -247,5 +252,6 @@ public sealed class CleanupReport
         or CleanupItemOutcome.SkippedLocked
         or CleanupItemOutcome.SkippedElevation
         or CleanupItemOutcome.SkippedRunning
+        or CleanupItemOutcome.ChangedSinceScan
         or CleanupItemOutcome.Failed);
 }

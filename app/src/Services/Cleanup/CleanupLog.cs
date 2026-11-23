@@ -62,6 +62,7 @@ public sealed class CleanupLog : ICleanupLog
         CleanupItemOutcome.SkippedLocked => "SKIPPED_LOCKED",
         CleanupItemOutcome.SkippedElevation => "SKIPPED_ELEVATION",
         CleanupItemOutcome.SkippedRunning => "SKIPPED_RUNNING",
+        CleanupItemOutcome.ChangedSinceScan => "CHANGED_SINCE_SCAN",
         CleanupItemOutcome.Failed => "FAILED",
         _ => "UNKNOWN"
     };
