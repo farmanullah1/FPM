@@ -18,11 +18,13 @@ public interface IQuarantineService
     IReadOnlyList<QuarantineEntry> GetEntries();
 
     /// <summary>
-    /// Moves one file into the quarantine and records it. Throws <see cref="IOException"/> or
-    /// <see cref="UnauthorizedAccessException"/> when the file is locked, refused or the
-    /// quarantine cannot be written; the caller treats that as a skipped file.
+    /// Moves a batch of files into the quarantine and records them with one manifest write.
+    /// Each file gets its own result, so one locked or refused file never hides the rest.
     /// </summary>
-    QuarantineEntry Quarantine(string filePath, string ruleId, string reason);
+    IReadOnlyList<QuarantineFileResult> QuarantineFiles(
+        IReadOnlyList<string> filePaths,
+        string ruleId,
+        string reason);
 
     /// <summary>Restores one entry, refusing when the original location is occupied.</summary>
     OperationResult Restore(string entryId);

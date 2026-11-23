@@ -16,17 +16,20 @@ namespace PCManager.Services.Cleanup;
 ///   are refused;
 /// - databases, credentials, keys, cookies and session/login files are refused by extension
 ///   and name;
-/// - the manifest is written atomically, and the move is rolled back if the manifest fails;
+/// - a batch is recorded with one atomic manifest write, and every move in it is rolled back
+///   if that write fails;
 /// - a manifest that exists but cannot be parsed blocks every write, so records are never
 ///   silently dropped;
 /// - restore refuses to overwrite anything and verifies the recorded SHA-256 first.
+///
+/// Hashing is deliberately bounded: files above 4 MB and anything beyond 128 MB of hashed
+/// bytes per batch are recorded without a hash instead of delaying cleanup.
 /// </summary>
 public sealed class QuarantineService : IQuarantineService
 {
-    private const int MaximumEntries = 10_000;
-
-    /// <summary>Hashing is capped so a multi-gigabyte cache file does not stall cleanup.</summary>
-    private const long HashLimitBytes = 64L * 1024 * 1024;
+    private const int MaximumEntries = 20_000;
+    private const long HashLimitBytes = 4L * 1024 * 1024;
+    private const long HashBudgetPerBatch = 128L * 1024 * 1024;
 
     private static readonly string[] ForbiddenExtensions =
     {
@@ -70,97 +73,107 @@ public sealed class QuarantineService : IQuarantineService
         }
     }
 
-    public QuarantineEntry Quarantine(string filePath, string ruleId, string reason)
+    public IReadOnlyList<QuarantineFileResult> QuarantineFiles(
+        IReadOnlyList<string> filePaths,
+        string ruleId,
+        string reason)
     {
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            throw new IOException("No file was named for quarantine.");
-        }
+        var results = new List<QuarantineFileResult>();
 
-        string original;
-
-        try
+        if (filePaths.Count == 0)
         {
-            original = Path.GetFullPath(filePath);
-        }
-        catch (Exception ex)
-        {
-            throw new IOException("The path is not valid: " + ex.Message, ex);
-        }
-
-        if (!File.Exists(original))
-        {
-            throw new FileNotFoundException("The file no longer exists.", original);
-        }
-
-        if (IsInside(original, RootPath))
-        {
-            throw new IOException("A quarantined file cannot be quarantined again.");
-        }
-
-        if (IsForbiddenLocation(original))
-        {
-            throw new IOException("Windows and Program Files are never quarantined.");
-        }
-
-        if (IsForbiddenFile(original))
-        {
-            throw new IOException("Databases, credentials and session files are never quarantined.");
+            return results;
         }
 
         lock (_gate)
         {
-            List<QuarantineEntry> entries = ReadManifest(forWrite: true);
-
-            if (entries.Count >= MaximumEntries)
-            {
-                throw new IOException("The quarantine is full. Apply the retention policy first.");
-            }
-
-            long bytes = new FileInfo(original).Length;
-            string id = Guid.NewGuid().ToString("N");
-            string storedRelative = Path.Combine("files", id + "-" + Path.GetFileName(original));
-            string storedFull = Path.Combine(RootPath, storedRelative);
-
-            Directory.CreateDirectory(Path.Combine(RootPath, "files"));
-            MoveFile(original, storedFull);
-
-            string hash = TryHash(storedFull);
-            var entry = new QuarantineEntry(
-                id,
-                original,
-                storedRelative,
-                DateTime.UtcNow,
-                hash,
-                bytes,
-                ruleId,
-                reason);
-
-            entries.Add(entry);
+            List<QuarantineEntry> entries;
 
             try
             {
-                WriteManifest(entries);
+                entries = ReadManifest(forWrite: true);
             }
-            catch
+            catch (Exception ex)
             {
-                // The file must not be lost because its record could not be written.
+                return filePaths
+                    .Select(path => new QuarantineFileResult(path, null, QuarantineRefusalKind.Failed, ex.Message))
+                    .ToList();
+            }
+
+            var attempts = new List<QuarantineAttempt>();
+            var moved = new List<QuarantineAttempt>();
+            long hashBudget = HashBudgetPerBatch;
+
+            foreach (string path in filePaths.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                bool room = entries.Count < MaximumEntries;
+                QuarantineAttempt attempt = room
+                    ? TryQuarantineOne(path, ruleId, reason, entries, ref hashBudget)
+                    : new QuarantineAttempt(
+                        path, null, null, QuarantineRefusalKind.Refused,
+                        "The quarantine is full. Apply the retention policy first.");
+
+                attempts.Add(attempt);
+
+                if (attempt.Entry is not null)
+                {
+                    moved.Add(attempt);
+                }
+            }
+
+            if (moved.Count > 0)
+            {
                 try
                 {
-                    MoveFile(storedFull, original);
+                    WriteManifest(entries);
                 }
-                catch (Exception rollback)
+                catch (Exception writeFailure)
                 {
-                    _logger.Error(
-                        $"A quarantined file could not be moved back after a manifest failure: {original}.",
-                        rollback);
-                }
+                    // No record means no restore, so put every moved file back.
+                    foreach (QuarantineAttempt attempt in moved)
+                    {
+                        try
+                        {
+                            MoveFile(attempt.StoredFull!, attempt.OriginalFull!);
+                        }
+                        catch (Exception rollback)
+                        {
+                            _logger.Error(
+                                $"A quarantined file could not be moved back after a manifest failure: {attempt.Path}.",
+                                rollback);
+                        }
+                    }
 
-                throw;
+                    _logger.Error("Quarantine manifest write failed; the batch was rolled back.", writeFailure);
+
+                    return attempts
+                        .Select(attempt => attempt.Entry is null
+                            ? new QuarantineFileResult(attempt.Path, null, attempt.Refusal, attempt.Error)
+                            : new QuarantineFileResult(
+                                attempt.Path,
+                                null,
+                                QuarantineRefusalKind.Failed,
+                                "The quarantine manifest could not be written, so the file was put back: " +
+                                writeFailure.Message))
+                        .ToList();
+                }
             }
 
-            _logger.Info($"Quarantined {original} ({entry.SizeText}).");
-            return entry;
+            foreach (QuarantineAttempt attempt in attempts)
+            {
+                results.Add(new QuarantineFileResult(attempt.Path, attempt.Entry, attempt.Refusal, attempt.Error));
+
+                if (attempt.Entry is not null)
+                {
+                    _logger.Info($"Quarantined {attempt.Path} ({attempt.Entry.SizeText}).");
+                }
+                else
+                {
+                    _logger.Info($"Not quarantined ({attempt.Refusal}): {attempt.Path} — {attempt.Error}");
+                }
+            }
+
+            return results;
         }
     }
 
@@ -244,7 +257,7 @@ public sealed class QuarantineService : IQuarantineService
             }
 
             if (!string.IsNullOrEmpty(entry.Sha256) &&
-                !string.Equals(TryHash(storedFull), entry.Sha256, StringComparison.OrdinalIgnoreCase))
+                !string.Equals(TryHash(storedFull, long.MaxValue), entry.Sha256, StringComparison.OrdinalIgnoreCase))
             {
                 return OperationResult.Fail(
                     "The quarantined copy does not match its recorded SHA-256. Nothing was restored.");
@@ -337,6 +350,98 @@ public sealed class QuarantineService : IQuarantineService
 
             return new QuarantinePurgeResult(removed, removedBytes);
         }
+    }
+
+    private QuarantineAttempt TryQuarantineOne(
+        string filePath,
+        string ruleId,
+        string reason,
+        List<QuarantineEntry> entries,
+        ref long hashBudget)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return new QuarantineAttempt(filePath, null, null, QuarantineRefusalKind.Failed, "No file was named.");
+        }
+
+        string original;
+
+        try
+        {
+            original = Path.GetFullPath(filePath);
+        }
+        catch (Exception ex)
+        {
+            return new QuarantineAttempt(filePath, null, null, QuarantineRefusalKind.Failed, ex.Message);
+        }
+
+        if (!File.Exists(original))
+        {
+            return new QuarantineAttempt(
+                filePath, null, null, QuarantineRefusalKind.Locked, "The file no longer exists.");
+        }
+
+        if (IsInside(original, RootPath) || IsForbiddenLocation(original))
+        {
+            return new QuarantineAttempt(
+                filePath, null, null, QuarantineRefusalKind.Refused,
+                "Windows, Program Files and the quarantine itself are never quarantined.");
+        }
+
+        if (IsForbiddenFile(original))
+        {
+            return new QuarantineAttempt(
+                filePath, null, null, QuarantineRefusalKind.Refused,
+                "Databases, credentials and session files are never quarantined.");
+        }
+
+        long bytes;
+        string storedFull;
+        QuarantineEntry entry;
+
+        try
+        {
+            bytes = new FileInfo(original).Length;
+            string id = Guid.NewGuid().ToString("N");
+            string storedRelative = Path.Combine("files", id + "-" + Path.GetFileName(original));
+            storedFull = Path.Combine(RootPath, storedRelative);
+
+            Directory.CreateDirectory(Path.Combine(RootPath, "files"));
+            MoveFile(original, storedFull);
+
+            string hash = TryHash(storedFull, hashBudget);
+
+            if (hash.Length > 0)
+            {
+                hashBudget = Math.Max(0, hashBudget - bytes);
+            }
+
+            entry = new QuarantineEntry(
+                id,
+                original,
+                storedRelative,
+                DateTime.UtcNow,
+                hash,
+                bytes,
+                ruleId,
+                reason);
+
+            entries.Add(entry);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return new QuarantineAttempt(filePath, null, null, QuarantineRefusalKind.Locked, ex.Message);
+        }
+        catch (IOException ex)
+        {
+            return new QuarantineAttempt(filePath, null, null, QuarantineRefusalKind.Locked, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return new QuarantineAttempt(filePath, null, null, QuarantineRefusalKind.Failed, ex.Message);
+        }
+
+        return new QuarantineAttempt(filePath, entry, storedFull, QuarantineRefusalKind.None, null);
     }
 
     private List<QuarantineEntry> ReadManifest(bool forWrite)
@@ -463,11 +568,13 @@ public sealed class QuarantineService : IQuarantineService
         }
     }
 
-    private static string TryHash(string path)
+    private static string TryHash(string path, long budget)
     {
         try
         {
-            if (new FileInfo(path).Length > HashLimitBytes)
+            long length = new FileInfo(path).Length;
+
+            if (length > HashLimitBytes || length > budget)
             {
                 return string.Empty;
             }
@@ -576,5 +683,15 @@ public sealed class QuarantineService : IQuarantineService
             : parent + Path.DirectorySeparatorChar;
 
         return candidate.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private sealed record QuarantineAttempt(
+        string Path,
+        QuarantineEntry? Entry,
+        string? StoredFull,
+        QuarantineRefusalKind Refusal,
+        string? Error)
+    {
+        public string? OriginalFull => Entry?.OriginalPath;
     }
 }

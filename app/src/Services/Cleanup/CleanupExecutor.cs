@@ -259,6 +259,7 @@ public sealed class CleanupExecutor : ICleanupExecutor
         int deletedFiles = 0;
         long quarantinedBytes = 0;
         int quarantinedFiles = 0;
+        var quarantineQueue = new List<string>();
         int skippedLocked = 0;
         int skippedProtected = 0;
         int skippedElevation = 0;
@@ -322,9 +323,8 @@ public sealed class CleanupExecutor : ICleanupExecutor
 
                     if (quarantine)
                     {
-                        _quarantine.Quarantine(file.FullName, item.RuleId, item.Name);
-                        quarantinedBytes += size;
-                        quarantinedFiles++;
+                        // Moving is batched so the manifest is written once per approved row.
+                        quarantineQueue.Add(file.FullName);
                     }
                     else
                     {
@@ -348,7 +348,43 @@ public sealed class CleanupExecutor : ICleanupExecutor
                 }
             }
 
-            if (!dryRun)
+        }
+
+        if (quarantine && !dryRun && quarantineQueue.Count > 0)
+        {
+            IReadOnlyList<QuarantineFileResult> batch =
+                _quarantine.QuarantineFiles(quarantineQueue, item.RuleId, item.Name);
+
+            foreach (QuarantineFileResult result in batch)
+            {
+                if (result.Entry is not null)
+                {
+                    quarantinedBytes += result.Entry.Bytes;
+                    quarantinedFiles++;
+                    continue;
+                }
+
+                switch (result.Refusal)
+                {
+                    case QuarantineRefusalKind.Locked:
+                        skippedLocked++;
+                        break;
+                    case QuarantineRefusalKind.Refused:
+                        skippedProtected++;
+                        _log.Write(item, CleanupItemOutcome.SkippedProtected, 0,
+                            $"quarantine refused: {result.Error}");
+                        break;
+                    default:
+                        failed++;
+                        _logger.Error($"Quarantine failed for {result.Path}: {result.Error}");
+                        break;
+                }
+            }
+        }
+
+        if (!dryRun)
+        {
+            foreach (string root in item.Roots)
             {
                 DeleteEmptySubfolders(root, item, cancellationToken);
             }

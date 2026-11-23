@@ -53,7 +53,11 @@ run through a separate `requireAdministrator` helper on demand, with UAC only wh
 plan reaches them; a restore-point checkbox asks for a checkpoint before Caution/Opt-In plans.
 Every approved row is re-measured before deletion, so a folder that changed after the scan is
 skipped and must be reviewed again. Six profiles tick rows by family without approving anything.
-Completed runs are kept in `cleanup_history.json` and export as Markdown or CSV. **Manage large
+A **quarantine** checkbox moves eligible non-elevated files into the app's own data folder
+instead of deleting them; the manifest keeps the original path, size and SHA-256, the Storage
+page restores any entry once its original location is free (never overwriting), and Settings
+sets the retention and size cap. Completed runs are kept in `cleanup_history.json` and export
+as Markdown or CSV. **Manage large
 files** scans any folder with
 `> 10 MB / 50 MB / 100 MB / 500 MB / 1 GB` filters, **Duplicate files** groups identical files by
 size then sampled SHA-256 and reports the wasted bytes, and a **Storage Sense** switch reads and

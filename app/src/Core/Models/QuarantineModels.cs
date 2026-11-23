@@ -34,6 +34,25 @@ public sealed record QuarantineEntry(
     public string DetailText => $"{SizeText} · {QuarantinedText} · {Reason}";
 }
 
+/// <summary>Why one file in a quarantine batch was not moved.</summary>
+public enum QuarantineRefusalKind
+{
+    None,
+    /// <summary>Locked, in use or gone by the time the move was attempted.</summary>
+    Locked,
+    /// <summary>The path or file type is never quarantined.</summary>
+    Refused,
+    /// <summary>The manifest could not be written or another unexpected error occurred.</summary>
+    Failed
+}
+
+/// <summary>Outcome for one file in a quarantine batch.</summary>
+public sealed record QuarantineFileResult(
+    string Path,
+    QuarantineEntry? Entry,
+    QuarantineRefusalKind Refusal,
+    string? Error);
+
 /// <summary>What one retention pass actually removed from the quarantine.</summary>
 public sealed record QuarantinePurgeResult(int EntriesRemoved, long BytesRemoved)
 {

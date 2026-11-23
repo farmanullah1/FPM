@@ -86,10 +86,10 @@ which is what makes each feature testable and replaceable.
 | --- | --- | --- |
 | Home | `HomeViewModel` | Live memory usage and temp-file size, one-click Boost (working-set trim + temp purge, reporting the measured available-memory delta and the bytes actually removed), Smart Boost auto-trim above the saved threshold, and four quick-action cards. |
 | Protection | `ProtectionViewModel` | Defender real-time/antivirus state and signature version, Windows Update service and pending restart, plus pop-up management, default browser, Explorer restart and default-apps cards. |
-| Storage | `StorageViewModel` | Drive usage from `DriveInfo`; Cleanup Center with a read-only numbered scan, tiered rows, typed approval gate (`proceed`/`only`/`keep`, ranges), dry run, safety-guarded execution, `cleanup_log.txt` and a measured before/after report; large-file filter (10/50/100/500 MB, 1 GB); duplicate finder (size + sampled SHA-256); Storage Sense. |
+| Storage | `StorageViewModel` | Drive usage from `DriveInfo`; Cleanup Center with a read-only numbered scan, tiered rows, typed approval gate (`proceed`/`only`/`keep`, ranges), dry run, optional restoreable quarantine, safety-guarded execution, `cleanup_log.txt` and a measured before/after report; quarantine list with per-file Restore that refuses an occupied destination; large-file filter (10/50/100/500 MB, 1 GB); duplicate finder (size + sampled SHA-256); Storage Sense. |
 | Apps | `AppsViewModel` | Live application list with RAM and CPU plus per-row End Task (this process and `MSPCManager*` are refused), startup entries from `Run`/`StartupApproved`/Startup folder/scheduled tasks with working toggles, installed Win32 apps (HKLM/HKCU Uninstall keys) with search and uninstall that waits for the uninstaller, re-checks the registry and reports measured leftovers, and Store/MSIX packages from `Get-AppxPackage` with framework/system packages hidden and a confirmed current-user uninstall. |
 | Toolbox | `ToolboxViewModel` | Floating always-on-top toolbar toggle, multi-monitor screenshot via GDI, screen recorder (Game Bar with `psr.exe` fallback), calculator, notepad, `ipconfig /flushdns` and quick web links. |
-| Settings | `SettingsViewModel` | Start with Windows (own `HKCU\...\Run` value), Smart Boost on/off and threshold, protected paths (add/remove/reload whitelist), Light/Dark theme, and the About block with data/log paths. |
+| Settings | `SettingsViewModel` | Start with Windows (own `HKCU\...\Run` value), Smart Boost on/off and threshold, protected paths (add/remove/reload whitelist), quarantine retention and size policy, Light/Dark theme, and the About block with data/log paths. |
 
 ## Cleanup engine
 
@@ -101,7 +101,8 @@ The Storage page and the CLI use one engine, split so that measuring cannot dele
 | Scanner | `Services/Cleanup/CleanupScanner.cs` | Read-only measurement with bounded parallelism; no delete/move API |
 | Parser | `Services/Cleanup/CleanupCommandParser.cs` | `proceed`, `only 1, 2`, `keep 1, 2`, ranges; rejects everything else |
 | Safety guard | `Services/Cleanup/SafetyGuard.cs` | Allow-list roots, deny-list, reparse refusal, whitelist precedence |
-| Executor | `Services/Cleanup/CleanupExecutor.cs` | Deletes only an approved, unexpired, unchanged plan; logs and re-measures |
+| Executor | `Services/Cleanup/CleanupExecutor.cs` | Deletes only an approved, unexpired, unchanged plan, or moves eligible non-elevated files to quarantine; logs and re-measures |
+| Quarantine | `Services/Cleanup/QuarantineService.cs`, Storage and Settings cards | `quarantine\manifest.json` (original path, stored path, time, size, SHA-256, rule, reason); restore refuses occupied destinations, traversal and hash mismatches; retention/size policy from Settings |
 | Freshness | `Services/Cleanup/CleanupPlanFreshness.cs` | Re-measures before deletion; material changes return `CHANGED_SINCE_SCAN` |
 | Profiles | `Core/Models/CleanupProfiles.cs` | Quick, Developer, AI, Browser, Windows and Deep Review presets tick rows only; Opt-in and running apps excluded |
 | History | `Services/Cleanup/CleanupHistoryService.cs` | Last 50 runs in `cleanup_history.json`; last five shown in Storage |

@@ -14,7 +14,7 @@ public sealed class QuarantineServiceTests
         string source = workspace.CreateFile("cache.bin", "payload");
         var service = new QuarantineService(new TestLogger(), workspace.QuarantineRoot);
 
-        var entry = service.Quarantine(source, "rule.dev.npm", "npm cache");
+        var entry = QuarantineSingle(service, source, "rule.dev.npm", "npm cache");
 
         Assert.False(File.Exists(source));
         Assert.True(File.Exists(workspace.StoredPath(entry)));
@@ -39,7 +39,7 @@ public sealed class QuarantineServiceTests
         string source = workspace.CreateFile("cache.bin", "payload");
         var service = new QuarantineService(new TestLogger(), workspace.QuarantineRoot);
 
-        QuarantineEntry entry = service.Quarantine(source, "rule", "reason");
+        QuarantineEntry entry = QuarantineSingle(service, source);
         var result = service.Restore(entry.Id);
 
         Assert.True(result.Success);
@@ -55,7 +55,7 @@ public sealed class QuarantineServiceTests
         string source = workspace.CreateFile("cache.bin", "old");
         var service = new QuarantineService(new TestLogger(), workspace.QuarantineRoot);
 
-        QuarantineEntry entry = service.Quarantine(source, "rule", "reason");
+        QuarantineEntry entry = QuarantineSingle(service, source);
         File.WriteAllText(source, "new");
 
         var result = service.Restore(entry.Id);
@@ -104,8 +104,11 @@ public sealed class QuarantineServiceTests
         string credentials = workspace.CreateFile("Login Data", "passwords");
         var service = new QuarantineService(new TestLogger(), workspace.QuarantineRoot);
 
-        Assert.Throws<IOException>(() => service.Quarantine(database, "rule", "reason"));
-        Assert.Throws<IOException>(() => service.Quarantine(credentials, "rule", "reason"));
+        IReadOnlyList<QuarantineFileResult> results =
+            service.QuarantineFiles(new[] { database, credentials }, "rule", "reason");
+
+        Assert.All(results, result => Assert.Equal(QuarantineRefusalKind.Refused, result.Refusal));
+        Assert.All(results, result => Assert.Null(result.Entry));
         Assert.True(File.Exists(database));
         Assert.True(File.Exists(credentials));
         Assert.Empty(service.GetEntries());
@@ -118,7 +121,7 @@ public sealed class QuarantineServiceTests
         string source = workspace.CreateFile("cache.bin", "payload");
         var service = new QuarantineService(new TestLogger(), workspace.QuarantineRoot);
 
-        QuarantineEntry entry = service.Quarantine(source, "rule", "reason");
+        QuarantineEntry entry = QuarantineSingle(service, source);
         QuarantinePurgeResult purge = service.Purge(TimeSpan.Zero, long.MaxValue);
 
         Assert.Equal(1, purge.EntriesRemoved);
@@ -135,9 +138,9 @@ public sealed class QuarantineServiceTests
         string second = workspace.CreateFile("second.bin", new string('b', 4096));
         var service = new QuarantineService(new TestLogger(), workspace.QuarantineRoot);
 
-        QuarantineEntry older = service.Quarantine(first, "rule", "reason");
+        QuarantineEntry older = QuarantineSingle(service, first);
         Thread.Sleep(5);
-        QuarantineEntry newer = service.Quarantine(second, "rule", "reason");
+        QuarantineEntry newer = QuarantineSingle(service, second);
 
         QuarantinePurgeResult purge = service.Purge(TimeSpan.FromDays(365), 4096);
 
@@ -146,6 +149,53 @@ public sealed class QuarantineServiceTests
         Assert.Contains(service.GetEntries(), entry => entry.Id == newer.Id);
         Assert.False(File.Exists(workspace.StoredPath(older)));
         Assert.True(File.Exists(workspace.StoredPath(newer)));
+    }
+
+    [Fact]
+    public void A_batch_reports_each_file_separately()
+    {
+        using var workspace = new Workspace();
+        string first = workspace.CreateFile("first.bin", "one");
+        string second = workspace.CreateFile("second.bin", "two");
+        var service = new QuarantineService(new TestLogger(), workspace.QuarantineRoot);
+
+        IReadOnlyList<QuarantineFileResult> results =
+            service.QuarantineFiles(new[] { first, second }, "rule", "reason");
+
+        Assert.Equal(2, results.Count);
+        Assert.All(results, result => Assert.NotNull(result.Entry));
+        Assert.Equal(2, service.GetEntries().Count);
+        Assert.False(File.Exists(first));
+        Assert.False(File.Exists(second));
+    }
+
+    [Fact]
+    public void A_manifest_write_failure_puts_the_file_back()
+    {
+        using var workspace = new Workspace();
+        string source = workspace.CreateFile("cache.bin", "payload");
+        Directory.CreateDirectory(workspace.ManifestPath);
+        var service = new QuarantineService(new TestLogger(), workspace.QuarantineRoot);
+
+        IReadOnlyList<QuarantineFileResult> results =
+            service.QuarantineFiles(new[] { source }, "rule", "reason");
+
+        QuarantineFileResult result = Assert.Single(results);
+        Assert.Null(result.Entry);
+        Assert.Equal(QuarantineRefusalKind.Failed, result.Refusal);
+        Assert.True(File.Exists(source));
+        Assert.Equal("payload", File.ReadAllText(source));
+    }
+
+    private static QuarantineEntry QuarantineSingle(
+        QuarantineService service,
+        string path,
+        string ruleId = "rule",
+        string reason = "reason")
+    {
+        QuarantineFileResult result = Assert.Single(service.QuarantineFiles(new[] { path }, ruleId, reason));
+        Assert.NotNull(result.Entry);
+        return result.Entry!;
     }
 
     private sealed class Workspace : IDisposable
