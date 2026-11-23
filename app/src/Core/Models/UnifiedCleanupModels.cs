@@ -8,7 +8,7 @@ public sealed record UnifiedCleanupItem(
     string ExactPath,
     long SizeBytes,
     string Description,
-    CleanupSafetyTier Tier,
+    CleanupTier Tier,
     string RuleId,
     bool RequiresElevation = false,
     bool RequiresAppClosed = false,

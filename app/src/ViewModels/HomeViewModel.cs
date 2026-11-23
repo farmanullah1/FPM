@@ -55,6 +55,7 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
 
         BoostCommand = new AsyncRelayCommand(BoostAsync, () => !IsBusy);
         CaptureCommand = new AsyncRelayCommand(CaptureAsync, () => !IsBusy);
+        CleanEverythingCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Storage));
         OpenProtectionCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Protection));
         OpenProcessesCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Apps));
         OpenCleanupCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Storage));
@@ -72,6 +73,7 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
 
     public AsyncRelayCommand BoostCommand { get; }
     public AsyncRelayCommand CaptureCommand { get; }
+    public RelayCommand CleanEverythingCommand { get; }
     public RelayCommand OpenProtectionCommand { get; }
     public RelayCommand OpenProcessesCommand { get; }
     public RelayCommand OpenCleanupCommand { get; }

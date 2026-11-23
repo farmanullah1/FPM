@@ -76,6 +76,17 @@ public partial class App : Application
 
         _services = collection.BuildServiceProvider();
 
+        // Run legacy data migration preflight (FarmanullahPCManager -> FPM)
+        try
+        {
+            var migrationService = _services.GetService<ILegacyIdentityMigrationService>();
+            migrationService?.MigrateIfNecessary();
+        }
+        catch (Exception ex)
+        {
+            _services.GetService<IAppLogger>()?.Error($"Legacy migration failed: {ex.Message}", ex);
+        }
+
         // Cleanup CLI shares the exact same engine as the UI. --scan deletes nothing;
         // --clean requires an explicit --ids list.
         if (CleanupCli.IsCleanupCommand(e.Args))

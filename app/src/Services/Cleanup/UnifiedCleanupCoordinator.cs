@@ -10,6 +10,7 @@ public sealed class UnifiedCleanupCoordinator : IUnifiedCleanupCoordinator
     private readonly CleanupExecutor _executor;
     private readonly IAppLogger _logger;
     private UnifiedScanReport? _lastReport;
+    private CleanupScanResult? _lastScanResult;
 
     public UnifiedCleanupCoordinator(
         CleanupScanner scanner,
@@ -25,7 +26,8 @@ public sealed class UnifiedCleanupCoordinator : IUnifiedCleanupCoordinator
     {
         _logger.Info("Starting Unified Cleanup full scan across all categories.");
 
-        CleanupScanManifest manifest = await _scanner.ScanAsync(cancellationToken);
+        CleanupScanResult scanResult = await _scanner.ScanAsync(cancellationToken);
+        _lastScanResult = scanResult;
 
         var items = new List<UnifiedCleanupItem>();
         int number = 1;
@@ -34,33 +36,33 @@ public sealed class UnifiedCleanupCoordinator : IUnifiedCleanupCoordinator
         long caution = 0;
         long optIn = 0;
 
-        foreach (var candidate in manifest.Candidates.OrderBy(c => c.SafetyTier))
+        foreach (var candidate in scanResult.Items.OrderBy(c => c.Tier))
         {
             var item = new UnifiedCleanupItem(
                 number++,
                 candidate.Category,
-                candidate.Path,
-                candidate.SizeBytes,
-                candidate.Description,
-                candidate.SafetyTier,
-                candidate.RuleId,
-                candidate.RequiresElevation,
-                candidate.RequiresProcessClosed,
-                candidate.SafetyTier == CleanupSafetyTier.Safe);
+                candidate.PathText,
+                candidate.Bytes,
+                candidate.DetailText,
+                candidate.Tier,
+                candidate.Rule.Id,
+                candidate.Rule.RequiresElevation,
+                candidate.Rule.RequiresAppClosed,
+                candidate.Tier == CleanupTier.Safe);
 
             items.Add(item);
-            total += candidate.SizeBytes;
+            total += candidate.Bytes;
 
-            switch (candidate.SafetyTier)
+            switch (candidate.Tier)
             {
-                case CleanupSafetyTier.Safe:
-                    safe += candidate.SizeBytes;
+                case CleanupTier.Safe:
+                    safe += candidate.Bytes;
                     break;
-                case CleanupSafetyTier.Caution:
-                    caution += candidate.SizeBytes;
+                case CleanupTier.Caution:
+                    caution += candidate.Bytes;
                     break;
-                case CleanupSafetyTier.OptIn:
-                    optIn += candidate.SizeBytes;
+                case CleanupTier.OptIn:
+                    optIn += candidate.Bytes;
                     break;
             }
         }
@@ -76,7 +78,7 @@ public sealed class UnifiedCleanupCoordinator : IUnifiedCleanupCoordinator
         IReadOnlyList<int> approvedItemNumbers,
         CancellationToken cancellationToken = default)
     {
-        if (_lastReport is null || _lastReport.ScanId != scanId)
+        if (_lastReport is null || _lastReport.ScanId != scanId || _lastScanResult is null)
         {
             return new UnifiedExecutionResult(
                 scanId, 0, 0, 0, 0,
@@ -95,24 +97,51 @@ public sealed class UnifiedCleanupCoordinator : IUnifiedCleanupCoordinator
 
         _logger.Info($"Executing unified cleanup for {approvedItems.Count} approved items.");
 
-        // Construct plan for existing CleanupExecutor
-        var approvedRuleIds = approvedItems.Select(i => i.RuleId).Distinct().ToList();
-        var plan = new CleanupApprovedPlan(
-            _lastReport.ScanId,
-            approvedRuleIds,
-            approvedItems.Sum(i => i.SizeBytes),
-            DateTime.UtcNow.AddMinutes(15));
+        var planItems = new List<CleanupPlanItem>();
+        foreach (var item in approvedItems)
+        {
+            var candidate = _lastScanResult.Items.FirstOrDefault(c => c.Rule.Id == item.RuleId);
+            if (candidate is not null)
+            {
+                planItems.Add(new CleanupPlanItem(
+                    item.ItemNumber,
+                    candidate.Rule.Id,
+                    candidate.Rule.Name,
+                    candidate.Roots,
+                    candidate.Bytes,
+                    candidate.FileCount,
+                    candidate.Rule.Tier,
+                    candidate.Rule.Action,
+                    candidate.Rule.MinimumAge,
+                    candidate.Rule.RequiresElevation,
+                    candidate.Rule.RequiresAppClosed,
+                    candidate.Rule.ProcessName));
+            }
+        }
 
-        CleanupExecutionSummary summary = await _executor.ExecuteAsync(plan, cancellationToken: cancellationToken);
+        var plan = new CleanupPlan
+        {
+            PlanId = _lastReport.ScanId,
+            Items = planItems,
+            CreatedUtc = DateTime.UtcNow,
+            ExpiresUtc = DateTime.UtcNow.AddMinutes(15)
+        };
 
-        string summaryText = $"Successfully cleaned {summary.TargetsCleaned} items, released {summary.BytesFreed / (1024 * 1024)} MB.";
+        CleanupReport report = await _executor.ExecuteAsync(plan, dryRun: false, quarantine: false, cancellationToken: cancellationToken);
+
+        var skippedReasons = report.Items
+            .Where(i => i.Outcome != CleanupItemOutcome.Deleted)
+            .Select(i => $"{i.Name}: {i.OutcomeText} - {i.Message}")
+            .ToList();
+
+        string summaryText = $"Successfully cleaned {report.DeletedItems} items, released {report.BytesDeleted / (1024 * 1024)} MB.";
         return new UnifiedExecutionResult(
             scanId,
-            summary.TargetsCleaned,
-            summary.TargetsSkipped,
-            summary.BytesFreed,
-            summary.BytesFreed,
-            summary.SkippedReasons,
+            report.DeletedItems,
+            report.SkippedItems,
+            report.BytesDeleted,
+            report.BytesDeleted,
+            skippedReasons,
             summaryText);
     }
 }

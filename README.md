@@ -1,8 +1,7 @@
-# Farmanullah PC Manager
+# FPM (Windows PC Manager)
 
-A Windows 10/11 system utility built with **C# / .NET 8 / WPF (MVVM)**: live memory boost,
-deep disk cleanup, process and startup control, protection checks, a toolbox and an
-always-on-top quick bar.
+A high-performance Windows 10/11 system utility built with **C# / .NET 8 / WPF (MVVM)**: live memory boost & diagnostics,
+consolidated Clean Everything & multi-tier disk cleanup, process & startup control, Windows Defender/Update protection, a toolbox and an always-on-top desktop quick bar.
 
 The application lives in [`app/`](app/) — see [`app/README.md`](app/README.md) for build
 details and the internals of every service.
@@ -18,7 +17,7 @@ details and the internals of every service.
 | MVVM | `CommunityToolkit.Mvvm` 8.3.2 — `ObservableObject`, `[ObservableProperty]`, `RelayCommand`, `AsyncRelayCommand` |
 | Composition | `Microsoft.Extensions.DependencyInjection` 8.0.1 with one registration point (`Services/DependencyInjection/ServiceCollectionExtensions.cs`); WPF-only services are registered in `App.xaml.cs` |
 | System access | Win32 P/Invoke (`Services/Interop/NativeMethods.cs`), WMI via `System.Management`, `Microsoft.Win32.Registry`, `ServiceController`, `System.Drawing.Common` for screen capture |
-| State | JSON settings and rolling logs under `%LOCALAPPDATA%\FarmanullahPCManager`; `Core/AppInfo.cs` is the single source of identity, paths and protected process names |
+| State | JSON settings and rolling logs under `%LOCALAPPDATA%\FPM`; `Core/AppInfo.cs` is the single source of identity, paths and protected process names (with automatic migration from legacy `%LOCALAPPDATA%\FarmanullahPCManager`) |
 
 `UseWindowsForms` is enabled in the shell project for one reason only — the tray
 `NotifyIcon`. Everything the user sees is WPF.

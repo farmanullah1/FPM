@@ -130,7 +130,7 @@ public sealed class MemoryDiagnosticsService : IMemoryDiagnosticsService, IMemor
                 if (AppInfo.IsProtectedProcessName(proc.ProcessName) || proc.Id == Environment.ProcessId)
                 {
                     failed++;
-                    _logger.Warn($"Skipped protected process {proc.ProcessName} (PID {pid}) during memory relief.");
+                    _logger.Error($"Skipped protected process {proc.ProcessName} (PID {pid}) during memory relief.");
                     continue;
                 }
 
@@ -166,7 +166,7 @@ public sealed class MemoryDiagnosticsService : IMemoryDiagnosticsService, IMemor
             catch (Exception ex)
             {
                 failed++;
-                _logger.Warn($"Failed to close process PID {pid}: {ex.Message}");
+                _logger.Error($"Failed to close process PID {pid}: {ex.Message}");
             }
         }
 
