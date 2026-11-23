@@ -9,6 +9,7 @@ public static class PageKeys
     public const string Apps = "apps";
     public const string Toolbox = "toolbox";
     public const string Settings = "settings";
+    public const string Memory = "memory";
 }
 
 /// <summary>Cross-page navigation, implemented by the shell view model.</summary>
