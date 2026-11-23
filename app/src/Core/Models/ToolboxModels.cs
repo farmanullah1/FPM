@@ -35,6 +35,12 @@ public sealed class AppSettings
     /// <summary>Shows the always-on-top floating toolbar pill.</summary>
     public bool ShowFloatingToolbar { get; set; }
 
+    /// <summary>Persisted X coordinate of the floating toolbar (null for default placement).</summary>
+    public double? FloatingToolbarLeft { get; set; }
+
+    /// <summary>Persisted Y coordinate of the floating toolbar (null for default placement).</summary>
+    public double? FloatingToolbarTop { get; set; }
+
     /// <summary>Days a file may stay in the quarantine before the retention pass removes it.</summary>
     public int QuarantineRetentionDays { get; set; } = 7;
 
