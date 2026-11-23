@@ -6,8 +6,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>PCManager.Helper</RootNamespace>
-    <AssemblyName>FarmanullahPCManager.Helper</AssemblyName>
-    <Product>Farmanullah PC Manager Helper</Product>
+    <AssemblyName>FPM.Helper</AssemblyName>
+    <Product>FPM Helper</Product>
     <Version>3.23.3.0</Version>
     <AssemblyVersion>3.23.3.0</AssemblyVersion>
     <FileVersion>3.23.3.0</FileVersion>

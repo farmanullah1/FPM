@@ -65,6 +65,13 @@ public static class ServiceCollectionExtensions
             new ElevationService(sp.GetRequiredService<IAppLogger>()));
         services.AddSingleton<IRestorePointService, RestorePointService>();
 
+        // --- FPM Services (Migration, Memory Diagnostics, Unified Cleanup) ---
+        services.AddSingleton<ILegacyIdentityMigrationService, PCManager.Services.Infrastructure.LegacyIdentityMigrationService>();
+        services.AddSingleton<MemoryDiagnosticsService>();
+        services.AddSingleton<IMemoryDiagnosticsService>(sp => sp.GetRequiredService<MemoryDiagnosticsService>());
+        services.AddSingleton<IMemoryReliefService>(sp => sp.GetRequiredService<MemoryDiagnosticsService>());
+        services.AddSingleton<IUnifiedCleanupCoordinator, UnifiedCleanupCoordinator>();
+
         // --- Page facades -------------------------------------------------
         services.AddSingleton<IPcBoostService, PcBoostService>();
         services.AddSingleton<IProcessService, ProcessService>();

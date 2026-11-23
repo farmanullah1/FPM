@@ -28,7 +28,9 @@ public sealed class ElevationService : IElevationService
     {
         _logger = logger;
         _helperPath = helperPath ??
-                      Path.Combine(AppContext.BaseDirectory, "FarmanullahPCManager.Helper.exe");
+                      (File.Exists(Path.Combine(AppContext.BaseDirectory, "FPM.Helper.exe"))
+                          ? Path.Combine(AppContext.BaseDirectory, "FPM.Helper.exe")
+                          : Path.Combine(AppContext.BaseDirectory, "FarmanullahPCManager.Helper.exe"));
         _pipePrefix = BuildPipePrefix();
     }
 
@@ -196,7 +198,7 @@ public sealed class ElevationService : IElevationService
             sid = Environment.UserName;
         }
 
-        return $"FarmanullahPCManager.Helper.{sid}";
+        return $"FPM.Helper.{sid}";
     }
 }
 

@@ -432,10 +432,11 @@ internal static class Program
 
     private static string ResolvePipeName(string[] args)
     {
-        const string prefix = "FarmanullahPCManager.Helper.";
+        const string prefix = "FPM.Helper.";
+        const string legacyPrefix = "FarmanullahPCManager.Helper.";
 
         if (args.Length > 0 &&
-            args[0].StartsWith(prefix, StringComparison.Ordinal) &&
+            (args[0].StartsWith(prefix, StringComparison.Ordinal) || args[0].StartsWith(legacyPrefix, StringComparison.Ordinal)) &&
             args[0].IndexOfAny(new[] { '\\', '/', ':', '\0' }) < 0)
         {
             return args[0];

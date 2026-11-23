@@ -7,17 +7,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <RootNamespace>PCManager</RootNamespace>
-    <!-- Distinct executable name: never FarmanullahPCManager.exe vs MSPCManager.exe collision. -->
-    <AssemblyName>FarmanullahPCManager</AssemblyName>
-    <Product>Farmanullah PC Manager</Product>
-    <AssemblyTitle>Farmanullah PC Manager</AssemblyTitle>
+    <!-- Distinct executable name: FPM.exe vs MSPCManager.exe. -->
+    <AssemblyName>FPM</AssemblyName>
+    <Product>FPM</Product>
+    <AssemblyTitle>FPM</AssemblyTitle>
     <Version>3.23.3.0</Version>
-    <!-- AssemblyVersion must be set explicitly, otherwise it stays 1.0.0.0 and the
-         sidebar version label reads "Version 1.0.0". -->
     <AssemblyVersion>3.23.3.0</AssemblyVersion>
     <FileVersion>3.23.3.0</FileVersion>
     <Company>PCManager</Company>
-    <Description>Farmanullah PC Manager - Windows 11 cleaner, booster and toolbox.</Description>
+    <Description>FPM - Windows PC Manager utility.</Description>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>AnyCPU;x64</Platforms>
