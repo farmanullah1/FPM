@@ -11,12 +11,12 @@ namespace PCManager.Cli;
 /// <summary>
 /// Command-line access to the same two-phase engine as the UI:
 /// <code>
-/// FarmanullahPCManager.exe --scan
-/// FarmanullahPCManager.exe --clean --ids 1,2
-/// FarmanullahPCManager.exe --clean --ids 1,2 --dry-run
-/// FarmanullahPCManager.exe --clean --ids 1,2 --restore-point
-/// FarmanullahPCManager.exe --clean --ids 1,2 --quarantine
-/// FarmanullahPCManager.exe --auto-clean
+/// FPM.exe --scan
+/// FPM.exe --clean --ids 1,2
+/// FPM.exe --clean --ids 1,2 --dry-run
+/// FPM.exe --clean --ids 1,2 --restore-point
+/// FPM.exe --clean --ids 1,2 --quarantine
+/// FPM.exe --auto-clean
 /// </code>
 /// <c>--scan</c> deletes nothing. <c>--clean</c> requires an explicit id list, so a typo
 /// cannot approve everything. Output goes to the parent console when one exists.
@@ -62,7 +62,7 @@ internal static class CleanupCli
             {
                 Console.WriteLine();
                 Console.WriteLine("Nothing was deleted. To clean, review the numbers and run:");
-                Console.WriteLine("  FarmanullahPCManager.exe --clean --ids 1,2   (add --dry-run, --quarantine or --restore-point)");
+                Console.WriteLine($"  {AppInfo.ProductName}.exe --clean --ids 1,2   (add --dry-run, --quarantine or --restore-point)");
                 return 0;
             }
 
