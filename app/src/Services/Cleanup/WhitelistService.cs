@@ -20,9 +20,9 @@ public sealed class WhitelistService : IWhitelistService
     private readonly object _gate = new();
     private List<string> _entries = new();
 
-    public WhitelistService()
+    public WhitelistService(string? filePath = null)
     {
-        FilePath = Path.Combine(AppInfo.DataFolder, "whitelist.json");
+        FilePath = filePath ?? Path.Combine(AppInfo.DataFolder, "whitelist.json");
         Reload();
     }
 
