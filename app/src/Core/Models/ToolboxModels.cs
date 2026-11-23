@@ -41,6 +41,21 @@ public sealed class AppSettings
     /// <summary>Persisted Y coordinate of the floating toolbar (null for default placement).</summary>
     public double? FloatingToolbarTop { get; set; }
 
+    /// <summary>Persisted width of the main window (defaults to 560 standard panel).</summary>
+    public double MainWindowWidth { get; set; } = 560;
+
+    /// <summary>Persisted height of the main window (defaults to 780 standard panel).</summary>
+    public double MainWindowHeight { get; set; } = 780;
+
+    /// <summary>Persisted X coordinate of the main window.</summary>
+    public double? MainWindowLeft { get; set; }
+
+    /// <summary>Persisted Y coordinate of the main window.</summary>
+    public double? MainWindowTop { get; set; }
+
+    /// <summary>Whether the main window was maximized when last closed.</summary>
+    public bool MainWindowMaximized { get; set; }
+
     /// <summary>Days a file may stay in the quarantine before the retention pass removes it.</summary>
     public int QuarantineRetentionDays { get; set; } = 7;
 

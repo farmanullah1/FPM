@@ -35,6 +35,55 @@
                         <TextBlock Text="{Binding DriveFreeText}" Style="{StaticResource CaptionText}" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="{Binding DriveSummary}" Style="{StaticResource CaptionText}" Margin="0,6,0,0" />
+
+                    <!-- Physical Drive Hardware Health -->
+                    <ItemsControl ItemsSource="{Binding PhysicalDrives}" Margin="0,10,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource RowCard}" Padding="10" Margin="0,0,0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Model}" FontWeight="SemiBold" />
+                                                <Border Background="{DynamicResource App.CardBackground}" CornerRadius="4" Padding="6,2" Margin="8,0,0,0">
+                                                    <TextBlock Text="{Binding MediaType}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource App.Gold}" />
+                                                </Border>
+                                                <Border Background="{DynamicResource App.CardBackground}" CornerRadius="4" Padding="6,2" Margin="6,0,0,0">
+                                                    <TextBlock Text="{Binding BusType}" FontSize="11" Style="{StaticResource CaptionText}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Style="{StaticResource CaptionText}" Margin="0,2,0,0">
+                                                <Run Text="Health: " /><Run Text="{Binding HealthStatus}" FontWeight="SemiBold" /><Run Text=" · Status: " /><Run Text="{Binding OperationalStatus}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <TextBlock Text="TRIM: Enabled" Foreground="{DynamicResource App.Success}" FontSize="11" FontWeight="SemiBold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="TRIM: Enabled" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding TrimEnabled}" Value="False">
+                                                                <Setter Property="Text" Value="TRIM: Disabled" />
+                                                                <Setter Property="Foreground" Value="{DynamicResource App.Warning}" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding TrimEnabled}" Value="{x:Null}">
+                                                                <Setter Property="Text" Value="TRIM: N/A" />
+                                                                <Setter Property="Foreground" Value="{DynamicResource App.TextSubtle}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
 
@@ -349,6 +398,111 @@
                                                 VerticalAlignment="Center"
                                                 Command="{Binding DataContext.RecycleDuplicateExtrasCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Component Store (DISM) -->
+            <Border Style="{StaticResource Card}" Padding="12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Text="Windows Component Store (DISM)" FontSize="14" FontWeight="SemiBold" />
+                            <TextBlock Text="Read-only analysis of WinSxS to determine whether cleanup is recommended."
+                                       Style="{StaticResource CaptionText}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Analyze WinSxS" Style="{StaticResource SecondaryButton}"
+                                VerticalAlignment="Center" Command="{Binding AnalyzeDismCommand}" />
+                    </Grid>
+
+                    <TextBlock Text="{Binding DismStatusText}" Style="{StaticResource CaptionText}" Margin="0,8,0,0" TextWrapping="Wrap" />
+
+                    <Border Visibility="{Binding HasDismResult, Converter={StaticResource BoolToVisibility}}"
+                            Style="{StaticResource RowCard}" Padding="10" Margin="0,8,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Component Store Size:" Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="{Binding DismResult.ComponentStoreSize}" FontWeight="SemiBold" Margin="0,1,0,6" />
+                                <TextBlock Text="Actual Size:" Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="{Binding DismResult.ActualStoreSize}" FontWeight="SemiBold" Margin="0,1,0,6" />
+                                <TextBlock Text="Shared with Windows:" Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="{Binding DismResult.SharedWithWindows}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Backups &amp; Disabled Features:" Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="{Binding DismResult.BackupsAndDisabledFeatures}" FontWeight="SemiBold" Margin="0,1,0,6" />
+                                <TextBlock Text="Cache &amp; Temp Data:" Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="{Binding DismResult.CacheAndTempData}" FontWeight="SemiBold" Margin="0,1,0,6" />
+                                <TextBlock Text="Cleanup Recommended:" Style="{StaticResource CaptionText}" />
+                                <TextBlock FontWeight="SemiBold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="No" />
+                                            <Setter Property="Foreground" Value="{DynamicResource App.Success}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding DismResult.CleanupRecommended}" Value="True">
+                                                    <Setter Property="Text" Value="Yes (reclaimable packages detected)" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource App.Warning}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Downloads Manager -->
+            <Border Style="{StaticResource Card}" Padding="12">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Text="Downloads Manager" FontSize="14" FontWeight="SemiBold" />
+                            <TextBlock Text="Categorize downloaded files by age, type, and size to quickly locate old installers and large media."
+                                       Style="{StaticResource CaptionText}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Scan Downloads" Style="{StaticResource SecondaryButton}"
+                                VerticalAlignment="Center" Command="{Binding ScanDownloadsCommand}" />
+                    </Grid>
+
+                    <TextBlock Text="{Binding DownloadsSummary}" Style="{StaticResource CaptionText}" Margin="0,8,0,0" TextWrapping="Wrap" />
+
+                    <ItemsControl ItemsSource="{Binding DownloadItems}" Margin="0,8,0,0" MaxHeight="220">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource RowCard}" Padding="8,6" Margin="0,0,0,4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Category}" Style="{StaticResource CaptionText}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding FormattedSize}" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" Margin="12,0" />
+                                        <TextBlock Grid.Column="2" Text="{Binding PercentOfDrive, StringFormat={}{0:F1}%}" Style="{StaticResource CaptionText}"
+                                                   VerticalAlignment="Center" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>

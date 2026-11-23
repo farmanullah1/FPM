@@ -79,6 +79,7 @@ public sealed partial class StorageViewModel : ViewModelBase
     private readonly IAppLogger _logger;
     private readonly IQuarantineService _quarantine;
     private readonly IUserConfirmationService _confirmation;
+    private readonly IStorageIntelligenceService? _storageIntelligence;
 
     private long _largeFileThresholdBytes;
     private CleanupScanResult? _scan;
@@ -100,7 +101,8 @@ public sealed partial class StorageViewModel : ViewModelBase
         IToolLauncher launcher,
         IAppLogger logger,
         IQuarantineService quarantine,
-        IUserConfirmationService confirmation)
+        IUserConfirmationService confirmation,
+        IStorageIntelligenceService? storageIntelligence = null)
     {
         _storage = storage;
         _cleanupScanner = cleanupScanner;
@@ -117,6 +119,7 @@ public sealed partial class StorageViewModel : ViewModelBase
         _logger = logger;
         _quarantine = quarantine;
         _confirmation = confirmation;
+        _storageIntelligence = storageIntelligence;
 
         ScanCleanupCommand = new AsyncRelayCommand(ScanCleanupAsync, () => !IsBusy);
         ReviewSelectedCommand = new AsyncRelayCommand(ReviewSelectedAsync, () => !IsBusy && CleanupItems.Count > 0);
@@ -137,6 +140,8 @@ public sealed partial class StorageViewModel : ViewModelBase
         RestoreQuarantineCommand = new RelayCommand<string>(RestoreQuarantine);
         PurgeQuarantineCommand = new RelayCommand(PurgeQuarantine);
         OpenQuarantineFolderCommand = new RelayCommand(OpenQuarantineFolder);
+        AnalyzeDismCommand = new AsyncRelayCommand(AnalyzeDismAsync, () => !IsBusy && !IsAnalyzingDism);
+        ScanDownloadsCommand = new AsyncRelayCommand(ScanDownloadsAsync, () => !IsBusy);
 
         _scanPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         _largeFileThresholdBytes = Math.Max(10L * 1024 * 1024, settings.Current.LargeFileThresholdBytes);
@@ -146,12 +151,16 @@ public sealed partial class StorageViewModel : ViewModelBase
     public ObservableCollection<LargeFile> LargeFiles { get; } = new();
     public ObservableCollection<DuplicateGroup> DuplicateGroups { get; } = new();
     public ObservableCollection<QuarantineEntry> QuarantineEntries { get; } = new();
+    public ObservableCollection<DriveHealthInfo> PhysicalDrives { get; } = new();
+    public ObservableCollection<StorageFolderItem> DownloadItems { get; } = new();
 
     public AsyncRelayCommand ScanCleanupCommand { get; }
     public AsyncRelayCommand ReviewSelectedCommand { get; }
     public AsyncRelayCommand ReviewApprovalCommand { get; }
     public RelayCommand<string> ApplyProfileCommand { get; }
     public AsyncRelayCommand ExecutePlanCommand { get; }
+    public AsyncRelayCommand AnalyzeDismCommand { get; }
+    public AsyncRelayCommand ScanDownloadsCommand { get; }
 
     public IReadOnlyList<CleanupProfile> CleanupProfiles => CleanupProfileCatalog.All;
     public RelayCommand CancelPlanCommand { get; }
@@ -173,6 +182,24 @@ public sealed partial class StorageViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _driveSummary = "Reading drive information...";
+
+    [ObservableProperty]
+    private DismAnalysisResult? _dismResult;
+
+    [ObservableProperty]
+    private bool _isAnalyzingDism;
+
+    [ObservableProperty]
+    private bool _hasDismResult;
+
+    [ObservableProperty]
+    private string _dismStatusText = "Analyze the Windows Component Store (WinSxS) to see if cleanup is recommended (read-only DISM).";
+
+    [ObservableProperty]
+    private string _downloadsSummary = "Analyze your Downloads folder to find old installers and large media.";
+
+    [ObservableProperty]
+    private bool _hasDownloadItems;
 
     [ObservableProperty]
     private double _driveUsedPercent;
@@ -298,6 +325,8 @@ public sealed partial class StorageViewModel : ViewModelBase
         FilterLargeFilesCommand.NotifyCanExecuteChanged();
         FindDuplicatesCommand.NotifyCanExecuteChanged();
         RecycleDuplicateExtrasCommand.NotifyCanExecuteChanged();
+        AnalyzeDismCommand.NotifyCanExecuteChanged();
+        ScanDownloadsCommand.NotifyCanExecuteChanged();
     }
 
     private async Task RefreshDriveAsync()
@@ -321,11 +350,99 @@ public sealed partial class StorageViewModel : ViewModelBase
             DriveUsedText = $"{ByteFormatter.Format(system.UsedBytes)} used";
             DriveFreeText = $"{ByteFormatter.Format(system.FreeBytes)} free";
             DriveSummary = $"{system.Format} · {system.SizeSummary}";
+
+            if (_storageIntelligence is not null)
+            {
+                try
+                {
+                    IReadOnlyList<DriveHealthInfo> healthList = await _storageIntelligence.GetDrivesHealthAsync();
+                    PhysicalDrives.Clear();
+                    foreach (DriveHealthInfo drive in healthList)
+                    {
+                        PhysicalDrives.Add(drive);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warn("Failed to query physical drive health.", ex);
+                }
+            }
         }
         catch (Exception ex)
         {
             DriveSummary = ex.Message;
             _logger.Error("Drive refresh failed.", ex);
+        }
+    }
+
+    private async Task AnalyzeDismAsync()
+    {
+        if (_storageIntelligence is null)
+        {
+            DismStatusText = "DISM intelligence service is not available.";
+            return;
+        }
+
+        IsAnalyzingDism = true;
+        DismStatusText = "Analyzing Windows Component Store with DISM (read-only, please wait)...";
+
+        try
+        {
+            DismAnalysisResult result = await _storageIntelligence.AnalyzeComponentStoreAsync();
+            DismResult = result;
+            HasDismResult = result.Success;
+            DismStatusText = result.Success
+                ? (result.CleanupRecommended
+                    ? "DISM analysis complete: Component store cleanup is recommended."
+                    : "DISM analysis complete: Component store is healthy; cleanup is not required.")
+                : $"DISM analysis failed: {result.ErrorMessage}";
+        }
+        catch (Exception ex)
+        {
+            DismStatusText = $"DISM analysis error: {ex.Message}";
+            _logger.Error("DISM analysis failed.", ex);
+        }
+        finally
+        {
+            IsAnalyzingDism = false;
+        }
+    }
+
+    private async Task ScanDownloadsAsync()
+    {
+        if (_storageIntelligence is null)
+        {
+            DownloadsSummary = "Storage intelligence service is not available.";
+            return;
+        }
+
+        IsBusy = true;
+        DownloadsSummary = "Scanning Downloads folder...";
+
+        try
+        {
+            string downloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+            IReadOnlyList<StorageFolderItem> items = await _storageIntelligence.AnalyzeStorageMapAsync(downloads);
+            DownloadItems.Clear();
+            foreach (StorageFolderItem item in items)
+            {
+                DownloadItems.Add(item);
+            }
+
+            HasDownloadItems = DownloadItems.Count > 0;
+            long total = items.Sum(i => i.Bytes);
+            DownloadsSummary = HasDownloadItems
+                ? $"Found {items.Count} items in Downloads totaling {ByteFormatter.Format(total)}."
+                : "No large or categorized items found in Downloads.";
+        }
+        catch (Exception ex)
+        {
+            DownloadsSummary = $"Downloads scan failed: {ex.Message}";
+            _logger.Error("Downloads scan failed.", ex);
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 

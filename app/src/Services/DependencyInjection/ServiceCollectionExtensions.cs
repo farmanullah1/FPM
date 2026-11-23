@@ -72,6 +72,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IMemoryReliefService>(sp => sp.GetRequiredService<MemoryDiagnosticsService>());
         services.AddSingleton<IUnifiedCleanupCoordinator, UnifiedCleanupCoordinator>();
         services.AddSingleton<INetworkThroughputService, PCManager.Services.Network.NetworkThroughputService>();
+        services.AddSingleton<IStorageIntelligenceService, PCManager.Services.Storage.StorageIntelligenceService>();
 
         // --- Page facades -------------------------------------------------
         services.AddSingleton<IPcBoostService, PcBoostService>();

@@ -11,7 +11,7 @@ namespace PCManager.ViewModels;
 /// and the theme. Navigation from a page goes through <see cref="NavigationService"/> so
 /// the quick-action cards never reference the shell.
 /// </summary>
-public sealed class MainViewModel : ObservableObject
+public sealed partial class MainViewModel : ObservableObject
 {
     private readonly IThemeService _themeService;
 
@@ -59,6 +59,18 @@ public sealed class MainViewModel : ObservableObject
     public string ProductName => AppInfo.ProductName;
 
     public string VersionText => $"Version {AppInfo.Version}";
+
+    [ObservableProperty]
+    private bool _isExpandedSidebar;
+
+    [ObservableProperty]
+    private double _currentWindowWidth = 560;
+
+    public void UpdateResponsiveLayout(double width)
+    {
+        CurrentWindowWidth = width;
+        IsExpandedSidebar = width >= 960;
+    }
 
     private ViewModelBase _currentPage;
     public ViewModelBase CurrentPage
