@@ -78,9 +78,21 @@ public sealed class AppxPackageService : IAppxPackageService
                     new[] { target.PackageFullName },
                     TimeSpan.FromMinutes(3));
 
-                return result.Success
-                    ? OperationResult.Ok($"Removed {target.Name} for the current user.")
-                    : OperationResult.Fail("Windows did not remove the package: " + result.Message);
+                if (!result.Success)
+                {
+                    return OperationResult.Fail("Windows did not remove the package: " + result.Message);
+                }
+
+                // Do not report success from the exit code alone. The package must no longer be
+                // in the current user's freshly queried list.
+                IReadOnlyList<AppxPackage> remaining = GetPackages();
+                return remaining.Any(candidate =>
+                    candidate.PackageFullName.Equals(
+                        target.PackageFullName,
+                        StringComparison.OrdinalIgnoreCase))
+                    ? OperationResult.Fail(
+                        $"Windows reported success, but {target.Name} is still listed. Refresh and check Windows Settings.")
+                    : OperationResult.Ok($"Removed {target.Name} for the current user.");
             }
             catch (Exception ex)
             {
