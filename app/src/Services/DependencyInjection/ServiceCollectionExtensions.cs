@@ -73,6 +73,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IUnifiedCleanupCoordinator, UnifiedCleanupCoordinator>();
         services.AddSingleton<INetworkThroughputService, PCManager.Services.Network.NetworkThroughputService>();
         services.AddSingleton<IStorageIntelligenceService, PCManager.Services.Storage.StorageIntelligenceService>();
+        services.AddSingleton<IAppLeftoverScanner, PCManager.Services.Apps.AppLeftoverScanner>();
 
         // --- Page facades -------------------------------------------------
         services.AddSingleton<IPcBoostService, PcBoostService>();

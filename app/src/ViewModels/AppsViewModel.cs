@@ -29,16 +29,22 @@ public sealed class RunningAppViewModel : ObservableObject
     public AsyncRelayCommand EndCommand { get; }
 }
 
-/// <summary>One installed application with its uninstall command.</summary>
+/// <summary>One installed application with its uninstall command and leftovers scan command.</summary>
 public sealed class InstalledAppViewModel : ObservableObject
 {
     private readonly Func<InstalledAppViewModel, Task> _uninstall;
+    private readonly Func<InstalledAppViewModel, Task>? _scanLeftovers;
 
-    public InstalledAppViewModel(InstalledApp app, Func<InstalledAppViewModel, Task> uninstall)
+    public InstalledAppViewModel(
+        InstalledApp app,
+        Func<InstalledAppViewModel, Task> uninstall,
+        Func<InstalledAppViewModel, Task>? scanLeftovers = null)
     {
         App = app;
         _uninstall = uninstall;
+        _scanLeftovers = scanLeftovers;
         UninstallCommand = new AsyncRelayCommand(() => _uninstall(this));
+        ScanLeftoversCommand = new AsyncRelayCommand(() => _scanLeftovers?.Invoke(this) ?? Task.CompletedTask);
     }
 
     public InstalledApp App { get; }
@@ -47,6 +53,7 @@ public sealed class InstalledAppViewModel : ObservableObject
     public string VersionText => string.IsNullOrWhiteSpace(App.Version) ? string.Empty : $"v{App.Version}";
     public string SizeText => App.SizeText;
     public AsyncRelayCommand UninstallCommand { get; }
+    public AsyncRelayCommand ScanLeftoversCommand { get; }
 }
 
 /// <summary>One Store/MSIX package with a confirmation-gated uninstall command.</summary>
@@ -82,6 +89,7 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
     private readonly IUserConfirmationService _confirmation;
     private readonly ISettingsService _settings;
     private readonly IAppLogger _logger;
+    private readonly IAppLeftoverScanner? _leftoverScanner;
     private readonly DispatcherTimer _timer;
 
     private IReadOnlyList<InstalledApp> _allInstalled = Array.Empty<InstalledApp>();
@@ -94,7 +102,8 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
         IAppxPackageService appxPackages,
         IUserConfirmationService confirmation,
         ISettingsService settings,
-        IAppLogger logger)
+        IAppLogger logger,
+        IAppLeftoverScanner? leftoverScanner = null)
     {
         _processes = processes;
         _installedApps = installedApps;
@@ -102,9 +111,13 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
         _confirmation = confirmation;
         _settings = settings;
         _logger = logger;
+        _leftoverScanner = leftoverScanner;
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         RefreshStartupCommand = new AsyncRelayCommand(LoadStartupAsync, () => !IsBusy);
+        ScanLeftoversCommand = new AsyncRelayCommand(() => ScanLeftoversAsync(LeftoverTargetApp), () => !IsBusy && !IsScanningLeftovers);
+        CleanLeftoversCommand = new AsyncRelayCommand(CleanLeftoversAsync, () => !IsBusy && HasLeftoverItems);
+        ExportRegBackupCommand = new AsyncRelayCommand(ExportRegBackupAsync, () => !IsBusy && HasLeftoverItems);
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
         _timer.Tick += async (_, _) =>
@@ -121,9 +134,13 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
     public ObservableCollection<StartupAppViewModel> StartupApps { get; } = new();
     public ObservableCollection<InstalledAppViewModel> InstalledApps { get; } = new();
     public ObservableCollection<StoreAppViewModel> StoreApps { get; } = new();
+    public ObservableCollection<AppLeftoverItem> LeftoverItems { get; } = new();
 
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand RefreshStartupCommand { get; }
+    public AsyncRelayCommand ScanLeftoversCommand { get; }
+    public AsyncRelayCommand CleanLeftoversCommand { get; }
+    public AsyncRelayCommand ExportRegBackupCommand { get; }
 
     [ObservableProperty]
     private string _appSearch = string.Empty;
@@ -136,6 +153,18 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private string _processSummary = "Reading running applications...";
+
+    [ObservableProperty]
+    private string _leftoverTargetApp = string.Empty;
+
+    [ObservableProperty]
+    private string _leftoverSummary = "Scan for orphaned folders and registry remnants of uninstalled applications.";
+
+    [ObservableProperty]
+    private bool _hasLeftoverItems;
+
+    [ObservableProperty]
+    private bool _isScanningLeftovers;
 
     partial void OnAppSearchChanged(string value)
     {

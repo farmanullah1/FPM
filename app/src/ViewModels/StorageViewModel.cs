@@ -364,7 +364,7 @@ public sealed partial class StorageViewModel : ViewModelBase
                 }
                 catch (Exception ex)
                 {
-                    _logger.Warn("Failed to query physical drive health.", ex);
+                    _logger.Error("Failed to query physical drive health.", ex);
                 }
             }
         }
