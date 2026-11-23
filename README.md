@@ -51,7 +51,10 @@ a 15-minute plan expiry, a runtime safety guard, `cleanup_log.txt` and a measure
 report sit behind that gate. Machine-wide rows (Windows temp/update/logs/Prefetch/`$PatchCache$`)
 run through a separate `requireAdministrator` helper on demand, with UAC only when the approved
 plan reaches them; a restore-point checkbox asks for a checkpoint before Caution/Opt-In plans.
-**Manage large files** scans any folder with
+Every approved row is re-measured before deletion, so a folder that changed after the scan is
+skipped and must be reviewed again. Six profiles tick rows by family without approving anything.
+Completed runs are kept in `cleanup_history.json` and export as Markdown or CSV. **Manage large
+files** scans any folder with
 `> 10 MB / 50 MB / 100 MB / 500 MB / 1 GB` filters, **Duplicate files** groups identical files by
 size then sampled SHA-256 and reports the wasted bytes, and a **Storage Sense** switch reads and
 writes the Windows setting.

@@ -51,6 +51,52 @@
                 </StackPanel>
             </Border>
 
+            <!-- Whitelist -->
+            <Border Style="{StaticResource Card}" Padding="20">
+                <StackPanel>
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Protected paths" FontSize="17" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding WhitelistCountText}" Style="{StaticResource CaptionText}" />
+                        </StackPanel>
+                        <Button Content="Reload" Style="{StaticResource PillButton}"
+                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Command="{Binding ReloadWhitelistCommand}" />
+                    </Grid>
+
+                    <TextBlock Style="{StaticResource CaptionText}" Margin="0,6,0,8"
+                               Text="Paths here are excluded from scans and refused by the safety guard. The hard deny-list still applies. Use the full path." />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding WhitelistPathInput, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="For example C:\Projects or D:\Source\vendor" />
+                        <Button Grid.Column="1" Content="Add path" Style="{StaticResource PrimaryButton}"
+                                Margin="8,0,0,0" Command="{Binding AddWhitelistCommand}" />
+                    </Grid>
+
+                    <ListBox ItemsSource="{Binding WhitelistEntries}"
+                             SelectedItem="{Binding SelectedWhitelistEntry, Mode=TwoWay}"
+                             Background="{DynamicResource App.Card}"
+                             BorderBrush="{DynamicResource App.Border}"
+                             Foreground="{DynamicResource App.Text}"
+                             MaxHeight="150" Margin="0,8,0,0" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Remove selected" Style="{StaticResource SecondaryButton}"
+                                Command="{Binding RemoveWhitelistCommand}" />
+                        <Button Content="Open whitelist folder" Style="{StaticResource SecondaryButton}"
+                                Margin="8,0,0,0" Command="{Binding OpenWhitelistFolderCommand}" />
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding WhitelistFilePath}" Style="{StaticResource CaptionText}"
+                               FontFamily="Consolas" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+
             <!-- Appearance -->
             <Border Style="{StaticResource Card}" Padding="20">
                 <Grid>

@@ -1,4 +1,6 @@
+using System.Collections.ObjectModel;
 using System.IO;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCManager.Core;
 using PCManager.Core.Models;
@@ -12,12 +14,13 @@ namespace PCManager.ViewModels;
 /// %LOCALAPPDATA%\FarmanullahPCManager\settings.json; the Run value is the only registry
 /// write and it uses the value name "FarmanullahPCManager".
 /// </summary>
-public sealed class SettingsViewModel : ViewModelBase
+public sealed partial class SettingsViewModel : ViewModelBase
 {
     private readonly IAppStartupService _appStartup;
     private readonly ISettingsService _settings;
     private readonly IThemeService _theme;
     private readonly IToolLauncher _launcher;
+    private readonly IWhitelistService _whitelist;
     private readonly IAppLogger _logger;
 
     public SettingsViewModel(
@@ -25,22 +28,56 @@ public sealed class SettingsViewModel : ViewModelBase
         ISettingsService settings,
         IThemeService theme,
         IToolLauncher launcher,
+        IWhitelistService whitelist,
         IAppLogger logger)
     {
         _appStartup = appStartup;
         _settings = settings;
         _theme = theme;
         _launcher = launcher;
+        _whitelist = whitelist;
         _logger = logger;
 
         OpenDataFolderCommand = new RelayCommand(() => OpenFolder(AppInfo.DataFolder));
         OpenLogFolderCommand = new RelayCommand(OpenLogFolder);
         ResetThresholdCommand = new RelayCommand(() => SmartBoostThreshold = 75);
+        AddWhitelistCommand = new RelayCommand(AddWhitelistPath);
+        RemoveWhitelistCommand = new RelayCommand(RemoveWhitelistPath, () => SelectedWhitelistEntry is not null);
+        ReloadWhitelistCommand = new RelayCommand(ReloadWhitelist);
+        OpenWhitelistFolderCommand = new RelayCommand(() => OpenFolder(AppInfo.DataFolder));
+
+        RefreshWhitelist();
     }
 
     public RelayCommand OpenDataFolderCommand { get; }
     public RelayCommand OpenLogFolderCommand { get; }
     public RelayCommand ResetThresholdCommand { get; }
+    public RelayCommand AddWhitelistCommand { get; }
+    public RelayCommand RemoveWhitelistCommand { get; }
+    public RelayCommand ReloadWhitelistCommand { get; }
+    public RelayCommand OpenWhitelistFolderCommand { get; }
+
+    public ObservableCollection<string> WhitelistEntries { get; } = new();
+
+    [ObservableProperty]
+    private string _whitelistPathInput = string.Empty;
+
+    [ObservableProperty]
+    private string? _selectedWhitelistEntry;
+
+    [ObservableProperty]
+    private string _whitelistCountText = "No protected paths yet.";
+
+    public string WhitelistFilePath => _whitelist.FilePath;
+
+    partial void OnSelectedWhitelistEntryChanged(string? value)
+        => RemoveWhitelistCommand.NotifyCanExecuteChanged();
+
+    public override Task LoadAsync()
+    {
+        RefreshWhitelist();
+        return Task.CompletedTask;
+    }
 
     public string ProductName => AppInfo.ProductName;
     public string VersionText => $"Version {AppInfo.Version}";
@@ -122,6 +159,82 @@ public sealed class SettingsViewModel : ViewModelBase
     }
 
     public string ThemeLabel => IsDark ? "Dark" : "Light";
+
+    private void AddWhitelistPath()
+    {
+        string input = Environment.ExpandEnvironmentVariables(WhitelistPathInput.Trim());
+
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            StatusMessage = "Enter a folder or file to protect.";
+            return;
+        }
+
+        string full;
+
+        try
+        {
+            full = Path.GetFullPath(input);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "That path is not valid: " + ex.Message;
+            return;
+        }
+
+        if (!Directory.Exists(full) && !File.Exists(full))
+        {
+            StatusMessage = "Choose an existing folder or file. Nothing was added.";
+            return;
+        }
+
+        _whitelist.Add(full);
+        WhitelistPathInput = string.Empty;
+        RefreshWhitelist();
+        StatusMessage = "Protected from scanning and deletion: " + full;
+        _logger.Info("Whitelist entry added: " + full);
+    }
+
+    private void RemoveWhitelistPath()
+    {
+        if (SelectedWhitelistEntry is not { } entry)
+        {
+            return;
+        }
+
+        bool removed = _whitelist.Remove(entry);
+        RefreshWhitelist();
+        StatusMessage = removed
+            ? "Removed from the whitelist: " + entry
+            : "That entry was not found in the whitelist.";
+    }
+
+    private void ReloadWhitelist()
+    {
+        _whitelist.Reload();
+        RefreshWhitelist();
+        StatusMessage = "Whitelist reloaded from disk.";
+    }
+
+    private void RefreshWhitelist()
+    {
+        WhitelistEntries.Clear();
+
+        foreach (string entry in _whitelist.GetEntries())
+        {
+            WhitelistEntries.Add(entry);
+        }
+
+        WhitelistCountText = WhitelistEntries.Count switch
+        {
+            0 => "No protected paths yet.",
+            1 => "1 protected path. It is never scanned or deleted.",
+            _ => $"{WhitelistEntries.Count} protected paths. They are never scanned or deleted."
+        };
+
+        SelectedWhitelistEntry = null;
+        RemoveWhitelistCommand.NotifyCanExecuteChanged();
+    }
 
     private void OpenLogFolder()
     {

@@ -112,6 +112,7 @@ public sealed partial class StorageViewModel : ViewModelBase
         ScanCleanupCommand = new AsyncRelayCommand(ScanCleanupAsync, () => !IsBusy);
         ReviewSelectedCommand = new AsyncRelayCommand(ReviewSelectedAsync, () => !IsBusy && CleanupItems.Count > 0);
         ReviewApprovalCommand = new AsyncRelayCommand(ReviewApprovalAsync, () => !IsBusy && CleanupItems.Count > 0);
+        ApplyProfileCommand = new RelayCommand<string>(ApplyProfile, _ => !IsBusy && CleanupItems.Count > 0);
         ExecutePlanCommand = new AsyncRelayCommand(ExecutePlanAsync, () => !IsBusy && HasPendingPlan);
         CancelPlanCommand = new RelayCommand(CancelPlan, () => HasPendingPlan);
         OpenCleanupLogCommand = new RelayCommand(OpenCleanupLogFolder);
@@ -133,7 +134,10 @@ public sealed partial class StorageViewModel : ViewModelBase
     public AsyncRelayCommand ScanCleanupCommand { get; }
     public AsyncRelayCommand ReviewSelectedCommand { get; }
     public AsyncRelayCommand ReviewApprovalCommand { get; }
+    public RelayCommand<string> ApplyProfileCommand { get; }
     public AsyncRelayCommand ExecutePlanCommand { get; }
+
+    public IReadOnlyList<CleanupProfile> CleanupProfiles => CleanupProfileCatalog.All;
     public RelayCommand CancelPlanCommand { get; }
     public RelayCommand OpenCleanupLogCommand { get; }
     public RelayCommand ExportMarkdownCommand { get; }
@@ -252,6 +256,7 @@ public sealed partial class StorageViewModel : ViewModelBase
         ScanCleanupCommand.NotifyCanExecuteChanged();
         ReviewSelectedCommand.NotifyCanExecuteChanged();
         ReviewApprovalCommand.NotifyCanExecuteChanged();
+        ApplyProfileCommand.NotifyCanExecuteChanged();
         ExecutePlanCommand.NotifyCanExecuteChanged();
         CancelPlanCommand.NotifyCanExecuteChanged();
         FilterLargeFilesCommand.NotifyCanExecuteChanged();
@@ -306,7 +311,7 @@ public sealed partial class StorageViewModel : ViewModelBase
             CleanupItems.Clear();
             foreach (CleanupCandidate candidate in result.Items)
             {
-                CleanupItems.Add(new CleanupItemViewModel(candidate, UpdateCleanupTotal));
+                CleanupItems.Add(new CleanupItemViewModel(candidate, OnCleanupSelectionChanged));
             }
 
             UpdateCleanupTotal();
@@ -320,6 +325,7 @@ public sealed partial class StorageViewModel : ViewModelBase
 
             ReviewSelectedCommand.NotifyCanExecuteChanged();
             ReviewApprovalCommand.NotifyCanExecuteChanged();
+            ApplyProfileCommand.NotifyCanExecuteChanged();
         }
         catch (OperationCanceledException)
         {
@@ -336,6 +342,22 @@ public sealed partial class StorageViewModel : ViewModelBase
         }
     }
 
+    private void OnCleanupSelectionChanged()
+    {
+        UpdateCleanupTotal();
+
+        if (!HasPendingPlan)
+        {
+            return;
+        }
+
+        // The approval described the old ticked rows. A changed selection cannot reuse it.
+        _pendingPlan = null;
+        HasPendingPlan = false;
+        ApprovalReviewText = "Selection changed. Review the command again to create a new plan.";
+        StatusMessage = "Selection changed; the previous approval was discarded.";
+    }
+
     private void UpdateCleanupTotal()
     {
         if (_scan is null)
@@ -349,6 +371,34 @@ public sealed partial class StorageViewModel : ViewModelBase
         CleanupTotalText =
             $"Potential storage recovery: {ByteFormatter.Format(total)} across {selected} selected row(s). " +
             "This is an estimate until a cleanup is verified.";
+    }
+
+    private void ApplyProfile(string? id)
+    {
+        CleanupProfile? profile = CleanupProfileCatalog.All.FirstOrDefault(candidate =>
+            candidate.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+
+        if (profile is null)
+        {
+            return;
+        }
+
+        int ticked = 0;
+
+        foreach (CleanupItemViewModel item in CleanupItems)
+        {
+            item.IsSelected = CleanupProfileCatalog.Includes(profile.Kind, item.Model);
+
+            if (item.IsSelected)
+            {
+                ticked++;
+            }
+        }
+
+        UpdateCleanupTotal();
+        StatusMessage = ticked == 0
+            ? $"Profile \"{profile.Name}\" matched no measured rows. Nothing is ticked."
+            : $"Profile \"{profile.Name}\" ticked {ticked} row(s). Review them; nothing is deleted until you confirm an approval.";
     }
 
     private Task ReviewSelectedAsync()

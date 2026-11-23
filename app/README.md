@@ -101,20 +101,28 @@ The Storage page and the CLI use one engine, split so that measuring cannot dele
 | Scanner | `Services/Cleanup/CleanupScanner.cs` | Read-only measurement with bounded parallelism; no delete/move API |
 | Parser | `Services/Cleanup/CleanupCommandParser.cs` | `proceed`, `only 1, 2`, `keep 1, 2`, ranges; rejects everything else |
 | Safety guard | `Services/Cleanup/SafetyGuard.cs` | Allow-list roots, deny-list, reparse refusal, whitelist precedence |
-| Executor | `Services/Cleanup/CleanupExecutor.cs` | Deletes only an approved, unexpired plan; logs and re-measures |
+| Executor | `Services/Cleanup/CleanupExecutor.cs` | Deletes only an approved, unexpired, unchanged plan; logs and re-measures |
+| Freshness | `Services/Cleanup/CleanupPlanFreshness.cs` | Re-measures before deletion; material changes return `CHANGED_SINCE_SCAN` |
+| Profiles | `Core/Models/CleanupProfiles.cs` | Quick, Developer, AI, Browser, Windows and Deep Review presets tick rows only; Opt-in and running apps excluded |
+| History | `Services/Cleanup/CleanupHistoryService.cs` | Last 50 runs in `cleanup_history.json`; last five shown in Storage |
+| Export | `Services/Cleanup/CleanupReportExporter.cs` | Measured report as Markdown or CSV under `reports\` |
 | Log | `Services/Cleanup/CleanupLog.cs` | `logs\cleanup_log.txt`, append-only, 5 MB rotation |
 | Whitelist | `Services/Cleanup/WhitelistService.cs` | `whitelist.json`, always wins over a rule |
 | Elevation client | `Services/Elevation/ElevationService.cs` | Starts the helper with `runas` only for an approved elevated rule; one request over a current-user-only pipe |
 | Helper | `Helper/Program.cs` | Fixed targets only, one shot, stops/restarts update services, logs to `helper-YYYYMMDD.log` |
 | Restore point | `Services/Elevation/ElevationService.cs` | Fixed `Checkpoint-Computer` command; UI checkbox and `--restore-point` |
 
-Flow: **scan → numbered table → approval command → confirm → execute → verify**. A plan is
-valid for 15 minutes and is discarded when a new scan runs. Opt-in rows (currently
-`$PatchCache$`) are never included implicitly. Browsers must be closed; the row is unselected and
-the executor re-checks the process before deleting. Machine-wide rows show a UAC prompt only when
-the plan actually reaches them; declining is reported as a skip, never retried in a loop.
-Caution/Opt-In plans tick "Create a System Restore point first" by default; the result is stated
-in the report whether or not Windows allowed it.
+Flow: **scan → numbered table → optional profile → approval command → confirm → execute → verify**.
+A profile only ticks rows; the approval gate is unchanged. A plan is valid for 15 minutes and is
+discarded when a new scan runs or any tick changes. Before touching a row, the executor
+measures it again; a change beyond 5% / 64 KB (or 5% / 3 files) is reported as
+`CHANGED_SINCE_SCAN` and nothing in that row is deleted. Opt-in rows (currently `$PatchCache$`)
+are never included implicitly. Browsers must be closed; the row is unselected and the executor
+re-checks the process before deleting. Machine-wide rows show a UAC prompt only when the plan
+actually reaches them; declining is reported as a skip, never retried in a loop. Caution/Opt-In
+plans tick "Create a System Restore point first" by default; the result is stated in the report
+whether or not Windows allowed it. Completed reports are appended to `cleanup_history.json` and
+can be exported as Markdown or CSV.
 
 CLI (same executable):
 
@@ -188,6 +196,8 @@ opens the matching Settings page instead (documented at the call site):
 - The helper was smoke-tested with `RunAsInvoker` (unknown rule rejected). No UAC-approved
   elevated deletion or restore-point creation has been run, so those paths are implemented but
   unverified end-to-end.
+- History is capped at 50 entries. Export files are written only under the app's own data folder,
+  never to a user-selected path. The history and export controls were not visually inspected.
 - The scanner and executor live in one assembly; the rule roots and the runtime safety guard,
   not assembly boundaries, are what prevent deletion outside a rule.
 - Startup toggles use the `StartupApproved` 12-byte binary blob (first byte even = enabled,

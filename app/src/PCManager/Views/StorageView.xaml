@@ -56,6 +56,24 @@
                     <TextBlock Text="{Binding CleanupTotalText}" FontWeight="SemiBold" Margin="0,4,0,0" />
                     <TextBlock Text="{Binding CleanupNotesText}" Style="{StaticResource CaptionText}" Margin="0,4,0,8" />
 
+                    <TextBlock Text="Profiles (they only tick rows; approval is still required)"
+                               Style="{StaticResource CaptionText}" Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding CleanupProfiles}" Margin="0,0,0,6">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Name}" ToolTip="{Binding Hint}"
+                                        Style="{StaticResource PillButton}" Margin="0,0,6,6"
+                                        Command="{Binding DataContext.ApplyProfileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding Id}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
                     <ItemsControl ItemsSource="{Binding CleanupItems}" Style="{StaticResource CardList}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
