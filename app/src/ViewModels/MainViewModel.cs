@@ -21,6 +21,7 @@ public sealed class MainViewModel : ObservableObject
         StorageViewModel storage,
         AppsViewModel apps,
         ToolboxViewModel toolbox,
+        MemoryViewModel memory,
         SettingsViewModel settingsPage,
         NavigationService navigation,
         ISettingsService settings,
@@ -31,6 +32,7 @@ public sealed class MainViewModel : ObservableObject
         Pages = new ObservableCollection<NavigationItem>
         {
             new(PageKeys.Home, "Home", "Boost and health", "Icon.Home", home),
+            new(PageKeys.Memory, "Memory", "RAM and process relief", "Icon.Performance", memory),
             new(PageKeys.Protection, "Protection", "Security and updates", "Icon.Health", protection),
             new(PageKeys.Storage, "Storage", "Cleanup and disks", "Icon.Storage", storage),
             new(PageKeys.Apps, "Apps", "Processes and startup", "Icon.Process", apps),

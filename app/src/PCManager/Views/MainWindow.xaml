@@ -66,7 +66,7 @@
                     <Path Data="{DynamicResource Icon.Logo}"
                           Fill="{DynamicResource App.Accent}"
                           Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" />
-                    <TextBlock Text="Farmanullah PC Manager"
+                    <TextBlock Text="FPM"
                                FontSize="11.5" FontWeight="SemiBold"
                                Margin="8,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>

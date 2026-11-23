@@ -101,10 +101,10 @@ public sealed partial class MemoryViewModel : ViewModelBase
             {
                 Processes.Add(new SelectableProcessMemoryItem
                 {
-                    Id = p.Id,
+                    Id = p.ProcessId,
                     ProcessName = p.ProcessName,
                     WorkingSetBytes = p.WorkingSetBytes,
-                    PrivateBytes = p.PrivateMemoryBytes,
+                    PrivateBytes = p.PrivateBytes,
                     CanRelieve = p.CanRelieve,
                     IsProtected = p.IsProtected,
                     IsSelected = false
@@ -127,11 +127,11 @@ public sealed partial class MemoryViewModel : ViewModelBase
     private void ApplySnapshot(ExtendedMemorySnapshot snapshot)
     {
         TotalPhysicalText = $"{ByteFormatter.Format((long)snapshot.TotalPhysicalBytes)} installed";
-        AvailablePhysicalText = $"{ByteFormatter.Format((long)snapshot.AvailablePhysicalBytes)} available ({snapshot.MemoryLoadPercent}% used)";
-        LoadPercent = snapshot.MemoryLoadPercent;
+        AvailablePhysicalText = $"{ByteFormatter.Format((long)snapshot.AvailableBytes)} available ({snapshot.LoadPercent}% used)";
+        LoadPercent = snapshot.LoadPercent;
         CommitChargeText = $"{ByteFormatter.Format((long)snapshot.CommittedBytes)} / {ByteFormatter.Format((long)snapshot.CommitLimitBytes)} committed";
 
-        switch (snapshot.Pressure)
+        switch (snapshot.PressureLevel)
         {
             case MemoryPressureLevel.High:
                 PressureText = "High Pressure";
@@ -200,18 +200,17 @@ public sealed partial class MemoryViewModel : ViewModelBase
 
             var plan = new MemoryReliefPlan(
                 selected.Select(s => s.Id).ToList(),
-                GracefulWaitMs: 3000,
-                AllowForceKill: false);
+                GracefulCloseFirst: true);
 
             MemoryReliefResult result = await _relief.ExecuteReliefPlanAsync(plan).ConfigureAwait(false);
 
             ExtendedMemorySnapshot after = _diagnostics.GetExtendedSnapshot();
 
-            long bytesFreed = (long)after.AvailablePhysicalBytes - (long)before.AvailablePhysicalBytes;
+            long bytesFreed = (long)after.AvailableBytes - (long)before.AvailableBytes;
             string freedFormatted = bytesFreed > 0 ? ByteFormatter.Format(bytesFreed) : "0 B";
 
-            ReliefReportText = $"Relief complete: Closed {result.SuccessfullyClosed.Count} app(s). " +
-                               $"Memory load changed from {before.MemoryLoadPercent}% to {after.MemoryLoadPercent}%. " +
+            ReliefReportText = $"Relief complete: Closed {result.Succeeded} app(s). " +
+                               $"Memory load changed from {before.LoadPercent}% to {after.LoadPercent}%. " +
                                $"Observed available memory increase: {freedFormatted}.";
             HasReliefReport = true;
 
