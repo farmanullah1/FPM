@@ -30,6 +30,8 @@ public enum CleanupItemOutcome
 {
     Deleted,
     PartiallyDeleted,
+    Quarantined,
+    PartiallyQuarantined,
     DryRun,
     SkippedProtected,
     SkippedLocked,
@@ -213,6 +215,8 @@ public sealed class CleanupItemResult
     public long BytesDeleted { get; init; }
     public long BytesRemaining { get; init; }
     public int FilesDeleted { get; init; }
+    public int FilesQuarantined { get; init; }
+    public long BytesQuarantined { get; init; }
     public int FilesSkipped { get; init; }
     public CleanupItemOutcome Outcome { get; init; }
     public required string Message { get; init; }
@@ -221,6 +225,8 @@ public sealed class CleanupItemResult
     {
         CleanupItemOutcome.Deleted => "DELETED",
         CleanupItemOutcome.PartiallyDeleted => "PARTIAL",
+        CleanupItemOutcome.Quarantined => "QUARANTINED",
+        CleanupItemOutcome.PartiallyQuarantined => "PARTIAL_QUARANTINE",
         CleanupItemOutcome.DryRun => "DRYRUN",
         CleanupItemOutcome.SkippedProtected => "SKIPPED_PROTECTED",
         CleanupItemOutcome.SkippedLocked => "SKIPPED_LOCKED",
@@ -237,6 +243,8 @@ public sealed class CleanupReport
     public IReadOnlyList<CleanupItemResult> Items { get; init; } = Array.Empty<CleanupItemResult>();
     public long EstimatedBytes { get; init; }
     public long BytesDeleted { get; init; }
+    public long BytesQuarantined { get; init; }
+    public int FilesQuarantined { get; init; }
     public int FilesDeleted { get; init; }
     public int FilesSkipped { get; init; }
     public TimeSpan Duration { get; init; }
@@ -247,7 +255,10 @@ public sealed class CleanupReport
     public IReadOnlyList<string> DriveChanges { get; init; } = Array.Empty<string>();
     public required string Summary { get; init; }
 
-    public int DeletedItems => Items.Count(i => i.Outcome is CleanupItemOutcome.Deleted or CleanupItemOutcome.PartiallyDeleted);
+    public int DeletedItems => Items.Count(i => i.Outcome is CleanupItemOutcome.Deleted
+        or CleanupItemOutcome.PartiallyDeleted
+        or CleanupItemOutcome.Quarantined
+        or CleanupItemOutcome.PartiallyQuarantined);
     public int SkippedItems => Items.Count(i => i.Outcome is CleanupItemOutcome.SkippedProtected
         or CleanupItemOutcome.SkippedLocked
         or CleanupItemOutcome.SkippedElevation

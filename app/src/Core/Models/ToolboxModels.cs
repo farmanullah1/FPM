@@ -34,6 +34,12 @@ public sealed class AppSettings
 
     /// <summary>Shows the always-on-top floating toolbar pill.</summary>
     public bool ShowFloatingToolbar { get; set; }
+
+    /// <summary>Days a file may stay in the quarantine before the retention pass removes it.</summary>
+    public int QuarantineRetentionDays { get; set; } = 7;
+
+    /// <summary>Upper bound for the whole quarantine, evicting the oldest entries first.</summary>
+    public long QuarantineMaxBytes { get; set; } = 2L * 1024 * 1024 * 1024;
 }
 
 public enum ThemeOption

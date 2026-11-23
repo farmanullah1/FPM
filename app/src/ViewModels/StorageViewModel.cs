@@ -76,6 +76,8 @@ public sealed partial class StorageViewModel : ViewModelBase
     private readonly ISettingsService _settings;
     private readonly IToolLauncher _launcher;
     private readonly IAppLogger _logger;
+    private readonly IQuarantineService _quarantine;
+    private readonly IUserConfirmationService _confirmation;
 
     private long _largeFileThresholdBytes;
     private CleanupScanResult? _scan;
@@ -94,7 +96,9 @@ public sealed partial class StorageViewModel : ViewModelBase
         IDuplicateFinderService duplicates,
         ISettingsService settings,
         IToolLauncher launcher,
-        IAppLogger logger)
+        IAppLogger logger,
+        IQuarantineService quarantine,
+        IUserConfirmationService confirmation)
     {
         _storage = storage;
         _cleanupScanner = cleanupScanner;
@@ -108,6 +112,8 @@ public sealed partial class StorageViewModel : ViewModelBase
         _settings = settings;
         _launcher = launcher;
         _logger = logger;
+        _quarantine = quarantine;
+        _confirmation = confirmation;
 
         ScanCleanupCommand = new AsyncRelayCommand(ScanCleanupAsync, () => !IsBusy);
         ReviewSelectedCommand = new AsyncRelayCommand(ReviewSelectedAsync, () => !IsBusy && CleanupItems.Count > 0);
@@ -122,6 +128,9 @@ public sealed partial class StorageViewModel : ViewModelBase
         FilterLargeFilesCommand = new AsyncRelayCommand<string>(FilterLargeFilesAsync, _ => !IsBusy);
         FindDuplicatesCommand = new AsyncRelayCommand(FindDuplicatesAsync, () => !IsBusy);
         OpenScanFolderCommand = new RelayCommand(OpenScanFolder);
+        RestoreQuarantineCommand = new RelayCommand<string>(RestoreQuarantine);
+        PurgeQuarantineCommand = new RelayCommand(PurgeQuarantine);
+        OpenQuarantineFolderCommand = new RelayCommand(OpenQuarantineFolder);
 
         _scanPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         _largeFileThresholdBytes = Math.Max(10L * 1024 * 1024, settings.Current.LargeFileThresholdBytes);
@@ -130,6 +139,7 @@ public sealed partial class StorageViewModel : ViewModelBase
     public ObservableCollection<CleanupItemViewModel> CleanupItems { get; } = new();
     public ObservableCollection<LargeFile> LargeFiles { get; } = new();
     public ObservableCollection<DuplicateGroup> DuplicateGroups { get; } = new();
+    public ObservableCollection<QuarantineEntry> QuarantineEntries { get; } = new();
 
     public AsyncRelayCommand ScanCleanupCommand { get; }
     public AsyncRelayCommand ReviewSelectedCommand { get; }
@@ -146,6 +156,9 @@ public sealed partial class StorageViewModel : ViewModelBase
     public AsyncRelayCommand<string> FilterLargeFilesCommand { get; }
     public AsyncRelayCommand FindDuplicatesCommand { get; }
     public RelayCommand OpenScanFolderCommand { get; }
+    public RelayCommand<string> RestoreQuarantineCommand { get; }
+    public RelayCommand PurgeQuarantineCommand { get; }
+    public RelayCommand OpenQuarantineFolderCommand { get; }
 
     [ObservableProperty]
     private string _systemDriveName = "C:";
@@ -184,6 +197,15 @@ public sealed partial class StorageViewModel : ViewModelBase
     private bool _isDryRun;
 
     [ObservableProperty]
+    private bool _quarantineEnabled;
+
+    [ObservableProperty]
+    private string _quarantineSummary = "The quarantine is empty.";
+
+    [ObservableProperty]
+    private bool _hasQuarantineEntries;
+
+    [ObservableProperty]
     private bool _createRestorePoint = true;
 
     [ObservableProperty]
@@ -216,6 +238,11 @@ public sealed partial class StorageViewModel : ViewModelBase
         "Type \"proceed\" (every ticked row), \"only 1, 2\" or \"keep 1, 2\". " +
         "Ranges work too: \"only 3-7\". Nothing is deleted until you confirm.";
 
+    public string QuarantinePolicyText =>
+        $"Keeps files for {_settings.Current.QuarantineRetentionDays} day(s), at most " +
+        $"{ByteFormatter.Format(_settings.Current.QuarantineMaxBytes)}. Change the policy in Settings."
+        + " The quarantine is not a backup.";
+
     public string LargeFileFilterText => _largeFileThresholdBytes >= 1024L * 1024 * 1024
         ? $"> {_largeFileThresholdBytes / (1024L * 1024 * 1024)} GB"
         : $"> {_largeFileThresholdBytes / (1024 * 1024)} MB";
@@ -243,6 +270,7 @@ public sealed partial class StorageViewModel : ViewModelBase
     public override async Task LoadAsync()
     {
         RefreshHistory();
+        RefreshQuarantine();
         await RefreshDriveAsync();
         await ScanCleanupCoreAsync();
 
@@ -487,7 +515,7 @@ public sealed partial class StorageViewModel : ViewModelBase
 
         try
         {
-            report = await _cleanupExecutor.ExecuteAsync(plan, IsDryRun);
+            report = await _cleanupExecutor.ExecuteAsync(plan, IsDryRun, QuarantineEnabled);
             _lastReport = report;
             CleanupReportText = BuildReport(report, restoreNote);
             HasCleanupReport = true;
@@ -498,6 +526,7 @@ public sealed partial class StorageViewModel : ViewModelBase
             {
                 _history.Add(report);
                 RefreshHistory();
+                RefreshQuarantine();
             }
         }
         catch (OperationCanceledException)
@@ -724,6 +753,92 @@ public sealed partial class StorageViewModel : ViewModelBase
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    private void RefreshQuarantine()
+    {
+        try
+        {
+            IReadOnlyList<QuarantineEntry> entries = _quarantine.GetEntries();
+
+            QuarantineEntries.Clear();
+            foreach (QuarantineEntry entry in entries.Take(20))
+            {
+                QuarantineEntries.Add(entry);
+            }
+
+            HasQuarantineEntries = entries.Count > 0;
+            QuarantineSummary = entries.Count == 0
+                ? "The quarantine is empty. Tick \"Move to quarantine\" before confirming a cleanup to use it."
+                : $"{entries.Count} file(s) · {ByteFormatter.Format(entries.Sum(entry => entry.Bytes))} · " +
+                  $"newest {entries[0].QuarantinedText}. Restore returns a file only when its original location is free.";
+
+            OnPropertyChanged(nameof(QuarantinePolicyText));
+        }
+        catch (Exception ex)
+        {
+            HasQuarantineEntries = false;
+            QuarantineSummary = "The quarantine could not be read: " + ex.Message;
+            _logger.Error("Quarantine refresh failed.", ex);
+        }
+    }
+
+    private void RestoreQuarantine(string? entryId)
+    {
+        if (string.IsNullOrWhiteSpace(entryId))
+        {
+            return;
+        }
+
+        OperationResult result = _quarantine.Restore(entryId);
+        StatusMessage = result.Message;
+        RefreshQuarantine();
+    }
+
+    private void PurgeQuarantine()
+    {
+        try
+        {
+            int count = _quarantine.GetEntries().Count;
+
+            if (count == 0)
+            {
+                StatusMessage = "The quarantine is already empty.";
+                return;
+            }
+
+            if (!_confirmation.Confirm(
+                    "Delete quarantined files",
+                    $"Permanently delete {count} quarantined file(s), including files younger than the " +
+                    $"{_settings.Current.QuarantineRetentionDays}-day retention?\n\n" +
+                    "Restoring will no longer be possible."))
+            {
+                return;
+            }
+
+            QuarantinePurgeResult result = _quarantine.Purge(TimeSpan.Zero, 0);
+            StatusMessage = result.Message;
+            _logger.Info("Quarantine emptied: " + result.Message);
+            RefreshQuarantine();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Could not empty the quarantine: " + ex.Message;
+            _logger.Error("Quarantine purge failed.", ex);
+        }
+    }
+
+    private void OpenQuarantineFolder()
+    {
+        try
+        {
+            Directory.CreateDirectory(_quarantine.RootPath);
+            _launcher.OpenFolder(_quarantine.RootPath);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = ex.Message;
         }
     }
 

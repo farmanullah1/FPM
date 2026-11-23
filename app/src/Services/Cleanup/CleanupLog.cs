@@ -57,6 +57,8 @@ public sealed class CleanupLog : ICleanupLog
     {
         CleanupItemOutcome.Deleted => "DELETED",
         CleanupItemOutcome.PartiallyDeleted => "PARTIAL",
+        CleanupItemOutcome.Quarantined => "QUARANTINED",
+        CleanupItemOutcome.PartiallyQuarantined => "PARTIAL_QUARANTINE",
         CleanupItemOutcome.DryRun => "DRYRUN",
         CleanupItemOutcome.SkippedProtected => "SKIPPED_PROTECTED",
         CleanupItemOutcome.SkippedLocked => "SKIPPED_LOCKED",

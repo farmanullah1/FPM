@@ -21,25 +21,39 @@ public sealed class CleanupExecutor : ICleanupExecutor
     private readonly IAppLogger _logger;
     private readonly IRecycleBinService _recycleBin;
     private readonly IElevationService _elevation;
+    private readonly IQuarantineService _quarantine;
+    private readonly ISettingsService _settings;
 
     public CleanupExecutor(
         ISafetyGuard guard,
         ICleanupLog log,
         IAppLogger logger,
         IRecycleBinService recycleBin,
-        IElevationService elevation)
+        IElevationService elevation,
+        IQuarantineService quarantine,
+        ISettingsService settings)
     {
         _guard = guard;
         _log = log;
         _logger = logger;
         _recycleBin = recycleBin;
         _elevation = elevation;
+        _quarantine = quarantine;
+        _settings = settings;
     }
 
-    public Task<CleanupReport> ExecuteAsync(CleanupPlan plan, bool dryRun, CancellationToken cancellationToken = default)
-        => Task.Run(() => Execute(plan, dryRun, cancellationToken), cancellationToken);
+    public Task<CleanupReport> ExecuteAsync(
+        CleanupPlan plan,
+        bool dryRun,
+        bool quarantine = false,
+        CancellationToken cancellationToken = default)
+        => Task.Run(() => Execute(plan, dryRun, quarantine, cancellationToken), cancellationToken);
 
-    private CleanupReport Execute(CleanupPlan plan, bool dryRun, CancellationToken cancellationToken)
+    private CleanupReport Execute(
+        CleanupPlan plan,
+        bool dryRun,
+        bool quarantine,
+        CancellationToken cancellationToken)
     {
         if (DateTime.UtcNow > plan.ExpiresUtc)
         {
@@ -52,6 +66,12 @@ public sealed class CleanupExecutor : ICleanupExecutor
                 PlanId = plan.PlanId,
                 Summary = "The approval expired after 15 minutes. Nothing was deleted. Scan again and approve a fresh plan."
             };
+        }
+
+        if (quarantine && !dryRun)
+        {
+            // Apply the user's retention and size policy before adding more files.
+            TryApplyQuarantinePolicy();
         }
 
         var stopwatch = Stopwatch.StartNew();
@@ -67,7 +87,7 @@ public sealed class CleanupExecutor : ICleanupExecutor
         foreach (CleanupPlanItem item in plan.Items)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            results.Add(ExecuteItem(item, dryRun, cancellationToken));
+            results.Add(ExecuteItem(item, dryRun, quarantine, cancellationToken));
         }
 
         stopwatch.Stop();
@@ -101,6 +121,8 @@ public sealed class CleanupExecutor : ICleanupExecutor
 
         long bytesDeleted = results.Sum(result => result.BytesDeleted);
         int filesDeleted = results.Sum(result => result.FilesDeleted);
+        long bytesQuarantined = results.Sum(result => result.BytesQuarantined);
+        int filesQuarantined = results.Sum(result => result.FilesQuarantined);
         int filesSkipped = results.Sum(result => result.FilesSkipped);
         int itemCount = results.Count;
 
@@ -108,20 +130,36 @@ public sealed class CleanupExecutor : ICleanupExecutor
 
         if (dryRun)
         {
-            summary = $"Dry run: {itemCount} item(s), {ByteFormatter.Format(plan.TotalBytes)} would be removed. " +
-                      "Nothing was deleted.";
+            summary = quarantine
+                ? $"Dry run: {itemCount} item(s), {ByteFormatter.Format(plan.TotalBytes)} would be moved to quarantine or permanently removed. Nothing was changed."
+                : $"Dry run: {itemCount} item(s), {ByteFormatter.Format(plan.TotalBytes)} would be removed. " +
+                  "Nothing was deleted.";
         }
         else
         {
-            var skipped = results.Count(result => result.Outcome is not (CleanupItemOutcome.Deleted or CleanupItemOutcome.PartiallyDeleted));
+            var skipped = results.Count(result => result.Outcome is not (
+                CleanupItemOutcome.Deleted or
+                CleanupItemOutcome.PartiallyDeleted or
+                CleanupItemOutcome.Quarantined or
+                CleanupItemOutcome.PartiallyQuarantined));
 
-            summary = $"Deleted {results.Count(r => r.Outcome is CleanupItemOutcome.Deleted or CleanupItemOutcome.PartiallyDeleted)} " +
-                      $"of {itemCount} item(s). Space released: {ByteFormatter.Format(bytesDeleted)} " +
-                      $"(estimate was {ByteFormatter.Format(plan.TotalBytes)}); {filesDeleted:N0} file(s) removed";
+            summary = $"Handled {results.Count(r => r.Outcome is CleanupItemOutcome.Deleted
+                or CleanupItemOutcome.PartiallyDeleted
+                or CleanupItemOutcome.Quarantined
+                or CleanupItemOutcome.PartiallyQuarantined)} " +
+                      $"of {itemCount} item(s). Deleted {ByteFormatter.Format(bytesDeleted)} ({filesDeleted:N0} file(s))";
+
+            if (bytesQuarantined > 0 || filesQuarantined > 0)
+            {
+                summary += $"; moved {ByteFormatter.Format(bytesQuarantined)} ({filesQuarantined:N0} file(s)) to quarantine, " +
+                           "which still occupies disk until the retention policy removes it";
+            }
+
+            summary += $". Estimate was {ByteFormatter.Format(plan.TotalBytes)}";
 
             if (filesSkipped > 0)
             {
-                summary += $", {filesSkipped:N0} skipped";
+                summary += $"; {filesSkipped:N0} skipped";
             }
 
             if (skipped > 0)
@@ -145,6 +183,8 @@ public sealed class CleanupExecutor : ICleanupExecutor
             EstimatedBytes = plan.TotalBytes,
             BytesDeleted = bytesDeleted,
             FilesDeleted = filesDeleted,
+            BytesQuarantined = bytesQuarantined,
+            FilesQuarantined = filesQuarantined,
             FilesSkipped = filesSkipped,
             Duration = stopwatch.Elapsed,
             DryRun = dryRun,
@@ -158,6 +198,7 @@ public sealed class CleanupExecutor : ICleanupExecutor
     private CleanupItemResult ExecuteItem(
         CleanupPlanItem item,
         bool dryRun,
+        bool quarantine,
         CancellationToken cancellationToken)
     {
         if (!dryRun && ExplainStaleness(item, cancellationToken) is { } changed)
@@ -216,6 +257,8 @@ public sealed class CleanupExecutor : ICleanupExecutor
 
         long deletedBytes = 0;
         int deletedFiles = 0;
+        long quarantinedBytes = 0;
+        int quarantinedFiles = 0;
         int skippedLocked = 0;
         int skippedProtected = 0;
         int skippedElevation = 0;
@@ -277,9 +320,18 @@ public sealed class CleanupExecutor : ICleanupExecutor
                         file.Attributes = FileAttributes.Normal;
                     }
 
-                    file.Delete();
-                    deletedBytes += size;
-                    deletedFiles++;
+                    if (quarantine)
+                    {
+                        _quarantine.Quarantine(file.FullName, item.RuleId, item.Name);
+                        quarantinedBytes += size;
+                        quarantinedFiles++;
+                    }
+                    else
+                    {
+                        file.Delete();
+                        deletedBytes += size;
+                        deletedFiles++;
+                    }
                 }
                 catch (UnauthorizedAccessException)
                 {
@@ -306,30 +358,40 @@ public sealed class CleanupExecutor : ICleanupExecutor
             ? 0
             : CleanupScanner.Measure(item.Roots, TimeSpan.Zero, cancellationToken).Bytes;
 
+        int handledFiles = deletedFiles + quarantinedFiles;
         CleanupItemOutcome itemOutcome;
         string message;
 
         if (dryRun)
         {
             itemOutcome = CleanupItemOutcome.DryRun;
-            message = $"Dry run: {ByteFormatter.Format(deletedBytes)} across {deletedFiles:N0} file(s) would be removed. " +
-                      "Nothing was removed.";
+            message = quarantine
+                ? $"Dry run: {ByteFormatter.Format(deletedBytes)} across {deletedFiles:N0} file(s) would be moved to quarantine. Nothing was moved."
+                : $"Dry run: {ByteFormatter.Format(deletedBytes)} across {deletedFiles:N0} file(s) would be removed. " +
+                  "Nothing was removed.";
         }
         else if (eligible == 0)
         {
             itemOutcome = CleanupItemOutcome.Deleted;
             message = "Nothing matched the rule at execution time; the folder was already clean or changed since the scan.";
         }
-        else if (deletedFiles > 0 && skippedLocked + skippedProtected + skippedElevation + failed > 0)
+        else if (handledFiles > 0 && skippedLocked + skippedProtected + skippedElevation + failed > 0)
         {
-            itemOutcome = CleanupItemOutcome.PartiallyDeleted;
-            message = $"{ByteFormatter.Format(deletedBytes)} removed from {deletedFiles:N0} file(s); " +
-                      $"{skippedLocked + skippedProtected + skippedElevation + failed:N0} skipped.";
+            itemOutcome = quarantine
+                ? CleanupItemOutcome.PartiallyQuarantined
+                : CleanupItemOutcome.PartiallyDeleted;
+            message = quarantine
+                ? $"{ByteFormatter.Format(quarantinedBytes)} moved to quarantine from {quarantinedFiles:N0} file(s); " +
+                  $"{skippedLocked + skippedProtected + skippedElevation + failed:N0} skipped."
+                : $"{ByteFormatter.Format(deletedBytes)} removed from {deletedFiles:N0} file(s); " +
+                  $"{skippedLocked + skippedProtected + skippedElevation + failed:N0} skipped.";
         }
-        else if (deletedFiles > 0)
+        else if (handledFiles > 0)
         {
-            itemOutcome = CleanupItemOutcome.Deleted;
-            message = $"{ByteFormatter.Format(deletedBytes)} removed from {deletedFiles:N0} file(s).";
+            itemOutcome = quarantine ? CleanupItemOutcome.Quarantined : CleanupItemOutcome.Deleted;
+            message = quarantine
+                ? $"{ByteFormatter.Format(quarantinedBytes)} moved to quarantine from {quarantinedFiles:N0} file(s). Restore them from the quarantine list."
+                : $"{ByteFormatter.Format(deletedBytes)} removed from {deletedFiles:N0} file(s).";
         }
         else if (skippedProtected > 0)
         {
@@ -352,7 +414,7 @@ public sealed class CleanupExecutor : ICleanupExecutor
             message = "No file could be removed; see the cleanup log for details.";
         }
 
-        _log.Write(item, itemOutcome, dryRun ? 0 : deletedBytes, message);
+        _log.Write(item, itemOutcome, dryRun ? 0 : deletedBytes + quarantinedBytes, message);
 
         return Result(
             item,
@@ -361,7 +423,9 @@ public sealed class CleanupExecutor : ICleanupExecutor
             dryRun ? 0 : deletedFiles,
             skippedLocked + skippedProtected + skippedElevation + failed,
             remainingBytes,
-            message);
+            message,
+            dryRun ? 0 : quarantinedBytes,
+            dryRun ? 0 : quarantinedFiles);
     }
 
     private string? ExplainStaleness(CleanupPlanItem item, CancellationToken cancellationToken)
@@ -534,19 +598,46 @@ public sealed class CleanupExecutor : ICleanupExecutor
         int deletedFiles,
         int skippedFiles,
         long bytesRemaining,
-        string message)
+        string message,
+        long bytesQuarantined = 0,
+        int filesQuarantined = 0)
         => new()
         {
             Number = item.Number,
             Name = item.Name,
             PathText = item.Roots.Count == 0 ? "Recycle Bin" : string.Join(" | ", item.Roots),
             BytesDeleted = bytesDeleted,
+            BytesQuarantined = bytesQuarantined,
             BytesRemaining = bytesRemaining,
             FilesDeleted = deletedFiles,
+            FilesQuarantined = filesQuarantined,
             FilesSkipped = skippedFiles,
             Outcome = outcome,
             Message = message
         };
+
+    private void TryApplyQuarantinePolicy()
+    {
+        try
+        {
+            AppSettings settings = _settings.Current;
+            QuarantinePurgeResult purge = _quarantine.Purge(
+                TimeSpan.FromDays(Math.Max(0, settings.QuarantineRetentionDays)),
+                Math.Max(0, settings.QuarantineMaxBytes));
+
+            if (purge.EntriesRemoved > 0)
+            {
+                _log.WriteLine(
+                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\tQUARANTINE_PURGE\t" +
+                    $"{purge.EntriesRemoved} file(s)\t{ByteFormatter.Format(purge.BytesRemoved)}");
+            }
+        }
+        catch (Exception ex)
+        {
+            // A failed retention pass must not block the approved cleanup.
+            _logger.Error("Quarantine retention pass failed.", ex);
+        }
+    }
 
     private long TryRecycleSize()
     {

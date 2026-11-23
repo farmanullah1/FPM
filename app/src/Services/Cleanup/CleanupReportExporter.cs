@@ -36,6 +36,7 @@ public sealed class CleanupReportExporter : ICleanupReportExporter
         text.AppendLine($"- Estimated: {ByteFormatter.Format(report.EstimatedBytes)}");
         text.AppendLine($"- Space released: {ByteFormatter.Format(report.BytesDeleted)}");
         text.AppendLine($"- Files removed: {report.FilesDeleted:N0}");
+        text.AppendLine($"- Moved to quarantine: {ByteFormatter.Format(report.BytesQuarantined)} in {report.FilesQuarantined:N0} file(s)");
         text.AppendLine($"- Files skipped: {report.FilesSkipped:N0}");
         text.AppendLine($"- Duration: {report.Duration.TotalSeconds:0.0} s");
         text.AppendLine();
@@ -74,7 +75,7 @@ public sealed class CleanupReportExporter : ICleanupReportExporter
     public string ExportCsv(CleanupReport report)
     {
         var text = new StringBuilder();
-        text.AppendLine("Number,Item,Outcome,BytesDeleted,FilesDeleted,FilesSkipped,Message");
+        text.AppendLine("Number,Item,Outcome,BytesDeleted,FilesDeleted,FilesQuarantined,BytesQuarantined,FilesSkipped,Message");
 
         foreach (CleanupItemResult item in report.Items)
         {
@@ -83,6 +84,8 @@ public sealed class CleanupReportExporter : ICleanupReportExporter
                 .Append(Csv(item.OutcomeText)).Append(',')
                 .Append(item.BytesDeleted).Append(',')
                 .Append(item.FilesDeleted).Append(',')
+                .Append(item.FilesQuarantined).Append(',')
+                .Append(item.BytesQuarantined).Append(',')
                 .Append(item.FilesSkipped).Append(',')
                 .Append(Csv(item.Message)).AppendLine();
         }

@@ -15,6 +15,7 @@ namespace PCManager.Cli;
 /// FarmanullahPCManager.exe --clean --ids 1,2
 /// FarmanullahPCManager.exe --clean --ids 1,2 --dry-run
 /// FarmanullahPCManager.exe --clean --ids 1,2 --restore-point
+/// FarmanullahPCManager.exe --clean --ids 1,2 --quarantine
 /// FarmanullahPCManager.exe --auto-clean
 /// </code>
 /// <c>--scan</c> deletes nothing. <c>--clean</c> requires an explicit id list, so a typo
@@ -45,6 +46,7 @@ internal static class CleanupCli
         TryAttachConsole();
 
         bool dryRun = HasFlag(args, "--dry-run");
+        bool quarantine = HasFlag(args, "--quarantine");
         bool clean = HasFlag(args, "--clean") || HasFlag(args, "--auto-clean");
         bool autoClean = HasFlag(args, "--auto-clean");
 
@@ -60,7 +62,7 @@ internal static class CleanupCli
             {
                 Console.WriteLine();
                 Console.WriteLine("Nothing was deleted. To clean, review the numbers and run:");
-                Console.WriteLine("  FarmanullahPCManager.exe --clean --ids 1,2   (add --dry-run or --restore-point)");
+                Console.WriteLine("  FarmanullahPCManager.exe --clean --ids 1,2   (add --dry-run, --quarantine or --restore-point)");
                 return 0;
             }
 
@@ -102,14 +104,15 @@ internal static class CleanupCli
 
             Console.WriteLine(dryRun ? "Dry run: no file will be removed." : "Executing the approved plan...");
 
-            CleanupReport report = await executor.ExecuteAsync(approval.Plan, dryRun);
+            CleanupReport report = await executor.ExecuteAsync(approval.Plan, dryRun, quarantine);
             Console.WriteLine(report.Summary);
 
             foreach (CleanupItemResult item in report.Items)
             {
                 Console.WriteLine(
                     $"  {item.OutcomeText,-18} #{item.Number} {item.Name}" +
-                    (item.BytesDeleted > 0 ? $" ({ByteFormatter.Format(item.BytesDeleted)})" : string.Empty));
+                    (item.BytesDeleted > 0 ? $" ({ByteFormatter.Format(item.BytesDeleted)})" : string.Empty) +
+                    (item.BytesQuarantined > 0 ? $" (quarantined {ByteFormatter.Format(item.BytesQuarantined)})" : string.Empty));
             }
 
             Console.WriteLine($"Log: {log.FilePath}");

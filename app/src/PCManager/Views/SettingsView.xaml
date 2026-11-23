@@ -97,6 +97,38 @@
                 </StackPanel>
             </Border>
 
+            <!-- Quarantine -->
+            <Border Style="{StaticResource Card}" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="Quarantine" FontSize="17" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding QuarantinePolicyText}" Style="{StaticResource CaptionText}"
+                               TextWrapping="Wrap" Margin="0,2,0,0" />
+
+                    <TextBlock Text="Retention" Style="{StaticResource SectionTitle}" Margin="0,12,0,4" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="3 days" Style="{StaticResource PillButton}" Margin="0,0,6,0"
+                                Command="{Binding SetQuarantineRetentionCommand}" CommandParameter="3" />
+                        <Button Content="7 days" Style="{StaticResource PillButton}" Margin="0,0,6,0"
+                                Command="{Binding SetQuarantineRetentionCommand}" CommandParameter="7" />
+                        <Button Content="30 days" Style="{StaticResource PillButton}"
+                                Command="{Binding SetQuarantineRetentionCommand}" CommandParameter="30" />
+                    </StackPanel>
+
+                    <TextBlock Text="Maximum size (oldest entries are removed first)" Style="{StaticResource SectionTitle}"
+                               Margin="0,12,0,4" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="1 GB" Style="{StaticResource PillButton}" Margin="0,0,6,0"
+                                Command="{Binding SetQuarantineMaxSizeCommand}" CommandParameter="1" />
+                        <Button Content="2 GB" Style="{StaticResource PillButton}" Margin="0,0,6,0"
+                                Command="{Binding SetQuarantineMaxSizeCommand}" CommandParameter="2" />
+                        <Button Content="5 GB" Style="{StaticResource PillButton}" Margin="0,0,6,0"
+                                Command="{Binding SetQuarantineMaxSizeCommand}" CommandParameter="5" />
+                        <Button Content="10 GB" Style="{StaticResource PillButton}"
+                                Command="{Binding SetQuarantineMaxSizeCommand}" CommandParameter="10" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- Appearance -->
             <Border Style="{StaticResource Card}" Padding="20">
                 <Grid>

@@ -3,6 +3,7 @@ using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCManager.Core;
+using PCManager.Core.Formatting;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
 
@@ -45,6 +46,8 @@ public sealed partial class SettingsViewModel : ViewModelBase
         RemoveWhitelistCommand = new RelayCommand(RemoveWhitelistPath, () => SelectedWhitelistEntry is not null);
         ReloadWhitelistCommand = new RelayCommand(ReloadWhitelist);
         OpenWhitelistFolderCommand = new RelayCommand(() => OpenFolder(AppInfo.DataFolder));
+        SetQuarantineRetentionCommand = new RelayCommand<string>(SetQuarantineRetention);
+        SetQuarantineMaxSizeCommand = new RelayCommand<string>(SetQuarantineMaxSize);
 
         RefreshWhitelist();
     }
@@ -56,6 +59,8 @@ public sealed partial class SettingsViewModel : ViewModelBase
     public RelayCommand RemoveWhitelistCommand { get; }
     public RelayCommand ReloadWhitelistCommand { get; }
     public RelayCommand OpenWhitelistFolderCommand { get; }
+    public RelayCommand<string> SetQuarantineRetentionCommand { get; }
+    public RelayCommand<string> SetQuarantineMaxSizeCommand { get; }
 
     public ObservableCollection<string> WhitelistEntries { get; } = new();
 
@@ -159,6 +164,39 @@ public sealed partial class SettingsViewModel : ViewModelBase
     }
 
     public string ThemeLabel => IsDark ? "Dark" : "Light";
+
+    public string QuarantinePolicyText =>
+        $"Keeps quarantined files for {_settings.Current.QuarantineRetentionDays} day(s), at most " +
+        $"{ByteFormatter.Format(_settings.Current.QuarantineMaxBytes)}. The policy is applied before a " +
+        "quarantined cleanup and when you empty the quarantine from Storage.";
+
+    private void SetQuarantineRetention(string? days)
+    {
+        if (!int.TryParse(days, out int value))
+        {
+            return;
+        }
+
+        value = Math.Clamp(value, 1, 365);
+        _settings.Current.QuarantineRetentionDays = value;
+        _settings.Save();
+        OnPropertyChanged(nameof(QuarantinePolicyText));
+        StatusMessage = $"Quarantine retention set to {value} day(s).";
+    }
+
+    private void SetQuarantineMaxSize(string? gigabytes)
+    {
+        if (!long.TryParse(gigabytes, out long value))
+        {
+            return;
+        }
+
+        value = Math.Clamp(value, 1, 100);
+        _settings.Current.QuarantineMaxBytes = value * 1024L * 1024 * 1024;
+        _settings.Save();
+        OnPropertyChanged(nameof(QuarantinePolicyText));
+        StatusMessage = $"Quarantine size limit set to {value} GB.";
+    }
 
     private void AddWhitelistPath()
     {

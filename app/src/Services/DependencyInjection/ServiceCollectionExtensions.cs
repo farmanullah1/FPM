@@ -52,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICleanupRuleCatalog, CleanupRuleCatalog>();
         services.AddSingleton<ICleanupScanner, CleanupScanner>();
         services.AddSingleton<ICleanupCommandParser, CleanupCommandParser>();
+        services.AddSingleton<IQuarantineService, QuarantineService>();
         services.AddSingleton<ICleanupExecutor, CleanupExecutor>();
         services.AddSingleton<ICleanupLog, CleanupLog>();
         services.AddSingleton<ICleanupHistoryService, CleanupHistoryService>();

@@ -8,5 +8,9 @@ namespace PCManager.Services.Abstractions;
 /// </summary>
 public interface ICleanupExecutor
 {
-    Task<CleanupReport> ExecuteAsync(CleanupPlan plan, bool dryRun, CancellationToken cancellationToken = default);
+    Task<CleanupReport> ExecuteAsync(
+        CleanupPlan plan,
+        bool dryRun,
+        bool quarantine = false,
+        CancellationToken cancellationToken = default);
 }
