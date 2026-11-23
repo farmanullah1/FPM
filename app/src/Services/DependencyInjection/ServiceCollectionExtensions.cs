@@ -39,6 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IStorageSenseService, StorageSenseService>();
         services.AddSingleton<IDuplicateFinderService, DuplicateFinderService>();
         services.AddSingleton<IInstalledAppService, InstalledAppService>();
+        services.AddSingleton<IAppxPackageService, AppxPackageService>();
         services.AddSingleton<ISystemRepairService, SystemRepairService>();
         services.AddSingleton<IDefenderStatusService, DefenderStatusService>();
         services.AddSingleton<IWindowsUpdateStatusService, WindowsUpdateStatusService>();

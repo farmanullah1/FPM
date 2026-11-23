@@ -53,6 +53,7 @@ public partial class App : Application
         // WPF-only services.
         collection.AddSingleton<IThemeService, ThemeService>();
         collection.AddSingleton<IFloatingToolbarHost, FloatingToolbarHost>();
+        collection.AddSingleton<IUserConfirmationService, MessageBoxConfirmationService>();
 
         // Navigation is a broker so pages never reference the shell.
         collection.AddSingleton<NavigationService>();

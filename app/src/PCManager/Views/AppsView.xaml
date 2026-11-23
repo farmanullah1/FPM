@@ -147,6 +147,43 @@
                 </StackPanel>
             </Border>
 
+            <!-- Store/MSIX apps -->
+            <Border Style="{StaticResource Card}" Padding="20">
+                <StackPanel>
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="Microsoft Store apps" FontSize="17" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding StoreAppsSummary}" Style="{StaticResource CaptionText}" />
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Style="{StaticResource CaptionText}" Margin="0,2,0,0"
+                               Text="MSIX packages for this account. Framework, resource and system packages are hidden; Microsoft PC Manager is never removed by this app." />
+
+                    <ItemsControl ItemsSource="{Binding StoreApps}" Style="{StaticResource CardList}" Margin="0,12,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource RowCard}" Padding="10" Margin="0,0,0,6"
+                                        ToolTip="{Binding PackageFullName}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Subtitle}" Style="{StaticResource CaptionText}" />
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="Uninstall" Style="{StaticResource PillButton}"
+                                                Margin="12,0,0,0" VerticalAlignment="Center"
+                                                Command="{Binding UninstallCommand}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
             <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" />
 
         </StackPanel>

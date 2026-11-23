@@ -49,9 +49,28 @@ public sealed class InstalledAppViewModel : ObservableObject
     public AsyncRelayCommand UninstallCommand { get; }
 }
 
+/// <summary>One Store/MSIX package with a confirmation-gated uninstall command.</summary>
+public sealed class StoreAppViewModel : ObservableObject
+{
+    private readonly Func<StoreAppViewModel, Task> _uninstall;
+
+    public StoreAppViewModel(AppxPackage package, Func<StoreAppViewModel, Task> uninstall)
+    {
+        Package = package;
+        _uninstall = uninstall;
+        UninstallCommand = new AsyncRelayCommand(() => _uninstall(this));
+    }
+
+    public AppxPackage Package { get; }
+    public string Name => Package.Name;
+    public string Subtitle => Package.Subtitle;
+    public string PackageFullName => Package.PackageFullName;
+    public AsyncRelayCommand UninstallCommand { get; }
+}
+
 /// <summary>
 /// Apps: running user applications (ending is refused for protected processes), startup
-/// entries with real On/Off toggles, and the installed-application list with search.
+/// entries with real On/Off toggles, installed desktop apps and Store/MSIX packages.
 /// </summary>
 public sealed partial class AppsViewModel : ViewModelBase, IDisposable
 {
@@ -59,21 +78,28 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
 
     private readonly IProcessService _processes;
     private readonly IInstalledAppService _installedApps;
+    private readonly IAppxPackageService _appxPackages;
+    private readonly IUserConfirmationService _confirmation;
     private readonly ISettingsService _settings;
     private readonly IAppLogger _logger;
     private readonly DispatcherTimer _timer;
 
     private IReadOnlyList<InstalledApp> _allInstalled = Array.Empty<InstalledApp>();
+    private IReadOnlyList<AppxPackage> _allStore = Array.Empty<AppxPackage>();
     private bool _refreshing;
 
     public AppsViewModel(
         IProcessService processes,
         IInstalledAppService installedApps,
+        IAppxPackageService appxPackages,
+        IUserConfirmationService confirmation,
         ISettingsService settings,
         IAppLogger logger)
     {
         _processes = processes;
         _installedApps = installedApps;
+        _appxPackages = appxPackages;
+        _confirmation = confirmation;
         _settings = settings;
         _logger = logger;
 
@@ -94,6 +120,7 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
     public ObservableCollection<RunningAppViewModel> RunningApps { get; } = new();
     public ObservableCollection<StartupAppViewModel> StartupApps { get; } = new();
     public ObservableCollection<InstalledAppViewModel> InstalledApps { get; } = new();
+    public ObservableCollection<StoreAppViewModel> StoreApps { get; } = new();
 
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand RefreshStartupCommand { get; }
@@ -105,15 +132,23 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
     private string _installedSummary = "Reading installed applications...";
 
     [ObservableProperty]
+    private string _storeAppsSummary = "Reading Store/MSIX packages...";
+
+    [ObservableProperty]
     private string _processSummary = "Reading running applications...";
 
-    partial void OnAppSearchChanged(string value) => ApplyInstalledFilter();
+    partial void OnAppSearchChanged(string value)
+    {
+        ApplyInstalledFilter();
+        ApplyStoreFilter();
+    }
 
     public override async Task LoadAsync()
     {
         await RefreshProcessesAsync();
         await LoadStartupAsync();
         await LoadInstalledAsync();
+        await LoadStoreAppsAsync();
     }
 
     protected override void OnBusyChanged()
@@ -205,6 +240,20 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
         }
     }
 
+    private async Task LoadStoreAppsAsync()
+    {
+        try
+        {
+            _allStore = await _appxPackages.GetPackagesAsync();
+            ApplyStoreFilter();
+        }
+        catch (Exception ex)
+        {
+            StoreAppsSummary = $"Could not read Store/MSIX packages: {ex.Message}";
+            _logger.Error("Store/MSIX package refresh failed.", ex);
+        }
+    }
+
     private void ApplyInstalledFilter()
     {
         string query = AppSearch.Trim();
@@ -227,10 +276,65 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
         InstalledSummary = $"{_allInstalled.Count} installed · showing {InstalledApps.Count}";
     }
 
+    private void ApplyStoreFilter()
+    {
+        string query = AppSearch.Trim();
+
+        IEnumerable<AppxPackage> filtered = _allStore;
+
+        if (query.Length > 0)
+        {
+            filtered = filtered.Where(package =>
+                package.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                package.Publisher.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                package.Version.Contains(query, StringComparison.OrdinalIgnoreCase));
+        }
+
+        StoreApps.Clear();
+        foreach (AppxPackage package in filtered.Take(200))
+        {
+            StoreApps.Add(new StoreAppViewModel(package, UninstallStoreAsync));
+        }
+
+        StoreAppsSummary = $"{_allStore.Count} Store package(s) · showing {StoreApps.Count}";
+    }
+
     private async Task UninstallAsync(InstalledAppViewModel app)
     {
+        if (!_confirmation.Confirm(
+                "Uninstall application",
+                $"Start the uninstaller for {app.Name}?\n\nThe installer controls the rest of the process."))
+        {
+            return;
+        }
+
         OperationResult result = await _installedApps.UninstallAsync(app.App);
         StatusMessage = result.Message;
+    }
+
+    private async Task UninstallStoreAsync(StoreAppViewModel app)
+    {
+        if (!app.Package.CanUninstall)
+        {
+            StatusMessage = "That package is protected or is not removable by this app. Use Windows Settings.";
+            return;
+        }
+
+        if (!_confirmation.Confirm(
+                "Uninstall Store app",
+                $"Remove {app.Name} for your current Windows account?\n\n{app.PackageFullName}\n\nThe package must be reinstalled from the Store or its installer."))
+        {
+            return;
+        }
+
+        OperationResult result = await _appxPackages.UninstallAsync(app.Package);
+        StatusMessage = result.Message;
+
+        if (result.Success)
+        {
+            await LoadInstalledAsync();
+            await LoadStoreAppsAsync();
+        }
     }
 
     public void Dispose() => _timer.Stop();

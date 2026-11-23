@@ -61,7 +61,7 @@ app/
     │   │                        StorageSenseService
     │   ├── Protection/         Defender + Windows Update status
     │   ├── Toolbox/            ToolboxService, ToolLauncher, InstalledAppService,
-    │   │                        SystemRepairService, DefaultBrowserService
+    │   │                        AppxPackageService, SystemRepairService, DefaultBrowserService
     │   ├── Settings/           SettingsService (per-user JSON under %LOCALAPPDATA%)
     │   ├── Startup/            AppStartupService (HKCU Run value)
     │   └── DependencyInjection/ServiceCollectionExtensions.cs   ← single registration point
@@ -87,9 +87,9 @@ which is what makes each feature testable and replaceable.
 | Home | `HomeViewModel` | Live memory usage and temp-file size, one-click Boost (working-set trim + temp purge, reporting the measured available-memory delta and the bytes actually removed), Smart Boost auto-trim above the saved threshold, and four quick-action cards. |
 | Protection | `ProtectionViewModel` | Defender real-time/antivirus state and signature version, Windows Update service and pending restart, plus pop-up management, default browser, Explorer restart and default-apps cards. |
 | Storage | `StorageViewModel` | Drive usage from `DriveInfo`; Cleanup Center with a read-only numbered scan, tiered rows, typed approval gate (`proceed`/`only`/`keep`, ranges), dry run, safety-guarded execution, `cleanup_log.txt` and a measured before/after report; large-file filter (10/50/100/500 MB, 1 GB); duplicate finder (size + sampled SHA-256); Storage Sense. |
-| Apps | `AppsViewModel` | Live application list with RAM and CPU plus per-row End Task (this process and `MSPCManager*` are refused), startup entries from `Run`/`StartupApproved`/Startup folder/scheduled tasks with working toggles, and installed apps (HKLM/HKCU Uninstall keys) with search and uninstall. |
+| Apps | `AppsViewModel` | Live application list with RAM and CPU plus per-row End Task (this process and `MSPCManager*` are refused), startup entries from `Run`/`StartupApproved`/Startup folder/scheduled tasks with working toggles, installed Win32 apps (HKLM/HKCU Uninstall keys) with search and uninstall, and Store/MSIX packages from `Get-AppxPackage` with framework/system packages hidden and a confirmed current-user uninstall. |
 | Toolbox | `ToolboxViewModel` | Floating always-on-top toolbar toggle, multi-monitor screenshot via GDI, screen recorder (Game Bar with `psr.exe` fallback), calculator, notepad, `ipconfig /flushdns` and quick web links. |
-| Settings | `SettingsViewModel` | Start with Windows (own `HKCU\...\Run` value), Smart Boost on/off and threshold, Light/Dark theme, and the About block with data/log paths. |
+| Settings | `SettingsViewModel` | Start with Windows (own `HKCU\...\Run` value), Smart Boost on/off and threshold, protected paths (add/remove/reload whitelist), Light/Dark theme, and the About block with data/log paths. |
 
 ## Cleanup engine
 
@@ -107,7 +107,7 @@ The Storage page and the CLI use one engine, split so that measuring cannot dele
 | History | `Services/Cleanup/CleanupHistoryService.cs` | Last 50 runs in `cleanup_history.json`; last five shown in Storage |
 | Export | `Services/Cleanup/CleanupReportExporter.cs` | Measured report as Markdown or CSV under `reports\` |
 | Log | `Services/Cleanup/CleanupLog.cs` | `logs\cleanup_log.txt`, append-only, 5 MB rotation |
-| Whitelist | `Services/Cleanup/WhitelistService.cs` | `whitelist.json`, always wins over a rule |
+| Whitelist | `Services/Cleanup/WhitelistService.cs`, Settings card | `whitelist.json`, always wins over a rule; add/remove/reload from Settings |
 | Elevation client | `Services/Elevation/ElevationService.cs` | Starts the helper with `runas` only for an approved elevated rule; one request over a current-user-only pipe |
 | Helper | `Helper/Program.cs` | Fixed targets only, one shot, stops/restarts update services, logs to `helper-YYYYMMDD.log` |
 | Restore point | `Services/Elevation/ElevationService.cs` | Fixed `Checkpoint-Computer` command; UI checkbox and `--restore-point` |

@@ -66,7 +66,9 @@ session-0 processes). **Startup apps** reads Run/RunOnce keys, Startup folders a
 Scheduler, with working toggles through `StartupApproved`, `.lnk` renaming and
 `Enable/Disable-ScheduledTask`; built-in `\Microsoft\` tasks are shown read-only. **App
 management** lists installed Win32 apps from the HKLM/HKCU Uninstall keys with search,
-version, size and uninstall (Store packages open Settings).
+version, size and uninstall, then Store/MSIX packages from `Get-AppxPackage` with framework,
+system and Microsoft PC Manager packages hidden. Both uninstall buttons ask before acting;
+Store removal is current-user only and re-checks the exact package first.
 
 ### Toolbox
 Floating-toolbar switch (always-on-top pill with live RAM, Boost, screenshot, notepad,
@@ -76,8 +78,9 @@ recorder (Game Bar, falling back to Steps Recorder), calculator, notepad, DNS fl
 
 ### Settings
 Start with Windows through this app's own `HKCU\...\Run` value, Smart Boost on/off with a
-50–95 % threshold slider and reset, Light/Dark theme applied instantly, and an About block
-showing the data folder and today's log path with buttons to open them.
+50–95 % threshold slider and reset, a protected-paths manager that adds/removes whitelist
+entries, Light/Dark theme applied instantly, and an About block showing the data folder and
+today's log path with buttons to open them.
 
 ## Architecture
 

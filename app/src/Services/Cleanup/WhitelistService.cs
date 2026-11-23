@@ -47,7 +47,7 @@ public sealed class WhitelistService : IWhitelistService
 
         try
         {
-            full = Path.GetFullPath(path);
+            full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
         }
         catch
         {
@@ -92,7 +92,7 @@ public sealed class WhitelistService : IWhitelistService
 
                 try
                 {
-                    string normalised = Path.GetFullPath(entry.Trim());
+                    string normalised = Path.TrimEndingDirectorySeparator(Path.GetFullPath(entry.Trim()));
 
                     if (!loaded.Contains(normalised, StringComparer.OrdinalIgnoreCase))
                     {
@@ -127,7 +127,7 @@ public sealed class WhitelistService : IWhitelistService
 
         try
         {
-            full = Path.GetFullPath(path);
+            full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
         }
         catch
         {
@@ -161,7 +161,7 @@ public sealed class WhitelistService : IWhitelistService
 
         try
         {
-            full = Path.GetFullPath(path);
+            full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
         }
         catch
         {
