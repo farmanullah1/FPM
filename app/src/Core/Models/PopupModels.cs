@@ -6,7 +6,14 @@ public sealed record PopupSourceInfo(
     string WindowTitle,
     int ProcessId,
     int WindowCount,
-    bool IsAllowed);
+    bool IsAllowed,
+    int SeenCount)
+{
+    /// <summary>Local 30-day sighting count; never transmitted.</summary>
+    public string SeenLabel => SeenCount <= 1
+        ? "First sighting"
+        : $"Seen {SeenCount}× in 30 days";
+}
 
 /// <summary>Read-only view of the FPM section in the Windows hosts file.</summary>
 public sealed record HostsBlockState(int BlockedDomains, string Detail)

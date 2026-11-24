@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using PCManager.Core.Elevation;
 using PCManager.Core.Formatting;
+using PCManager.Core;
 
 namespace PCManager.Helper;
 
@@ -371,8 +372,6 @@ internal static class Program
         "etc",
         "hosts");
 
-    private const string HostsBegin = "# BEGIN FPM";
-    private const string HostsEnd = "# END FPM";
     private const int MaxHostsDomains = 100;
 
     /// <summary>
@@ -407,26 +406,24 @@ internal static class Program
             }
 
             string original = File.ReadAllText(HostsPath);
-            string withoutBlock = RemoveHostsBlock(original);
 
             if (domains.Count == 0)
             {
-                if (string.Equals(withoutBlock, original, StringComparison.Ordinal))
+                if (!HostsFileContent.HasBlock(original))
                 {
                     return Success(request, 0, 0, 0, "No FPM hosts block was present.");
                 }
 
                 string backup = BackupHostsFile();
-                File.WriteAllText(HostsPath, withoutBlock, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                File.WriteAllText(
+                    HostsPath,
+                    HostsFileContent.RemoveBlock(original),
+                    new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
                 Log($"Hosts block removed.");
                 return Success(request, 0, 0, 0, $"FPM hosts block removed. Backup: {backup}");
             }
 
-            string newline = original.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
-            string block = HostsBegin + newline +
-                           string.Join(newline, domains.Select(domain => $"0.0.0.0 {domain}")) +
-                           newline + HostsEnd;
-            string updated = withoutBlock.TrimEnd() + newline + newline + block + newline;
+            string updated = HostsFileContent.ApplyBlock(original, domains);
 
             string backupPath = BackupHostsFile();
             File.WriteAllText(HostsPath, updated, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
@@ -448,36 +445,6 @@ internal static class Program
             Log($"ManageHostsBlock failed: {ex}");
             return Failure(request, $"The hosts file could not be updated: {ex.Message}");
         }
-    }
-
-    private static string RemoveHostsBlock(string content)
-    {
-        var result = new List<string>();
-        bool inside = false;
-
-        foreach (string line in content.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n'))
-        {
-            string trimmed = line.Trim();
-
-            if (trimmed.Equals(HostsBegin, StringComparison.OrdinalIgnoreCase))
-            {
-                inside = true;
-                continue;
-            }
-
-            if (trimmed.Equals(HostsEnd, StringComparison.OrdinalIgnoreCase))
-            {
-                inside = false;
-                continue;
-            }
-
-            if (!inside)
-            {
-                result.Add(line);
-            }
-        }
-
-        return string.Join(Environment.NewLine, result).TrimEnd() + Environment.NewLine;
     }
 
     private static string BackupHostsFile()

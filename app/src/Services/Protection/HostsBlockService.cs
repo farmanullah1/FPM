@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using PCManager.Core;
 using PCManager.Core.Elevation;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
@@ -11,8 +12,6 @@ namespace PCManager.Services.Protection;
 /// </summary>
 public sealed class HostsBlockService : IHostsBlockService
 {
-    internal const string BeginMarker = "# BEGIN FPM";
-    internal const string EndMarker = "# END FPM";
     internal const int MaxDomains = 100;
 
     private static readonly Regex DomainPattern = new(
@@ -39,8 +38,7 @@ public sealed class HostsBlockService : IHostsBlockService
                 return HostsBlockState.None("The Windows hosts file was not found.");
             }
 
-            string[] lines = File.ReadAllLines(hostsPath);
-            int count = CountBlockedDomains(lines);
+            int count = HostsFileContent.CountBlockedDomains(File.ReadAllText(hostsPath));
             return count == 0
                 ? HostsBlockState.None("No FPM hosts block is active.")
                 : new HostsBlockState(count, $"FPM is blocking {count} domain(s) in the hosts file.");
@@ -124,32 +122,5 @@ public sealed class HostsBlockService : IHostsBlockService
             "hosts");
 
     public static int CountBlockedDomains(IEnumerable<string> lines)
-    {
-        bool inside = false;
-        int count = 0;
-
-        foreach (string line in lines)
-        {
-            string trimmed = line.Trim();
-
-            if (trimmed.Equals(BeginMarker, StringComparison.OrdinalIgnoreCase))
-            {
-                inside = true;
-                continue;
-            }
-
-            if (trimmed.Equals(EndMarker, StringComparison.OrdinalIgnoreCase))
-            {
-                inside = false;
-                continue;
-            }
-
-            if (inside && trimmed.Length > 0 && !trimmed.StartsWith('#'))
-            {
-                count++;
-            }
-        }
-
-        return count;
-    }
+        => HostsFileContent.CountBlockedDomains(string.Join('\n', lines));
 }

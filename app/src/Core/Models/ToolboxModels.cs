@@ -67,6 +67,9 @@ public sealed class AppSettings
 
     /// <summary>Upper bound for the whole quarantine, evicting the oldest entries first.</summary>
     public long QuarantineMaxBytes { get; set; } = 2L * 1024 * 1024 * 1024;
+
+    /// <summary>User-chosen http(s) endpoint for the download speed test.</summary>
+    public string SpeedTestEndpoint { get; set; } = "https://speed.cloudflare.com/__down?bytes=10000000";
 }
 
 public enum ThemeOption
