@@ -17,6 +17,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- ============================ A: contextual tip ============================ -->
@@ -324,7 +325,8 @@
                 </Grid>
             </Border>
 
-            <TextBlock Text="{Binding StatusMessage}" FontSize="9"
+            <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                       Text="{Binding StatusMessage}" FontSize="9"
                        Foreground="{DynamicResource App.Subtle}"
                        Margin="2,5,2,0" TextTrimming="CharacterEllipsis"
                        ToolTip="{Binding StatusMessage}" />
