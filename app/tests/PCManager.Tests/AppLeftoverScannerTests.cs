@@ -1,3 +1,4 @@
+using Microsoft.Win32;
 using PCManager.Core.Models;
 using PCManager.Services.Apps;
 using PCManager.Services.Cleanup;
@@ -79,5 +80,43 @@ public sealed class AppLeftoverScannerTests
 
         Assert.True(result.Success);
         Assert.False(Directory.Exists(testDir));
+    }
+
+    [Fact]
+    public async Task ExportRegBackupAsync_WritesOneFilePerKeyInsteadOfOverwriting()
+    {
+        var safetyGuard = new SafetyGuard(new WhitelistService());
+        var scanner = new AppLeftoverScanner(safetyGuard, new TestLogger());
+
+        string suffix = Guid.NewGuid().ToString("N");
+        string subKey = $"Software\\FPM\\__LeftoverBackupTest_{suffix}";
+        string keyA = $"HKEY_CURRENT_USER\\{subKey}\\A";
+        string keyB = $"HKEY_CURRENT_USER\\{subKey}\\B";
+        string backupDir = Path.Combine(Path.GetTempPath(), "FPM_RegBackup_Test_" + suffix);
+
+        try
+        {
+            using (Registry.CurrentUser.CreateSubKey(subKey + "\\A"))
+            using (Registry.CurrentUser.CreateSubKey(subKey + "\\B"))
+            {
+            }
+
+            OperationResult result = await scanner.ExportRegBackupAsync(
+                new[] { keyA, keyB },
+                Path.Combine(backupDir, "reg_leftovers.reg"));
+
+            Assert.True(result.Success, result.Message);
+            string[] files = Directory.GetFiles(backupDir, "*.reg");
+            Assert.Equal(2, files.Length);
+            Assert.All(files, file => Assert.Contains("Windows Registry Editor", File.ReadAllText(file)));
+        }
+        finally
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(subKey, throwOnMissingSubKey: false);
+            if (Directory.Exists(backupDir))
+            {
+                Directory.Delete(backupDir, recursive: true);
+            }
+        }
     }
 }
