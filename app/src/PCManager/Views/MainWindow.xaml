@@ -21,6 +21,10 @@
                       CornerRadius="10" />
     </WindowChrome.WindowChrome>
 
+    <Window.InputBindings>
+        <KeyBinding Modifiers="Control" Key="K" Command="{Binding ToggleCommandPaletteCommand}" />
+    </Window.InputBindings>
+
     <Window.Resources>
         <!-- Adaptive Navigation Item Template -->
         <DataTemplate x:Key="NavigationItemTemplate">
@@ -107,6 +111,11 @@
                     <TextBlock Text="FPM"
                                FontSize="11.5" FontWeight="SemiBold"
                                Margin="8,0,0,0" VerticalAlignment="Center" />
+                    <Button Content="Ctrl+K" Style="{StaticResource PillButton}" Padding="6,1" FontSize="9.5"
+                            ToolTip="Open Command Palette (Ctrl+K)"
+                            Command="{Binding ToggleCommandPaletteCommand}"
+                            Margin="10,0,0,0" VerticalAlignment="Center"
+                            WindowChrome.IsHitTestVisibleInChrome="True" />
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
@@ -167,6 +176,71 @@
 
                 <!-- Hosted Page View -->
                 <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
+            </Grid>
+
+            <!-- ======================= Command Palette Overlay ======================= -->
+            <Grid Grid.RowSpan="2"
+                  Background="#99000000"
+                  Visibility="{Binding IsCommandPaletteOpen, Converter={StaticResource BoolToVisibility}}">
+                <Border Width="420" MaxHeight="380"
+                        VerticalAlignment="Top" Margin="0,48,0,0"
+                        Background="{DynamicResource App.CardBackground}"
+                        BorderBrush="{DynamicResource App.Gold}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding CommandPaletteQuery, UpdateSourceTrigger=PropertyChanged}"
+                                     FontSize="13" Padding="8,6"
+                                     ToolTip="Search commands or pages" />
+                            <Button Grid.Column="1" Content="&#x2715;" Style="{StaticResource PillButton}"
+                                    Margin="6,0,0,0" VerticalAlignment="Center"
+                                    Command="{Binding CloseCommandPaletteCommand}" />
+                        </Grid>
+
+                        <ListBox ItemsSource="{Binding FilteredCommands}"
+                                 MaxHeight="260"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 BorderThickness="0"
+                                 Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="8,6" Margin="0,2" CornerRadius="4"
+                                            Background="{DynamicResource App.RowBackground}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Category}" Style="{StaticResource CaptionText}" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding Shortcut}" Style="{StaticResource CaptionText}"
+                                                       VerticalAlignment="Center" Margin="8,0" />
+                                            <Button Grid.Column="2" Content="Go" Style="{StaticResource PillButton}"
+                                                    VerticalAlignment="Center"
+                                                    Command="{Binding DataContext.ExecutePaletteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Padding" Value="0" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
             </Grid>
         </Grid>
     </Border>

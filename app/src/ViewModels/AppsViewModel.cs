@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCManager.Core;
+using PCManager.Core.Formatting;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
 
@@ -184,6 +186,9 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
     {
         RefreshCommand.NotifyCanExecuteChanged();
         RefreshStartupCommand.NotifyCanExecuteChanged();
+        ScanLeftoversCommand.NotifyCanExecuteChanged();
+        CleanLeftoversCommand.NotifyCanExecuteChanged();
+        ExportRegBackupCommand.NotifyCanExecuteChanged();
     }
 
     private async Task RefreshProcessesAsync()
@@ -299,7 +304,7 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
         InstalledApps.Clear();
         foreach (InstalledApp app in filtered.Take(200))
         {
-            InstalledApps.Add(new InstalledAppViewModel(app, UninstallAsync));
+            InstalledApps.Add(new InstalledAppViewModel(app, UninstallAsync, a => ScanLeftoversForAppAsync(a)));
         }
 
         InstalledSummary = $"{_allInstalled.Count} installed · showing {InstalledApps.Count}";
@@ -344,6 +349,126 @@ public sealed partial class AppsViewModel : ViewModelBase, IDisposable
 
         // The uninstaller may have changed the list even when it did not finish cleanly.
         await LoadInstalledAsync();
+
+        if (result.Success)
+        {
+            await ScanLeftoversAsync(app.Name, app.App.Publisher);
+        }
+    }
+
+    public async Task ScanLeftoversForAppAsync(InstalledAppViewModel app)
+    {
+        LeftoverTargetApp = app.Name;
+        await ScanLeftoversAsync(app.Name, app.App.Publisher);
+    }
+
+    public async Task ScanLeftoversAsync(string appName, string? publisher = null)
+    {
+        if (_leftoverScanner is null)
+        {
+            LeftoverSummary = "Leftovers scanner is not available.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(appName))
+        {
+            LeftoverSummary = "Enter an application name to scan for leftovers.";
+            return;
+        }
+
+        LeftoverTargetApp = appName;
+        IsScanningLeftovers = true;
+        LeftoverSummary = $"Scanning for orphaned files, folders, and registry keys for '{appName}'...";
+
+        try
+        {
+            AppLeftoverScanResult result = await _leftoverScanner.ScanLeftoversAsync(appName, publisher);
+            LeftoverItems.Clear();
+            foreach (AppLeftoverItem item in result.Items)
+            {
+                LeftoverItems.Add(item);
+            }
+
+            HasLeftoverItems = LeftoverItems.Count > 0;
+            LeftoverSummary = result.FoundAny
+                ? $"Found {result.Items.Count} leftover remnants for '{appName}': {ByteFormatter.Format(result.TotalBytes)} in folders and {result.RegKeyCount} registry key(s)."
+                : $"No orphaned remnants or leftovers detected for '{appName}'.";
+        }
+        catch (Exception ex)
+        {
+            LeftoverSummary = $"Leftovers scan failed: {ex.Message}";
+            _logger.Error("Leftovers scan failed.", ex);
+        }
+        finally
+        {
+            IsScanningLeftovers = false;
+            CleanLeftoversCommand.NotifyCanExecuteChanged();
+            ExportRegBackupCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private async Task CleanLeftoversAsync()
+    {
+        if (_leftoverScanner is null || LeftoverItems.Count == 0)
+        {
+            return;
+        }
+
+        int count = LeftoverItems.Count(i => i.IsSelected);
+        if (count == 0)
+        {
+            StatusMessage = "No leftover items are selected.";
+            return;
+        }
+
+        if (!_confirmation.Confirm(
+                "Clean App Leftovers",
+                $"Clean {count} selected leftover item(s)?\n\nFolders will be moved to the Windows Recycle Bin, and any registry keys will be backed up to a .reg file first."))
+        {
+            return;
+        }
+
+        IsBusy = true;
+        StatusMessage = "Cleaning app leftovers (Recycle Bin & registry backup)...";
+
+        try
+        {
+            OperationResult result = await _leftoverScanner.CleanLeftoversAsync(LeftoverItems, createRegBackup: true);
+            StatusMessage = result.Message;
+
+            // Re-scan
+            await ScanLeftoversAsync(LeftoverTargetApp);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Clean leftovers failed: {ex.Message}";
+            _logger.Error("Clean leftovers failed.", ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task ExportRegBackupAsync()
+    {
+        if (_leftoverScanner is null)
+        {
+            return;
+        }
+
+        var regKeys = LeftoverItems.Where(i => i.Kind == AppLeftoverKind.RegistryKey).Select(i => i.TargetPath).ToList();
+        if (regKeys.Count == 0)
+        {
+            StatusMessage = "No registry remnants are in the leftovers list.";
+            return;
+        }
+
+        string backupDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FPM", "Backups");
+        string backupFile = Path.Combine(backupDir, $"reg_leftovers_{DateTime.Now:yyyyMMdd_HHmmss}.reg");
+
+        OperationResult result = await _leftoverScanner.ExportRegBackupAsync(regKeys, backupFile);
+        StatusMessage = result.Message;
     }
 
     private async Task UninstallStoreAsync(StoreAppViewModel app)

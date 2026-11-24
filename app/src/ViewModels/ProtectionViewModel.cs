@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCManager.Core.Models;
@@ -6,8 +7,9 @@ using PCManager.Services.Abstractions;
 namespace PCManager.ViewModels;
 
 /// <summary>
-/// Protection: the security status banner, the Windows Update check, and the four action
-/// cards (pop-up management, default browser, taskbar repair, restore default apps).
+/// Protection: the security status banner, the Windows Update check, the four action
+/// cards (pop-up management, default browser, taskbar repair, restore default apps),
+/// and the network connectivity diagnostics & virus scan triggers.
 /// </summary>
 public sealed partial class ProtectionViewModel : ViewModelBase
 {
@@ -15,17 +17,20 @@ public sealed partial class ProtectionViewModel : ViewModelBase
     private readonly ISystemRepairService _repair;
     private readonly IDefaultBrowserService _browser;
     private readonly IAppLogger _logger;
+    private readonly INetworkDiagnosticsService? _networkDiag;
 
     public ProtectionViewModel(
         IProtectionService protection,
         ISystemRepairService repair,
         IDefaultBrowserService browser,
-        IAppLogger logger)
+        IAppLogger logger,
+        INetworkDiagnosticsService? networkDiag = null)
     {
         _protection = protection;
         _repair = repair;
         _browser = browser;
         _logger = logger;
+        _networkDiag = networkDiag;
 
         RefreshCommand = new AsyncRelayCommand(RefreshAsync, () => !IsBusy);
         CheckUpdatesCommand = new AsyncRelayCommand(CheckUpdatesAsync, () => !IsBusy);
@@ -33,7 +38,12 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         BrowserCommand = new AsyncRelayCommand(BrowserAsync, () => !IsBusy);
         TaskbarCommand = new AsyncRelayCommand(TaskbarAsync, () => !IsBusy);
         RestoreAppsCommand = new RelayCommand(() => Run(_repair.OpenDefaultAppsSettings));
+        RunNetworkDiagnosticsCommand = new AsyncRelayCommand(RunNetworkDiagnosticsAsync, () => !IsBusy && !IsRunningNetworkDiag);
+        FlushDnsCommand = new AsyncRelayCommand(FlushDnsAsync, () => !IsBusy);
+        StartQuickScanCommand = new AsyncRelayCommand(StartQuickScanAsync, () => !IsBusy);
     }
+
+    public ObservableCollection<PingResultItem> PingResults { get; } = new();
 
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand CheckUpdatesCommand { get; }
@@ -41,6 +51,21 @@ public sealed partial class ProtectionViewModel : ViewModelBase
     public AsyncRelayCommand BrowserCommand { get; }
     public AsyncRelayCommand TaskbarCommand { get; }
     public RelayCommand RestoreAppsCommand { get; }
+    public AsyncRelayCommand RunNetworkDiagnosticsCommand { get; }
+    public AsyncRelayCommand FlushDnsCommand { get; }
+    public AsyncRelayCommand StartQuickScanCommand { get; }
+
+    [ObservableProperty]
+    private NetworkAdapterDetails? _activeAdapter;
+
+    [ObservableProperty]
+    private bool _hasNetworkDiagResult;
+
+    [ObservableProperty]
+    private bool _isRunningNetworkDiag;
+
+    [ObservableProperty]
+    private string _networkSummary = "Check your active adapter, DNS response, and latency.";
 
     [ObservableProperty]
     private bool _bannerHealthy = true;
@@ -68,6 +93,9 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         CheckUpdatesCommand.NotifyCanExecuteChanged();
         BrowserCommand.NotifyCanExecuteChanged();
         TaskbarCommand.NotifyCanExecuteChanged();
+        RunNetworkDiagnosticsCommand.NotifyCanExecuteChanged();
+        FlushDnsCommand.NotifyCanExecuteChanged();
+        StartQuickScanCommand.NotifyCanExecuteChanged();
     }
 
     private async Task RefreshAsync()
@@ -163,6 +191,94 @@ public sealed partial class ProtectionViewModel : ViewModelBase
             OperationResult result = await Task.Run(_repair.RestartExplorer);
             StatusMessage = result.Message;
             _logger.Info($"Taskbar repair: {result.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task RunNetworkDiagnosticsAsync()
+    {
+        if (_networkDiag is null)
+        {
+            NetworkSummary = "Network diagnostics service is not available.";
+            return;
+        }
+
+        IsRunningNetworkDiag = true;
+        NetworkSummary = "Testing adapter, gateway, DNS, and internet endpoints...";
+
+        try
+        {
+            NetworkDiagnosticsSummary summary = await _networkDiag.RunDiagnosticsAsync();
+            ActiveAdapter = summary.Adapter;
+            PingResults.Clear();
+            foreach (PingResultItem ping in summary.Pings)
+            {
+                PingResults.Add(ping);
+            }
+
+            HasNetworkDiagResult = true;
+            NetworkSummary = summary.OverallStatus;
+            StatusMessage = summary.OverallStatus;
+        }
+        catch (Exception ex)
+        {
+            NetworkSummary = $"Network diagnostics failed: {ex.Message}";
+            _logger.Error("Network diagnostics failed.", ex);
+        }
+        finally
+        {
+            IsRunningNetworkDiag = false;
+        }
+    }
+
+    private async Task FlushDnsAsync()
+    {
+        if (_networkDiag is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        StatusMessage = "Flushing DNS resolver cache...";
+
+        try
+        {
+            OperationResult result = await _networkDiag.FlushDnsCacheAsync();
+            StatusMessage = result.Message;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Flush DNS failed: {ex.Message}";
+            _logger.Error("Flush DNS failed.", ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task StartQuickScanAsync()
+    {
+        if (_networkDiag is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        StatusMessage = "Initiating Windows Defender Quick Scan...";
+
+        try
+        {
+            OperationResult result = await _networkDiag.StartQuickVirusScanAsync();
+            StatusMessage = result.Message;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Quick scan failed: {ex.Message}";
+            _logger.Error("Quick scan failed.", ex);
         }
         finally
         {

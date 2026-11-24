@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using PCManager.Core;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
@@ -50,11 +51,87 @@ public sealed partial class MainViewModel : ObservableObject
 
         _currentPage = Pages[0].Page;
         _selectedPage = Pages[0];
+
+        ToggleCommandPaletteCommand = new RelayCommand(ToggleCommandPalette);
+        CloseCommandPaletteCommand = new RelayCommand(() => IsCommandPaletteOpen = false);
+        ExecutePaletteCommand = new RelayCommand<CommandPaletteEntry>(ExecuteCommand);
+
+        BuildCommandPalette();
     }
 
     public ObservableCollection<NavigationItem> Pages { get; }
 
     public ObservableCollection<NavigationItem> SettingsItems { get; }
+
+    public ObservableCollection<CommandPaletteEntry> FilteredCommands { get; } = new();
+    private readonly List<CommandPaletteEntry> _allCommands = new();
+
+    public IRelayCommand ToggleCommandPaletteCommand { get; }
+    public IRelayCommand CloseCommandPaletteCommand { get; }
+    public IRelayCommand<CommandPaletteEntry> ExecutePaletteCommand { get; }
+
+    [ObservableProperty]
+    private bool _isCommandPaletteOpen;
+
+    [ObservableProperty]
+    private string _commandPaletteQuery = string.Empty;
+
+    partial void OnCommandPaletteQueryChanged(string value)
+    {
+        FilterCommands();
+    }
+
+    private void ToggleCommandPalette()
+    {
+        IsCommandPaletteOpen = !IsCommandPaletteOpen;
+        if (IsCommandPaletteOpen)
+        {
+            CommandPaletteQuery = string.Empty;
+            FilterCommands();
+        }
+    }
+
+    private void ExecuteCommand(CommandPaletteEntry? entry)
+    {
+        if (entry is null) return;
+        IsCommandPaletteOpen = false;
+        entry.Action.Invoke();
+    }
+
+    private void FilterCommands()
+    {
+        FilteredCommands.Clear();
+        string q = CommandPaletteQuery.Trim();
+        var matches = string.IsNullOrWhiteSpace(q)
+            ? _allCommands
+            : _allCommands.Where(c => c.Title.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                                      c.Category.Contains(q, StringComparison.OrdinalIgnoreCase));
+
+        foreach (CommandPaletteEntry item in matches)
+        {
+            FilteredCommands.Add(item);
+        }
+    }
+
+    private void BuildCommandPalette()
+    {
+        _allCommands.Clear();
+        _allCommands.Add(new CommandPaletteEntry("Navigate to Home", "Navigation", "Ctrl+1", () => SelectPage(PageKeys.Home)));
+        _allCommands.Add(new CommandPaletteEntry("Navigate to Memory", "Navigation", "Ctrl+2", () => SelectPage(PageKeys.Memory)));
+        _allCommands.Add(new CommandPaletteEntry("Navigate to Protection", "Navigation", "Ctrl+3", () => SelectPage(PageKeys.Protection)));
+        _allCommands.Add(new CommandPaletteEntry("Navigate to Storage", "Navigation", "Ctrl+4", () => SelectPage(PageKeys.Storage)));
+        _allCommands.Add(new CommandPaletteEntry("Navigate to Apps", "Navigation", "Ctrl+5", () => SelectPage(PageKeys.Apps)));
+        _allCommands.Add(new CommandPaletteEntry("Navigate to Toolbox", "Navigation", "Ctrl+6", () => SelectPage(PageKeys.Toolbox)));
+        _allCommands.Add(new CommandPaletteEntry("Navigate to Settings", "Navigation", "Ctrl+,", () => SelectPage(PageKeys.Settings)));
+        _allCommands.Add(new CommandPaletteEntry("One-Click Cleanup", "Action", "Enter", () => SelectPage(PageKeys.Home)));
+        _allCommands.Add(new CommandPaletteEntry("Analyze Component Store (DISM)", "Action", string.Empty, () => SelectPage(PageKeys.Storage)));
+        _allCommands.Add(new CommandPaletteEntry("Downloads Categorization Manager", "Action", string.Empty, () => SelectPage(PageKeys.Storage)));
+        _allCommands.Add(new CommandPaletteEntry("App Leftovers Deep Cleaner", "Action", string.Empty, () => SelectPage(PageKeys.Apps)));
+        _allCommands.Add(new CommandPaletteEntry("Test Network Diagnostics & Latency", "Action", string.Empty, () => SelectPage(PageKeys.Protection)));
+        _allCommands.Add(new CommandPaletteEntry("Flush DNS Resolver Cache", "Action", string.Empty, () => SelectPage(PageKeys.Protection)));
+        _allCommands.Add(new CommandPaletteEntry("Trigger Windows Defender Quick Scan", "Action", string.Empty, () => SelectPage(PageKeys.Protection)));
+        FilterCommands();
+    }
 
     public string ProductName => AppInfo.ProductName;
 

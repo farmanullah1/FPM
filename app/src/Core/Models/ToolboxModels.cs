@@ -59,6 +59,12 @@ public sealed class AppSettings
     /// <summary>Days a file may stay in the quarantine before the retention pass removes it.</summary>
     public int QuarantineRetentionDays { get; set; } = 7;
 
+    /// <summary>Active application language code ("en" or "ur").</summary>
+    public string Language { get; set; } = "en";
+
+    /// <summary>Whether local usage tracking is enabled for stale app discovery.</summary>
+    public bool UsageTrackingEnabled { get; set; } = true;
+
     /// <summary>Upper bound for the whole quarantine, evicting the oldest entries first.</summary>
     public long QuarantineMaxBytes { get; set; } = 2L * 1024 * 1024 * 1024;
 }

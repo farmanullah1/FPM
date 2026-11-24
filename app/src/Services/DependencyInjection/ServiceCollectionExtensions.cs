@@ -74,6 +74,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<INetworkThroughputService, PCManager.Services.Network.NetworkThroughputService>();
         services.AddSingleton<IStorageIntelligenceService, PCManager.Services.Storage.StorageIntelligenceService>();
         services.AddSingleton<IAppLeftoverScanner, PCManager.Services.Apps.AppLeftoverScanner>();
+        services.AddSingleton<INetworkDiagnosticsService, PCManager.Services.Network.NetworkDiagnosticsService>();
+        services.AddSingleton<IMaintenanceReadinessService, PCManager.Services.Infrastructure.MaintenanceReadinessService>();
 
         // --- Page facades -------------------------------------------------
         services.AddSingleton<IPcBoostService, PcBoostService>();

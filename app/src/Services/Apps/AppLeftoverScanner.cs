@@ -47,7 +47,7 @@ public sealed class AppLeftoverScanner : IAppLeftoverScanner
         // Safety verification: never scan or clean protected system components
         if (IsProtected(cleanName))
         {
-            _logger.Warn($"Refused leftover scan for protected name: {cleanName}");
+            _logger.Info($"Refused leftover scan for protected name: {cleanName}");
             return new AppLeftoverScanResult(cleanName, Array.Empty<AppLeftoverItem>(), 0, 0, false);
         }
 
@@ -81,8 +81,8 @@ public sealed class AppLeftoverScanner : IAppLeftoverScanner
                 if (Directory.Exists(dir))
                 {
                     // Double check with SafetyGuard
-                    SafetyDecision decision = _safetyGuard.EvaluatePath(dir);
-                    if (decision.IsAllowed)
+                    SafetyVerdict verdict = _safetyGuard.EvaluateRoot(dir, new[] { dir });
+                    if (verdict.Allowed)
                     {
                         long size = CalculateDirectorySize(dir, cancellationToken);
                         items.Add(new AppLeftoverItem(
@@ -103,13 +103,13 @@ public sealed class AppLeftoverScanner : IAppLeftoverScanner
                             0,
                             "-",
                             isSafeToRemove: false,
-                            safetyReason: decision.Reason));
+                            safetyReason: verdict.Reason));
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.Warn($"Error probing directory '{dir}': {ex.Message}");
+                _logger.Info($"Error probing directory '{dir}': {ex.Message}");
             }
         }
 
@@ -152,7 +152,7 @@ public sealed class AppLeftoverScanner : IAppLeftoverScanner
             }
             catch (Exception ex)
             {
-                _logger.Warn($"Error probing registry '{hive}\\{subKey}': {ex.Message}");
+                _logger.Info($"Error probing registry '{hive}\\{subKey}': {ex.Message}");
             }
         }
 
@@ -170,37 +170,99 @@ public sealed class AppLeftoverScanner : IAppLeftoverScanner
         {
             try
             {
-                string? dir = Path.GetDirectoryName(backupFilePath);
-                if (!string.IsNullOrWhiteSpace(dir))
+                List<string> keys = registryKeys
+                    .Where(k => !string.IsNullOrWhiteSpace(k))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                if (keys.Count == 0)
                 {
-                    Directory.CreateDirectory(dir);
+                    return OperationResult.Fail("No registry keys were supplied for the backup.");
                 }
 
-                foreach (string key in registryKeys)
+                string? dir = Path.GetDirectoryName(backupFilePath);
+                if (string.IsNullOrWhiteSpace(dir))
+                {
+                    return OperationResult.Fail("The registry backup path has no folder.");
+                }
+
+                Directory.CreateDirectory(dir);
+                string baseName = Path.GetFileNameWithoutExtension(backupFilePath);
+                if (string.IsNullOrWhiteSpace(baseName))
+                {
+                    baseName = "reg_leftovers";
+                }
+
+                var written = new List<string>();
+                var failures = new List<string>();
+
+                for (int index = 0; index < keys.Count; index++)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    // Invoke reg.exe export
-                    ProcessStartInfo psi = new("reg.exe", $"export \"{key}\" \"{backupFilePath}\" /y")
+
+                    // One file per key: reg.exe export overwrites, so sharing one name would
+                    // silently lose every key except the last.
+                    string fileName = keys.Count == 1
+                        ? $"{baseName}.reg"
+                        : $"{baseName}_{index + 1:00}_{SanitizeKeyName(keys[index])}.reg";
+                    string target = Path.Combine(dir, fileName);
+
+                    ProcessStartInfo psi = new("reg.exe")
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
-                        RedirectStandardError = true,
-                        RedirectStandardOutput = true
+                        RedirectStandardError = true
                     };
+                    psi.ArgumentList.Add("export");
+                    psi.ArgumentList.Add(keys[index]);
+                    psi.ArgumentList.Add(target);
+                    psi.ArgumentList.Add("/y");
 
                     using Process? proc = Process.Start(psi);
-                    proc?.WaitForExit(5000);
+                    if (proc is null)
+                    {
+                        failures.Add(keys[index]);
+                        continue;
+                    }
+
+                    string error = proc.StandardError.ReadToEnd();
+                    proc.WaitForExit(10000);
+
+                    if (proc.ExitCode != 0 || !File.Exists(target))
+                    {
+                        failures.Add(string.IsNullOrWhiteSpace(error) ? keys[index] : $"{keys[index]} ({error.Trim()})");
+                        continue;
+                    }
+
+                    written.Add(target);
                 }
 
-                return File.Exists(backupFilePath)
-                    ? OperationResult.Ok($"Exported registry backup to: {backupFilePath}")
-                    : OperationResult.Fail("Registry export command did not produce a file.");
+                if (failures.Count > 0)
+                {
+                    return OperationResult.Fail(
+                        $"Exported {written.Count} of {keys.Count} registry key(s); failed: {string.Join("; ", failures)}");
+                }
+
+                return OperationResult.Ok(
+                    keys.Count == 1 ? $"Exported registry backup to: {written[0]}" : $"Exported {written.Count} registry backups to: {dir}");
             }
             catch (Exception ex)
             {
                 return OperationResult.Fail($"Registry export failed: {ex.Message}");
             }
         }, cancellationToken);
+
+    private static string SanitizeKeyName(string key)
+    {
+        char[] invalid = Path.GetInvalidFileNameChars();
+        var builder = new System.Text.StringBuilder(key.Length);
+        foreach (char c in key)
+        {
+            builder.Append(c == '\\' || Array.IndexOf(invalid, c) >= 0 ? '_' : c);
+        }
+
+        string result = builder.ToString().Trim('_');
+        return result.Length > 60 ? result[^60..] : result;
+    }
 
     public Task<OperationResult> CleanLeftoversAsync(
         IEnumerable<AppLeftoverItem> items,
@@ -224,7 +286,12 @@ public sealed class AppLeftoverScanner : IAppLeftoverScanner
             {
                 string backupDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FPM", "Backups");
                 string backupPath = Path.Combine(backupDir, $"reg_leftovers_{DateTime.Now:yyyyMMdd_HHmmss}.reg");
-                ExportRegBackupAsync(regKeys, backupPath, cancellationToken).GetAwaiter().GetResult();
+                OperationResult backup = ExportRegBackupAsync(regKeys, backupPath, cancellationToken).GetAwaiter().GetResult();
+                if (!backup.Success)
+                {
+                    // Fail closed: no registry key may disappear without a readable backup.
+                    return OperationResult.Fail($"Leftover cleanup stopped because the registry backup failed. {backup.Message}");
+                }
             }
 
             foreach (AppLeftoverItem item in selectedItems)

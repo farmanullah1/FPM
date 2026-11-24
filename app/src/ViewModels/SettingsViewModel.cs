@@ -23,6 +23,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
     private readonly IToolLauncher _launcher;
     private readonly IWhitelistService _whitelist;
     private readonly IAppLogger _logger;
+    private readonly IMaintenanceReadinessService? _readinessService;
 
     public SettingsViewModel(
         IAppStartupService appStartup,
@@ -30,7 +31,8 @@ public sealed partial class SettingsViewModel : ViewModelBase
         IThemeService theme,
         IToolLauncher launcher,
         IWhitelistService whitelist,
-        IAppLogger logger)
+        IAppLogger logger,
+        IMaintenanceReadinessService? readinessService = null)
     {
         _appStartup = appStartup;
         _settings = settings;
@@ -38,6 +40,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         _launcher = launcher;
         _whitelist = whitelist;
         _logger = logger;
+        _readinessService = readinessService;
 
         OpenDataFolderCommand = new RelayCommand(() => OpenFolder(AppInfo.DataFolder));
         OpenLogFolderCommand = new RelayCommand(OpenLogFolder);
@@ -48,6 +51,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         OpenWhitelistFolderCommand = new RelayCommand(() => OpenFolder(AppInfo.DataFolder));
         SetQuarantineRetentionCommand = new RelayCommand<string>(SetQuarantineRetention);
         SetQuarantineMaxSizeCommand = new RelayCommand<string>(SetQuarantineMaxSize);
+        RunReadinessCheckCommand = new AsyncRelayCommand(RunReadinessCheckAsync, () => !IsBusy && !IsRunningReadinessCheck);
 
         RefreshWhitelist();
     }
@@ -61,8 +65,10 @@ public sealed partial class SettingsViewModel : ViewModelBase
     public RelayCommand OpenWhitelistFolderCommand { get; }
     public RelayCommand<string> SetQuarantineRetentionCommand { get; }
     public RelayCommand<string> SetQuarantineMaxSizeCommand { get; }
+    public AsyncRelayCommand RunReadinessCheckCommand { get; }
 
     public ObservableCollection<string> WhitelistEntries { get; } = new();
+    public ObservableCollection<ReadinessCheckItem> ReadinessChecks { get; } = new();
 
     [ObservableProperty]
     private string _whitelistPathInput = string.Empty;
@@ -72,6 +78,15 @@ public sealed partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _whitelistCountText = "No protected paths yet.";
+
+    [ObservableProperty]
+    private bool _hasReadinessResult;
+
+    [ObservableProperty]
+    private bool _isRunningReadinessCheck;
+
+    [ObservableProperty]
+    private string _readinessSummary = "Check FPM subsystems, data folder, rule catalog, and storage headroom.";
 
     public string WhitelistFilePath => _whitelist.FilePath;
 
@@ -272,6 +287,80 @@ public sealed partial class SettingsViewModel : ViewModelBase
 
         SelectedWhitelistEntry = null;
         RemoveWhitelistCommand.NotifyCanExecuteChanged();
+    }
+
+    public string Language
+    {
+        get => _settings.Current.Language;
+        set
+        {
+            if (_settings.Current.Language == value)
+            {
+                return;
+            }
+
+            _settings.Current.Language = value;
+            _settings.Save();
+            OnPropertyChanged();
+            StatusMessage = value == "ur" ? "Language set to Urdu (اردو)." : "Language set to English.";
+        }
+    }
+
+    public bool UsageTrackingEnabled
+    {
+        get => _settings.Current.UsageTrackingEnabled;
+        set
+        {
+            if (_settings.Current.UsageTrackingEnabled == value)
+            {
+                return;
+            }
+
+            _settings.Current.UsageTrackingEnabled = value;
+            _settings.Save();
+            OnPropertyChanged();
+            StatusMessage = value ? "Local usage tracking enabled." : "Local usage tracking disabled.";
+        }
+    }
+
+    public async Task RunReadinessCheckAsync()
+    {
+        if (_readinessService is null)
+        {
+            ReadinessSummary = "Readiness service is not available.";
+            return;
+        }
+
+        IsRunningReadinessCheck = true;
+        ReadinessSummary = "Evaluating FPM subsystem readiness and storage headroom...";
+
+        try
+        {
+            MaintenanceReadinessResult result = await _readinessService.CheckReadinessAsync();
+            ReadinessChecks.Clear();
+            foreach (ReadinessCheckItem item in result.Checks)
+            {
+                ReadinessChecks.Add(item);
+            }
+
+            HasReadinessResult = true;
+            ReadinessSummary = result.Summary;
+            StatusMessage = result.Summary;
+        }
+        catch (Exception ex)
+        {
+            ReadinessSummary = $"Readiness check failed: {ex.Message}";
+            _logger.Error("Readiness check failed.", ex);
+        }
+        finally
+        {
+            IsRunningReadinessCheck = false;
+        }
+    }
+
+    protected override void OnBusyChanged()
+    {
+        RunReadinessCheckCommand.NotifyCanExecuteChanged();
     }
 
     private void OpenLogFolder()

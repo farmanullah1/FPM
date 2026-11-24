@@ -21,4 +21,11 @@
     <SolidColorBrush x:Key="App.Selection" Color="#FEF3C7" />
     <SolidColorBrush x:Key="App.Track" Color="#F1EDE2" />
 
+    <!-- Aliases kept for the responsive shell's command palette (v7 token names). -->
+    <SolidColorBrush x:Key="App.CardBackground" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="App.RowBackground" Color="#FFFDF7" />
+    <SolidColorBrush x:Key="App.Hover" Color="#FFFDF7" />
+    <SolidColorBrush x:Key="App.Gold" Color="#F59E0B" />
+    <SolidColorBrush x:Key="App.TextSubtle" Color="#57534E" />
+
 </ResourceDictionary>
