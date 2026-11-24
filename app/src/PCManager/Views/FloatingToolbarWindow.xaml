@@ -29,8 +29,9 @@
                 <!-- FPM Logo / Open action -->
                 <Button Style="{StaticResource CaptionButton}" Width="24" Height="24"
                         Command="{Binding OpenFpmCommand}" ToolTip="Open FPM" Margin="0,0,4,0">
-                    <Path Data="{DynamicResource Icon.Logo}" Fill="{DynamicResource App.Accent}"
-                          Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" />
+                    <Image Source="{StaticResource Brand.Emblem}"
+                           Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center"
+                           AutomationProperties.Name="FPM emblem" />
                 </Button>
 
                 <!-- RAM Load Section -->
