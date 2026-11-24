@@ -18,6 +18,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- ============================ A: contextual tip ============================ -->
@@ -45,17 +46,66 @@
                     </Border>
 
                     <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center">
-                        <TextBlock Text="Switch between open Windows" FontSize="12" FontWeight="Bold" />
-                        <TextBlock Text="Press Win + Tab to switch open windows or virtual desktops."
+                        <TextBlock Text="{Binding TipTitle}" FontSize="12" FontWeight="Bold" />
+                        <TextBlock Text="{Binding TipBody}"
                                    FontSize="10.5" Foreground="{DynamicResource App.Subtle}"
                                    TextWrapping="Wrap" Margin="0,1,0,0" />
-                        <Button Style="{StaticResource PillButton}" Command="{Binding OpenTipsCommand}"
-                                HorizontalAlignment="Left" Padding="0,2,0,0" Margin="0,1,0,0"
-                                ToolTip="Open the Windows keyboard-shortcut tips in your browser">
-                            <TextBlock Text="Discover more tips &#x203A;"
-                                       FontSize="10.5" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource App.AccentLabel}" />
-                        </Button>
+                        <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
+                            <Button Style="{StaticResource PillButton}" Command="{Binding OpenTipLinkCommand}"
+                                    HorizontalAlignment="Left" Padding="0,2,0,0"
+                                    ToolTip="Open the page this tip describes">
+                                <TextBlock Text="{Binding TipLinkText}"
+                                           FontSize="10.5" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource App.AccentLabel}" />
+                            </Button>
+
+                            <StackPanel Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
+                                <Ellipse Width="5" Height="5" Margin="0,0,3,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{DynamicResource App.Subtle}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding TipIndex}" Value="0">
+                                                    <Setter Property="Fill" Value="{DynamicResource App.Accent}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <Ellipse Width="5" Height="5" Margin="0,0,3,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{DynamicResource App.Subtle}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding TipIndex}" Value="1">
+                                                    <Setter Property="Fill" Value="{DynamicResource App.Accent}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <Ellipse Width="5" Height="5" Margin="0,0,5,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{DynamicResource App.Subtle}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding TipIndex}" Value="2">
+                                                    <Setter Property="Fill" Value="{DynamicResource App.Accent}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <Button Style="{StaticResource CaptionButton}" Content="&#x2039;"
+                                        Width="18" Height="18" FontSize="11"
+                                        Command="{Binding PreviousTipCommand}" ToolTip="Previous tip"
+                                        AutomationProperties.Name="Previous tip" />
+                                <Button Style="{StaticResource CaptionButton}" Content="&#x203A;"
+                                        Width="18" Height="18" FontSize="11"
+                                        Command="{Binding NextTipCommand}" ToolTip="Next tip"
+                                        AutomationProperties.Name="Next tip" />
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
 
                     <Button Grid.Column="2" Style="{StaticResource CaptionButton}"
@@ -294,8 +344,58 @@
                 </Button>
             </Grid>
 
+            <!-- ==================== D: one-click cleanup + status chips ==================== -->
+            <Border x:Name="CleanupCard" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+                    Style="{StaticResource Card}" Padding="11,12" Margin="0,0,0,8">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="30" Height="30" CornerRadius="7"
+                                    Background="{DynamicResource App.AccentSoft}" VerticalAlignment="Center">
+                                <Path Data="{DynamicResource Icon.Cleanup}" Fill="{DynamicResource App.Accent}"
+                                      Width="16" Height="16" Stretch="Uniform"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Margin="9,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="One-Click Cleanup" FontSize="12.5" FontWeight="Bold" />
+                                <TextBlock Text="Scan, review and clean supported junk"
+                                           FontSize="9.5" Foreground="{DynamicResource App.Subtle}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Button Grid.Column="1" Content="Scan &amp; review"
+                                Style="{StaticResource PrimaryButton}" Height="28"
+                                VerticalAlignment="Center"
+                                Command="{Binding CleanEverythingCommand}"
+                                ToolTip="Open the Cleanup Center to scan and review every supported category" />
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,9,0,0">
+                        <Button Style="{StaticResource PillButton}" Command="{Binding OpenMemoryCommand}"
+                                ToolTip="Open the Memory page">
+                            <TextBlock Text="{Binding MemoryChipText}" FontSize="10" FontWeight="SemiBold" />
+                        </Button>
+                        <Button Style="{StaticResource PillButton}" Margin="6,0,0,0"
+                                Command="{Binding OpenStorageCommand}"
+                                ToolTip="Open the Storage page">
+                            <TextBlock Text="{Binding StorageChipText}" FontSize="10" FontWeight="SemiBold" />
+                        </Button>
+                        <TextBlock Text="Nothing is removed without review."
+                                   FontSize="9" Foreground="{DynamicResource App.Subtle}"
+                                   VerticalAlignment="Center" Margin="10,0,0,0"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- ============================ D: compact capture strip ============================ -->
-            <Border x:Name="CaptureCard" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+            <Border x:Name="CaptureCard" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
                     Style="{StaticResource Card}" Padding="9,10" Margin="0">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -325,7 +425,7 @@
                 </Grid>
             </Border>
 
-            <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+            <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3"
                        Text="{Binding StatusMessage}" FontSize="9"
                        Foreground="{DynamicResource App.Subtle}"
                        Margin="2,5,2,0" TextTrimming="CharacterEllipsis"

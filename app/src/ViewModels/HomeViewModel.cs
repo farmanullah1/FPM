@@ -19,6 +19,22 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
     private const string TipsUrl =
         "https://support.microsoft.com/en-us/windows/keyboard-shortcuts-in-windows-dcc61a57-8ff0-cffe-9796-cb9706c75eec";
 
+    private static readonly HomeTip[] Tips =
+    {
+        new(
+            "Switch between open Windows",
+            "Press Win + Tab to switch open windows or virtual desktops.",
+            "Discover more tips ›"),
+        new(
+            "Scan once, clean once",
+            "One-Click Cleanup reviews every supported category before anything is removed.",
+            "Open Cleanup Center ›"),
+        new(
+            "Trim what starts with Windows",
+            "Review startup apps and turn off what you do not need.",
+            "Open startup apps ›")
+    };
+
     private readonly IPcBoostService _boost;
     private readonly ITempFileCleaner _tempCleaner;
     private readonly ISettingsService _settings;
@@ -31,6 +47,7 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
     private readonly DispatcherTimer _timer;
 
     private DateTime _lastSmartBoost = DateTime.MinValue;
+    private int _tipIndex;
 
     public HomeViewModel(
         IPcBoostService boost,
@@ -60,8 +77,12 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         OpenProcessesCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Apps));
         OpenCleanupCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Storage));
         OpenStartupCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Apps));
-        OpenTipsCommand = new RelayCommand(OpenTips);
+        OpenTipLinkCommand = new RelayCommand(OpenTipLink);
+        PreviousTipCommand = new RelayCommand(() => MoveTip(-1));
+        NextTipCommand = new RelayCommand(() => MoveTip(1));
         DismissTipCommand = new RelayCommand(() => IsTipVisible = false);
+        OpenMemoryCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Memory));
+        OpenStorageCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Storage));
 
         StatusMessage = "Ready.";
 
@@ -78,8 +99,12 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
     public RelayCommand OpenProcessesCommand { get; }
     public RelayCommand OpenCleanupCommand { get; }
     public RelayCommand OpenStartupCommand { get; }
-    public RelayCommand OpenTipsCommand { get; }
+    public RelayCommand OpenTipLinkCommand { get; }
+    public RelayCommand PreviousTipCommand { get; }
+    public RelayCommand NextTipCommand { get; }
     public RelayCommand DismissTipCommand { get; }
+    public RelayCommand OpenMemoryCommand { get; }
+    public RelayCommand OpenStorageCommand { get; }
 
     [ObservableProperty]
     private bool _isTipVisible = true;
@@ -110,10 +135,28 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
 
     public string LoadText => $"{LoadPercent:0}%";
 
+    public string MemoryChipText => $"Memory {LoadText}";
+
+    public string StorageChipText => $"Disk {DiskUsageText}";
+
+    public string TipTitle => Tips[_tipIndex].Title;
+
+    public string TipBody => Tips[_tipIndex].Body;
+
+    public string TipLinkText => Tips[_tipIndex].LinkText;
+
+    public int TipIndex => _tipIndex;
+
     /// <summary>Boost button caption; the command itself disables the button while busy.</summary>
     public string BoostButtonText => IsBusy ? "Optimizing..." : "Boost";
 
-    partial void OnLoadPercentChanged(double value) => OnPropertyChanged(nameof(LoadText));
+    partial void OnLoadPercentChanged(double value)
+    {
+        OnPropertyChanged(nameof(LoadText));
+        OnPropertyChanged(nameof(MemoryChipText));
+    }
+
+    partial void OnDiskUsageTextChanged(string value) => OnPropertyChanged(nameof(StorageChipText));
 
     /// <summary>True when Smart Boost should trim automatically (settings-backed).</summary>
     public bool SmartBoostEnabled
@@ -199,8 +242,22 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void OpenTips()
+    private void OpenTipLink()
     {
+        if (_tipIndex == 1)
+        {
+            CleanEverythingCommand.Execute(null);
+            StatusMessage = "Opened the Cleanup Center.";
+            return;
+        }
+
+        if (_tipIndex == 2)
+        {
+            OpenStartupCommand.Execute(null);
+            StatusMessage = "Opened startup apps.";
+            return;
+        }
+
         try
         {
             _launcher.OpenUri(TipsUrl);
@@ -211,6 +268,15 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
             StatusMessage = $"Could not open the tips page: {ex.Message}";
             _logger.Error("Could not open the tips page.", ex);
         }
+    }
+
+    private void MoveTip(int delta)
+    {
+        _tipIndex = (_tipIndex + delta + Tips.Length) % Tips.Length;
+        OnPropertyChanged(nameof(TipTitle));
+        OnPropertyChanged(nameof(TipBody));
+        OnPropertyChanged(nameof(TipLinkText));
+        OnPropertyChanged(nameof(TipIndex));
     }
 
     /// <summary>Counts the user-facing processes and reads the system drive, exactly as the cards show them.</summary>
@@ -331,4 +397,6 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
     }
 
     public void Dispose() => _timer.Stop();
+
+    private sealed record HomeTip(string Title, string Body, string LinkText);
 }

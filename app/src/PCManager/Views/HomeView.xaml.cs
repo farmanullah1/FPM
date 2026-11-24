@@ -24,14 +24,16 @@ public partial class HomeView : UserControl
             Place(TipCard, row: 0, column: 0, columnSpan: 3);
             Place(BoostCard, row: 1, column: 0, columnSpan: 1);
             Place(UtilityGrid, row: 1, column: 2, columnSpan: 1);
-            Place(CaptureCard, row: 2, column: 0, columnSpan: 3);
+            Place(CleanupCard, row: 2, column: 0, columnSpan: 1);
+            Place(CaptureCard, row: 2, column: 2, columnSpan: 1);
         }
         else
         {
             Place(TipCard, row: 0, column: 0, columnSpan: 3);
             Place(BoostCard, row: 1, column: 0, columnSpan: 3);
             Place(UtilityGrid, row: 2, column: 0, columnSpan: 3);
-            Place(CaptureCard, row: 3, column: 0, columnSpan: 3);
+            Place(CleanupCard, row: 3, column: 0, columnSpan: 3);
+            Place(CaptureCard, row: 4, column: 0, columnSpan: 3);
         }
     }
 
