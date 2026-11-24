@@ -129,6 +129,7 @@ internal static class Program
         {
             HelperCommand.CleanRule => CleanRule(request),
             HelperCommand.CreateRestorePoint => await CreateRestorePointAsync(request).ConfigureAwait(false),
+            HelperCommand.ManageHostsBlock => ManageHostsBlock(request),
             _ => Failure(request, "Unsupported helper command.")
         };
 
@@ -362,6 +363,164 @@ internal static class Program
             Log($"Restore point failed: {ex}");
             return Failure(request, $"System Restore failed: {ex.Message}");
         }
+    }
+
+    private static readonly string HostsPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.System),
+        "drivers",
+        "etc",
+        "hosts");
+
+    private const string HostsBegin = "# BEGIN FPM";
+    private const string HostsEnd = "# END FPM";
+    private const int MaxHostsDomains = 100;
+
+    /// <summary>
+    /// Replaces the marker-delimited FPM block in the hosts file, or removes it when no domains
+    /// are supplied. The helper always writes a timestamped backup before changing the file.
+    /// </summary>
+    private static HelperResponse ManageHostsBlock(HelperRequest request)
+    {
+        try
+        {
+            if (!File.Exists(HostsPath))
+            {
+                return Failure(request, "The Windows hosts file was not found.");
+            }
+
+            List<string> domains = (request.Domains ?? new List<string>())
+                .Where(domain => !string.IsNullOrWhiteSpace(domain))
+                .Select(domain => domain.Trim().ToLowerInvariant())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (domains.Count > MaxHostsDomains)
+            {
+                return Failure(request, $"At most {MaxHostsDomains} domains can be blocked at once.");
+            }
+
+            string? invalid = domains.FirstOrDefault(domain => !IsValidDomain(domain));
+
+            if (invalid is not null)
+            {
+                return Failure(request, $"'{invalid}' is not a valid domain name.");
+            }
+
+            string original = File.ReadAllText(HostsPath);
+            string withoutBlock = RemoveHostsBlock(original);
+
+            if (domains.Count == 0)
+            {
+                if (string.Equals(withoutBlock, original, StringComparison.Ordinal))
+                {
+                    return Success(request, 0, 0, 0, "No FPM hosts block was present.");
+                }
+
+                string backup = BackupHostsFile();
+                File.WriteAllText(HostsPath, withoutBlock, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                Log($"Hosts block removed.");
+                return Success(request, 0, 0, 0, $"FPM hosts block removed. Backup: {backup}");
+            }
+
+            string newline = original.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
+            string block = HostsBegin + newline +
+                           string.Join(newline, domains.Select(domain => $"0.0.0.0 {domain}")) +
+                           newline + HostsEnd;
+            string updated = withoutBlock.TrimEnd() + newline + newline + block + newline;
+
+            string backupPath = BackupHostsFile();
+            File.WriteAllText(HostsPath, updated, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            Log($"Hosts block written: {domains.Count} domain(s).");
+
+            return Success(
+                request,
+                0,
+                0,
+                0,
+                $"Blocked {domains.Count} domain(s) in the hosts file. Backup: {backupPath}");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Failure(request, "Administrator access to the hosts file was denied.");
+        }
+        catch (Exception ex)
+        {
+            Log($"ManageHostsBlock failed: {ex}");
+            return Failure(request, $"The hosts file could not be updated: {ex.Message}");
+        }
+    }
+
+    private static string RemoveHostsBlock(string content)
+    {
+        var result = new List<string>();
+        bool inside = false;
+
+        foreach (string line in content.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n'))
+        {
+            string trimmed = line.Trim();
+
+            if (trimmed.Equals(HostsBegin, StringComparison.OrdinalIgnoreCase))
+            {
+                inside = true;
+                continue;
+            }
+
+            if (trimmed.Equals(HostsEnd, StringComparison.OrdinalIgnoreCase))
+            {
+                inside = false;
+                continue;
+            }
+
+            if (!inside)
+            {
+                result.Add(line);
+            }
+        }
+
+        return string.Join(Environment.NewLine, result).TrimEnd() + Environment.NewLine;
+    }
+
+    private static string BackupHostsFile()
+    {
+        string directory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "FPM",
+            "backups");
+        Directory.CreateDirectory(directory);
+
+        string path = Path.Combine(directory, $"hosts-{DateTime.Now:yyyyMMdd-HHmmss}.hosts");
+        File.Copy(HostsPath, path, overwrite: true);
+        return path;
+    }
+
+    private static bool IsValidDomain(string domain)
+    {
+        if (domain.Length is < 4 or > 253 || !domain.Contains('.', StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        string[] labels = domain.Split('.');
+
+        if (labels.Length < 2 || labels[^1].Length < 2)
+        {
+            return false;
+        }
+
+        foreach (string label in labels)
+        {
+            if (label.Length is 0 or > 63 || label[0] == '-' || label[^1] == '-')
+            {
+                return false;
+            }
+
+            if (label.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-'))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static void TryStopService(string name, List<ServiceController> stopped)

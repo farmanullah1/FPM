@@ -13,6 +13,7 @@ public interface IElevationService
     Task<ElevationOutcome> RunAsync(
         HelperCommand command,
         string? ruleId = null,
+        IReadOnlyList<string>? domains = null,
         CancellationToken cancellationToken = default);
 }
 

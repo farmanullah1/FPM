@@ -96,6 +96,7 @@ public sealed class ElevatedHelperTests
         public Task<ElevationOutcome> RunAsync(
             HelperCommand command,
             string? ruleId = null,
+            IReadOnlyList<string>? domains = null,
             CancellationToken cancellationToken = default)
         {
             LastCommand = command;

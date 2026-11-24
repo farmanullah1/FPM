@@ -18,19 +18,28 @@ public sealed partial class ProtectionViewModel : ViewModelBase
     private readonly IDefaultBrowserService _browser;
     private readonly IAppLogger _logger;
     private readonly INetworkDiagnosticsService? _networkDiag;
+    private readonly INetworkSpeedTestService? _speedTest;
+    private readonly IPopupMonitorService? _popups;
+    private readonly IHostsBlockService? _hosts;
 
     public ProtectionViewModel(
         IProtectionService protection,
         ISystemRepairService repair,
         IDefaultBrowserService browser,
         IAppLogger logger,
-        INetworkDiagnosticsService? networkDiag = null)
+        INetworkDiagnosticsService? networkDiag = null,
+        INetworkSpeedTestService? speedTest = null,
+        IPopupMonitorService? popups = null,
+        IHostsBlockService? hosts = null)
     {
         _protection = protection;
         _repair = repair;
         _browser = browser;
         _logger = logger;
         _networkDiag = networkDiag;
+        _speedTest = speedTest;
+        _popups = popups;
+        _hosts = hosts;
 
         RefreshCommand = new AsyncRelayCommand(RefreshAsync, () => !IsBusy);
         CheckUpdatesCommand = new AsyncRelayCommand(CheckUpdatesAsync, () => !IsBusy);
@@ -41,6 +50,13 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         RunNetworkDiagnosticsCommand = new AsyncRelayCommand(RunNetworkDiagnosticsAsync, () => !IsBusy && !IsRunningNetworkDiag);
         FlushDnsCommand = new AsyncRelayCommand(FlushDnsAsync, () => !IsBusy);
         StartQuickScanCommand = new AsyncRelayCommand(StartQuickScanAsync, () => !IsBusy);
+        RunSpeedTestCommand = new AsyncRelayCommand(RunSpeedTestAsync, () => !IsBusy && !IsSpeedTesting);
+        ScanPopupsCommand = new AsyncRelayCommand(ScanPopupsAsync, () => !IsBusy && !IsScanningPopups);
+        AllowPopupCommand = new AsyncRelayCommand<PopupSourceInfo>(AllowPopupAsync);
+        ApplyHostsBlockCommand = new AsyncRelayCommand(ApplyHostsBlockAsync, () => !IsBusy);
+        RemoveHostsBlockCommand = new AsyncRelayCommand(RemoveHostsBlockAsync, () => !IsBusy);
+
+        RefreshHostsState();
     }
 
     public ObservableCollection<PingResultItem> PingResults { get; } = new();
@@ -54,6 +70,37 @@ public sealed partial class ProtectionViewModel : ViewModelBase
     public AsyncRelayCommand RunNetworkDiagnosticsCommand { get; }
     public AsyncRelayCommand FlushDnsCommand { get; }
     public AsyncRelayCommand StartQuickScanCommand { get; }
+    public AsyncRelayCommand RunSpeedTestCommand { get; }
+    public AsyncRelayCommand ScanPopupsCommand { get; }
+    public AsyncRelayCommand<PopupSourceInfo> AllowPopupCommand { get; }
+    public AsyncRelayCommand ApplyHostsBlockCommand { get; }
+    public AsyncRelayCommand RemoveHostsBlockCommand { get; }
+
+    public ObservableCollection<PopupSourceInfo> PopupSources { get; } = new();
+
+    [ObservableProperty]
+    private string _speedTestEndpoint = "https://speed.cloudflare.com/__down?bytes=10000000";
+
+    [ObservableProperty]
+    private string _speedTestResultText = "Not run yet. The test downloads from the endpoint above.";
+
+    [ObservableProperty]
+    private bool _isSpeedTesting;
+
+    [ObservableProperty]
+    private bool _isScanningPopups;
+
+    [ObservableProperty]
+    private bool _hasPopupResults;
+
+    [ObservableProperty]
+    private string _popupSummary = "Scan to list apps that currently own visible windows.";
+
+    [ObservableProperty]
+    private string _hostsBlockInput = string.Empty;
+
+    [ObservableProperty]
+    private string _hostsBlockStatus = "Checking the hosts file...";
 
     [ObservableProperty]
     private NetworkAdapterDetails? _activeAdapter;
@@ -96,7 +143,15 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         RunNetworkDiagnosticsCommand.NotifyCanExecuteChanged();
         FlushDnsCommand.NotifyCanExecuteChanged();
         StartQuickScanCommand.NotifyCanExecuteChanged();
+        RunSpeedTestCommand.NotifyCanExecuteChanged();
+        ScanPopupsCommand.NotifyCanExecuteChanged();
+        ApplyHostsBlockCommand.NotifyCanExecuteChanged();
+        RemoveHostsBlockCommand.NotifyCanExecuteChanged();
     }
+
+    partial void OnIsSpeedTestingChanged(bool value) => RunSpeedTestCommand.NotifyCanExecuteChanged();
+
+    partial void OnIsScanningPopupsChanged(bool value) => ScanPopupsCommand.NotifyCanExecuteChanged();
 
     private async Task RefreshAsync()
     {
@@ -284,6 +339,145 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         {
             IsBusy = false;
         }
+    }
+
+    private async Task RunSpeedTestAsync()
+    {
+        if (_speedTest is null)
+        {
+            SpeedTestResultText = "The speed-test service is not available.";
+            return;
+        }
+
+        IsSpeedTesting = true;
+        SpeedTestResultText = "Downloading from the endpoint...";
+
+        try
+        {
+            SpeedTestResult result = await _speedTest.RunAsync(SpeedTestEndpoint);
+            SpeedTestResultText = result.Message;
+            StatusMessage = result.Success ? "Speed test finished." : "Speed test failed.";
+        }
+        catch (Exception ex)
+        {
+            SpeedTestResultText = $"Speed test failed: {ex.Message}";
+            _logger.Error("Speed test failed.", ex);
+        }
+        finally
+        {
+            IsSpeedTesting = false;
+        }
+    }
+
+    private async Task ScanPopupsAsync()
+    {
+        if (_popups is null)
+        {
+            PopupSummary = "The popup monitor is not available.";
+            return;
+        }
+
+        IsScanningPopups = true;
+        PopupSummary = "Looking for visible windows from other apps...";
+
+        try
+        {
+            IReadOnlyList<PopupSourceInfo> sources = await _popups.ScanAsync();
+            PopupSources.Clear();
+
+            foreach (PopupSourceInfo source in sources)
+            {
+                PopupSources.Add(source);
+            }
+
+            HasPopupResults = true;
+            PopupSummary = sources.Count == 0
+                ? "No other app currently owns a visible top-level window."
+                : $"{sources.Count} app(s) own visible windows. Allowed apps stay in the list but are ignored.";
+        }
+        catch (Exception ex)
+        {
+            PopupSummary = $"Popup scan failed: {ex.Message}";
+            _logger.Error("Popup scan failed.", ex);
+        }
+        finally
+        {
+            IsScanningPopups = false;
+        }
+    }
+
+    private async Task AllowPopupAsync(PopupSourceInfo? source)
+    {
+        if (_popups is null || source is null)
+        {
+            return;
+        }
+
+        await _popups.SetAllowedAsync(source.ProcessName, allowed: true);
+        StatusMessage = $"{source.ProcessName} will be marked as allowed on the next scan.";
+        await ScanPopupsAsync();
+    }
+
+    private async Task ApplyHostsBlockAsync()
+    {
+        if (_hosts is null)
+        {
+            HostsBlockStatus = "The hosts block service is not available.";
+            return;
+        }
+
+        IsBusy = true;
+        HostsBlockStatus = "Waiting for administrator approval...";
+
+        try
+        {
+            OperationResult result = await _hosts.ApplyAsync(HostsBlockInput);
+            HostsBlockStatus = result.Message;
+            StatusMessage = result.Success ? "Hosts block updated." : result.Message;
+            RefreshHostsState();
+        }
+        catch (Exception ex)
+        {
+            HostsBlockStatus = $"Hosts block failed: {ex.Message}";
+            _logger.Error("Hosts block failed.", ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task RemoveHostsBlockAsync()
+    {
+        if (_hosts is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        HostsBlockStatus = "Waiting for administrator approval...";
+
+        try
+        {
+            OperationResult result = await _hosts.RemoveAsync();
+            HostsBlockStatus = result.Message;
+            StatusMessage = result.Message;
+            RefreshHostsState();
+        }
+        catch (Exception ex)
+        {
+            HostsBlockStatus = $"Removing the hosts block failed: {ex.Message}";
+            _logger.Error("Removing the hosts block failed.", ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void RefreshHostsState()
+    {
+        HostsBlockStatus = _hosts?.GetState().Detail ?? "Hosts block service is not available.";
     }
 
     private void Run(Func<OperationResult> action) => StatusMessage = action().Message;

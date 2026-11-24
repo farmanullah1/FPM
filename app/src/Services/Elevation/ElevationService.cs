@@ -39,6 +39,7 @@ public sealed class ElevationService : IElevationService
     public async Task<ElevationOutcome> RunAsync(
         HelperCommand command,
         string? ruleId = null,
+        IReadOnlyList<string>? domains = null,
         CancellationToken cancellationToken = default)
     {
         if (!IsHelperAvailable)
@@ -55,7 +56,8 @@ public sealed class ElevationService : IElevationService
         {
             Command = command,
             RuleId = ruleId ?? string.Empty,
-            RequestId = Guid.NewGuid().ToString("N")
+            RequestId = Guid.NewGuid().ToString("N"),
+            Domains = domains?.ToList() ?? new List<string>()
         };
 
         Process? process = null;

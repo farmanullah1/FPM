@@ -10,7 +10,10 @@ namespace PCManager.Core.Elevation;
 public enum HelperCommand
 {
     CleanRule,
-    CreateRestorePoint
+    CreateRestorePoint,
+
+    /// <summary>Replace or remove the FPM section of the hosts file (backup written first).</summary>
+    ManageHostsBlock
 }
 
 /// <summary>One request line on the helper pipe. Maximum 8 KB, enforced by both ends.</summary>
@@ -19,6 +22,9 @@ public sealed class HelperRequest
     public HelperCommand Command { get; set; }
     public string RuleId { get; set; } = string.Empty;
     public string RequestId { get; set; } = string.Empty;
+
+    /// <summary>Validated DNS names for ManageHostsBlock; empty means remove the block.</summary>
+    public List<string> Domains { get; set; } = new();
 }
 
 /// <summary>One response line from the helper.</summary>

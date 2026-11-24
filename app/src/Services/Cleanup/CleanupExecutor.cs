@@ -517,7 +517,7 @@ public sealed class CleanupExecutor : ICleanupExecutor
         try
         {
             outcome = _elevation
-                .RunAsync(HelperCommand.CleanRule, item.RuleId, cancellationToken)
+                .RunAsync(HelperCommand.CleanRule, item.RuleId, cancellationToken: cancellationToken)
                 .GetAwaiter()
                 .GetResult();
         }
