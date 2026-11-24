@@ -6,10 +6,22 @@
              mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch" Margin="10,9,10,10">
+        <Grid x:Name="HomeLayout" MaxWidth="1280" HorizontalAlignment="Stretch" Margin="10,9,10,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="4*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
             <!-- ============================ A: contextual tip ============================ -->
-            <Border Style="{StaticResource Card}" Padding="9,10" Margin="0,0,0,8"
+            <Border x:Name="TipCard" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                    Style="{StaticResource Card}" Padding="9,10" Margin="0,0,0,8"
                     Visibility="{Binding IsTipVisible, Converter={StaticResource BoolToVisibility}}">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -54,7 +66,8 @@
             </Border>
 
             <!-- ============================ B: PC boost hero ============================ -->
-            <Border Style="{StaticResource Card}" Padding="11,12" Margin="0,0,0,8">
+            <Border x:Name="BoostCard" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                    Style="{StaticResource Card}" Padding="11,12" Margin="0,0,0,8">
                 <StackPanel>
                     <Grid>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -156,7 +169,7 @@
             </Border>
 
             <!-- ============================ C: 2x2 quick actions ============================ -->
-            <Grid Margin="0,0,0,8">
+            <Grid x:Name="UtilityGrid" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -281,7 +294,8 @@
             </Grid>
 
             <!-- ============================ D: compact capture strip ============================ -->
-            <Border Style="{StaticResource Card}" Padding="9,10" Margin="0">
+            <Border x:Name="CaptureCard" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+                    Style="{StaticResource Card}" Padding="9,10" Margin="0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -314,6 +328,6 @@
                        Foreground="{DynamicResource App.Subtle}"
                        Margin="2,5,2,0" TextTrimming="CharacterEllipsis"
                        ToolTip="{Binding StatusMessage}" />
-        </StackPanel>
+        </Grid>
     </ScrollViewer>
 </UserControl>
