@@ -162,13 +162,13 @@ public partial class App : Application
         {
             _tray = new System.Windows.Forms.NotifyIcon
             {
-                Icon = System.Drawing.SystemIcons.Shield,
+                Icon = LoadTrayIcon() ?? System.Drawing.SystemIcons.Shield,
                 Text = AppInfo.ProductName, // shell tooltip, max 63 characters
                 Visible = true
             };
 
             var menu = new System.Windows.Forms.ContextMenuStrip();
-            menu.Items.Add("Open Farmanullah PC Manager", null, (_, _) => ShowMainWindow());
+            menu.Items.Add("Open FPM", null, (_, _) => ShowMainWindow());
             menu.Items.Add("Boost now", null, async (_, _) => await TrayBoostAsync());
             menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
             menu.Items.Add("Exit", null, (_, _) => Shutdown());
@@ -178,6 +178,21 @@ public partial class App : Application
         catch (Exception ex)
         {
             _services?.GetService<IAppLogger>()?.Error("Tray icon creation failed.", ex);
+        }
+    }
+
+    private static System.Drawing.Icon? LoadTrayIcon()
+    {
+        try
+        {
+            string? executable = Environment.ProcessPath;
+            return executable is null
+                ? null
+                : System.Drawing.Icon.ExtractAssociatedIcon(executable);
+        }
+        catch
+        {
+            return null;
         }
     }
 

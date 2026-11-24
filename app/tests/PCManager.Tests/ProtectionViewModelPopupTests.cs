@@ -55,6 +55,45 @@ public sealed class ProtectionViewModelPopupTests
         public OperationResult OpenDefaultAppsSettings() => OperationResult.Ok("opened");
     }
 
+    private sealed class FakeSettingsService : ISettingsService
+    {
+        public AppSettings Current { get; } = new();
+
+        public int SaveCount { get; private set; }
+
+        public void Save() => SaveCount++;
+    }
+
+    [Fact]
+    public void SpeedTestEndpoint_persists_edits_and_reloads_them()
+    {
+        var settings = new FakeSettingsService();
+        settings.Current.SpeedTestEndpoint = "https://example.com/custom.bin";
+
+        var vm = new ProtectionViewModel(
+            new FakeProtectionService(),
+            new FakeRepairService(),
+            new FakeBrowserService(),
+            new TestLogger(),
+            settings: settings);
+
+        Assert.Equal("https://example.com/custom.bin", vm.SpeedTestEndpoint);
+
+        vm.SpeedTestEndpoint = "https://example.org/other.bin";
+
+        Assert.Equal("https://example.org/other.bin", settings.Current.SpeedTestEndpoint);
+        Assert.Equal(1, settings.SaveCount);
+
+        var relaunched = new ProtectionViewModel(
+            new FakeProtectionService(),
+            new FakeRepairService(),
+            new FakeBrowserService(),
+            new TestLogger(),
+            settings: settings);
+
+        Assert.Equal("https://example.org/other.bin", relaunched.SpeedTestEndpoint);
+    }
+
     [Fact]
     public async Task TogglePopupAllowCommand_revokes_an_allowed_app()
     {

@@ -1,7 +1,5 @@
-using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 
 namespace PCManager.Services;
@@ -30,24 +28,17 @@ public static class AppIdentity
         }
     }
 
-    /// <summary>Uses the built-in shield icon so no external .ico asset is required.</summary>
+    /// <summary>Applies the embedded original FPM icon to a secondary window.</summary>
     public static void ApplyWindowIcon(Window window)
     {
         try
         {
-            IntPtr handle = SystemIcons.Shield.Handle;
-
-            if (handle != IntPtr.Zero)
-            {
-                window.Icon = Imaging.CreateBitmapSourceFromHIcon(
-                    handle,
-                    Int32Rect.Empty,
-                    BitmapSizeOptions.FromEmptyOptions());
-            }
+            var uri = new Uri("pack://application:,,,/Assets/fpm.ico", UriKind.Absolute);
+            window.Icon = BitmapFrame.Create(uri, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
         }
         catch (Exception)
         {
-            // A missing icon must never prevent the window from opening.
+            // A missing icon must never prevent a window from opening.
         }
     }
 }

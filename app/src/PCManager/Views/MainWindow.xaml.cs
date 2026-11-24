@@ -27,8 +27,6 @@ public partial class MainWindow : Window
         _settings = settings;
         DataContext = viewModel;
 
-        AppIdentity.ApplyWindowIcon(this);
-
         RestoreWindowBounds();
 
         Loaded += OnLoaded;

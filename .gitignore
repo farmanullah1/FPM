@@ -80,3 +80,8 @@ installer_types.txt
 *.bak
 *.orig
 *.rej
+
+
+
+
+reference/*

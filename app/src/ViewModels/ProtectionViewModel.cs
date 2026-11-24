@@ -161,6 +161,18 @@ public sealed partial class ProtectionViewModel : ViewModelBase
 
     partial void OnIsScanningPopupsChanged(bool value) => ScanPopupsCommand.NotifyCanExecuteChanged();
 
+    partial void OnSpeedTestEndpointChanged(string value)
+    {
+        string endpoint = value.Trim();
+
+        if (Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri) &&
+            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) &&
+            !string.IsNullOrWhiteSpace(uri.Host))
+        {
+            SaveSpeedTestEndpoint(endpoint);
+        }
+    }
+
     private async Task RefreshAsync()
     {
         IsBusy = true;
@@ -359,7 +371,7 @@ public sealed partial class ProtectionViewModel : ViewModelBase
 
         IsSpeedTesting = true;
         SpeedTestResultText = "Downloading from the endpoint...";
-        SaveSpeedTestEndpoint();
+        SaveSpeedTestEndpoint(SpeedTestEndpoint);
 
         try
         {
@@ -415,16 +427,24 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         }
     }
 
-    private void SaveSpeedTestEndpoint()
+    private void SaveSpeedTestEndpoint(string endpoint)
     {
         if (_settings is null)
         {
             return;
         }
 
+        string normalized = endpoint.Trim();
+
+        if (normalized.Length == 0 ||
+            string.Equals(_settings.Current.SpeedTestEndpoint, normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
         try
         {
-            _settings.Current.SpeedTestEndpoint = SpeedTestEndpoint.Trim();
+            _settings.Current.SpeedTestEndpoint = normalized;
             _settings.Save();
         }
         catch (Exception ex)
