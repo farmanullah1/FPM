@@ -1,21 +1,58 @@
-# Build output - never commit compiled artifacts
+# ---------------------------------------------------------------------------
+# Build and test output - never commit compiled or generated artifacts
+# ---------------------------------------------------------------------------
 [Bb]in/
 [Oo]bj/
+[Oo]ut/
 .vs/
+TestResults/
 *.user
 *.suo
 *.pdb
 *.dll
+*.trx
+*.binlog
+*.msbuild.log
+coverage*.xml
+*.coverage
+*.coveragexml
+*.nupkg
+*.snupkg
 
-# Vendor installer packages: Microsoft PC Manager MSIX is proprietary and not redistributable,
-# and the raw package is far above GitHub's 100 MB per-file limit
+# ---------------------------------------------------------------------------
+# Distributables and signing material
+# ---------------------------------------------------------------------------
+# Microsoft PC Manager's MSIX is proprietary and not redistributable, and any
+# built installer belongs in a release, not in source control.
 *.msixbundle
 *.msix
 *.appxbundle
 *.appx
 *.exe
+*.msi
+*.pfx
+*.snk
+*.pvk
 
+# ---------------------------------------------------------------------------
+# Local configuration and secrets
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------------------
+# Editor / OS noise
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------------------
 # Investigation / craft workspace artifacts (not part of the application)
+# ---------------------------------------------------------------------------
 .freebuff/
 investigation.cany/
 capture/
@@ -26,14 +63,20 @@ feed.json
 transcript.json
 usage.json
 build-activity.log
+installer_types.txt
 
-
+# ---------------------------------------------------------------------------
 # Documentation / specs / prompts (keep README.md only)
+# ---------------------------------------------------------------------------
 /*.md
 !/README.md
 !/app/**/*.md
-/*.exe
 
+# ---------------------------------------------------------------------------
 # Local scratch
+# ---------------------------------------------------------------------------
 *.log
 *.tmp
+*.bak
+*.orig
+*.rej
