@@ -21,6 +21,7 @@ public sealed partial class ProtectionViewModel : ViewModelBase
     private readonly INetworkSpeedTestService? _speedTest;
     private readonly IPopupMonitorService? _popups;
     private readonly IHostsBlockService? _hosts;
+    private readonly ISettingsService? _settings;
 
     public ProtectionViewModel(
         IProtectionService protection,
@@ -30,7 +31,8 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         INetworkDiagnosticsService? networkDiag = null,
         INetworkSpeedTestService? speedTest = null,
         IPopupMonitorService? popups = null,
-        IHostsBlockService? hosts = null)
+        IHostsBlockService? hosts = null,
+        ISettingsService? settings = null)
     {
         _protection = protection;
         _repair = repair;
@@ -40,6 +42,12 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         _speedTest = speedTest;
         _popups = popups;
         _hosts = hosts;
+        _settings = settings;
+
+        if (!string.IsNullOrWhiteSpace(settings?.Current.SpeedTestEndpoint))
+        {
+            _speedTestEndpoint = settings.Current.SpeedTestEndpoint;
+        }
 
         RefreshCommand = new AsyncRelayCommand(RefreshAsync, () => !IsBusy);
         CheckUpdatesCommand = new AsyncRelayCommand(CheckUpdatesAsync, () => !IsBusy);
@@ -351,6 +359,7 @@ public sealed partial class ProtectionViewModel : ViewModelBase
 
         IsSpeedTesting = true;
         SpeedTestResultText = "Downloading from the endpoint...";
+        SaveSpeedTestEndpoint();
 
         try
         {
@@ -403,6 +412,24 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         finally
         {
             IsScanningPopups = false;
+        }
+    }
+
+    private void SaveSpeedTestEndpoint()
+    {
+        if (_settings is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _settings.Current.SpeedTestEndpoint = SpeedTestEndpoint.Trim();
+            _settings.Save();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Could not save the speed-test endpoint.", ex);
         }
     }
 

@@ -152,7 +152,7 @@
                                                 <TextBlock Text="{Binding WindowTitle}" Style="{StaticResource CaptionText}"
                                                            TextTrimming="CharacterEllipsis" ToolTip="{Binding WindowTitle}" />
                                             </StackPanel>
-                                            <TextBlock Grid.Column="1" Text="{Binding WindowCount}"
+                                            <TextBlock Grid.Column="1" Text="{Binding SeenLabel}"
                                                        Style="{StaticResource CaptionText}"
                                                        VerticalAlignment="Center" Margin="10,0" />
                                             <Button Grid.Column="2" Content="Allow" VerticalAlignment="Center"
