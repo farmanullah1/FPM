@@ -158,14 +158,15 @@
                                                        Style="{StaticResource CaptionText}"
                                                        VerticalAlignment="Center" Margin="10,0" />
                                             <Button Grid.Column="2" Content="Allow" VerticalAlignment="Center"
-                                                    Command="{Binding DataContext.AllowPopupCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    Command="{Binding DataContext.TogglePopupAllowCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                     CommandParameter="{Binding}">
                                                 <Button.Style>
                                                     <Style TargetType="Button" BasedOn="{StaticResource PillButton}">
+                                                        <Setter Property="ToolTip" Value="Ignore this app in future scans" />
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsAllowed}" Value="True">
                                                                 <Setter Property="Content" Value="Allowed" />
-                                                                <Setter Property="IsEnabled" Value="False" />
+                                                                <Setter Property="ToolTip" Value="Click to revoke this exception" />
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>

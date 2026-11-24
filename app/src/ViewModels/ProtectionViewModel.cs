@@ -60,7 +60,7 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         StartQuickScanCommand = new AsyncRelayCommand(StartQuickScanAsync, () => !IsBusy);
         RunSpeedTestCommand = new AsyncRelayCommand(RunSpeedTestAsync, () => !IsBusy && !IsSpeedTesting);
         ScanPopupsCommand = new AsyncRelayCommand(ScanPopupsAsync, () => !IsBusy && !IsScanningPopups);
-        AllowPopupCommand = new AsyncRelayCommand<PopupSourceInfo>(AllowPopupAsync);
+        TogglePopupAllowCommand = new AsyncRelayCommand<PopupSourceInfo>(TogglePopupAllowAsync);
         ApplyHostsBlockCommand = new AsyncRelayCommand(ApplyHostsBlockAsync, () => !IsBusy);
         RemoveHostsBlockCommand = new AsyncRelayCommand(RemoveHostsBlockAsync, () => !IsBusy);
 
@@ -80,7 +80,7 @@ public sealed partial class ProtectionViewModel : ViewModelBase
     public AsyncRelayCommand StartQuickScanCommand { get; }
     public AsyncRelayCommand RunSpeedTestCommand { get; }
     public AsyncRelayCommand ScanPopupsCommand { get; }
-    public AsyncRelayCommand<PopupSourceInfo> AllowPopupCommand { get; }
+    public AsyncRelayCommand<PopupSourceInfo> TogglePopupAllowCommand { get; }
     public AsyncRelayCommand ApplyHostsBlockCommand { get; }
     public AsyncRelayCommand RemoveHostsBlockCommand { get; }
 
@@ -402,7 +402,7 @@ public sealed partial class ProtectionViewModel : ViewModelBase
             HasPopupResults = true;
             PopupSummary = sources.Count == 0
                 ? "No other app currently owns a visible top-level window."
-                : $"{sources.Count} app(s) own visible windows. Allowed apps stay in the list but are ignored.";
+                : $"{sources.Count} app(s) own visible windows. Allowed apps stay in the list but are ignored; select Allowed again to revoke.";
         }
         catch (Exception ex)
         {
@@ -433,15 +433,18 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         }
     }
 
-    private async Task AllowPopupAsync(PopupSourceInfo? source)
+    private async Task TogglePopupAllowAsync(PopupSourceInfo? source)
     {
         if (_popups is null || source is null)
         {
             return;
         }
 
-        await _popups.SetAllowedAsync(source.ProcessName, allowed: true);
-        StatusMessage = $"{source.ProcessName} will be marked as allowed on the next scan.";
+        bool allow = !source.IsAllowed;
+        await _popups.SetAllowedAsync(source.ProcessName, allow);
+        StatusMessage = allow
+            ? $"{source.ProcessName} will be ignored on the next scan."
+            : $"{source.ProcessName} is no longer allowed and will be listed again.";
         await ScanPopupsAsync();
     }
 
