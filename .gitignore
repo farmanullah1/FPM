@@ -1,87 +1,129 @@
 # ---------------------------------------------------------------------------
-# Build and test output - never commit compiled or generated artifacts
+# FPM - ignore policy (R1)
+# Builds on GitHub's VisualStudio template, then applies FPM's rules.
+# Keep tracked: source, *.sln, *.csproj, Directory.Build.props, .editorconfig,
+# .gitattributes, installer/FPM.iss + images, Assets/, docs/images/, README.md,
+# LICENSE, THIRD_PARTY_NOTICES.md, CHANGELOG.md, community files, .github/,
+# tools/, tests and small fixtures.
 # ---------------------------------------------------------------------------
+
+# --- Build and IDE output --------------------------------------------------
 [Bb]in/
 [Oo]bj/
 [Oo]ut/
+publish/
+dist/
+artifacts/
 .vs/
+.idea/
 TestResults/
+coverage/
 *.user
 *.suo
-*.pdb
-*.dll
+*.userprefs
 *.trx
 *.binlog
 *.msbuild.log
-coverage*.xml
-*.coverage
-*.coveragexml
+*.cache
+*.tmp
+*.pid
+*.pdb
+*.dll
+
+# --- Packages --------------------------------------------------------------
 *.nupkg
 *.snupkg
 
-# ---------------------------------------------------------------------------
-# Distributables and signing material
-# ---------------------------------------------------------------------------
-# Microsoft PC Manager's MSIX is proprietary and not redistributable, and any
-# built installer belongs in a release, not in source control.
+# --- Installer and release artifacts (CI uploads these) --------------------
+installer/Output/
 *.msixbundle
 *.msix
 *.appxbundle
 *.appx
-*.exe
 *.msi
-*.pfx
-*.snk
-*.pvk
+*.exe
+Setup*.exe
+FPM-Setup-*.exe
+*.zip
 
-# ---------------------------------------------------------------------------
-# Local configuration and secrets
-# ---------------------------------------------------------------------------
+# --- Secrets and signing material -----------------------------------------
 .env
 .env.*
 !.env.example
+*.pfx
+*.p12
+*.snk
+*.pvk
+*.key
+*.pem
+secrets.json
+appsettings.*.local.json
+*.publishsettings
+local.properties
 
-# ---------------------------------------------------------------------------
-# Editor / OS noise
-# ---------------------------------------------------------------------------
-.idea/
-.vscode/
-.DS_Store
-Thumbs.db
-desktop.ini
+# --- Local app data produced while testing --------------------------------
+/settings.json
+cleanup_log.txt
+debloat_log.txt
+android_actions.log
+/journal/
+/backups/
+/quarantine/
+/Data/
+*.wsb
 
-# ---------------------------------------------------------------------------
-# Investigation / craft workspace artifacts (not part of the application)
-# ---------------------------------------------------------------------------
-.freebuff/
-investigation.cany/
-capture/
+# --- Third-party reference material (read-only, never redistributed) ------
+# Win11Debloat (MIT) and Universal Android Debloater (GPL-3.0) sources, and
+# Google platform-tools if they are ever downloaded next to the repo.
 reference/
-inbox/
+refs/
+platform-tools/
+
+# --- Investigation / craft workspace artifacts ----------------------------
+.craft/
 craft.json
 feed.json
 transcript.json
 usage.json
 build-activity.log
 installer_types.txt
+capture/
+inbox/
+investigation.cany/
 
-# ---------------------------------------------------------------------------
-# Documentation / specs / prompts (keep README.md only)
-# ---------------------------------------------------------------------------
-/*.md
-!/README.md
-!/app/**/*.md
+# --- AI-agent working files -----------------------------------------------
+AGENT_STATE.md
+docs/freebuff/
+FPM_Master_*.md
+*_Master_Prompt*.md
+.antigravity/
+.freebuff/
+.omnirush/
+.cursor/
+.windsurf/
+.codebuff/
+.claude/
+.gemini/
+*.agent.log
 
-# ---------------------------------------------------------------------------
-# Local scratch
-# ---------------------------------------------------------------------------
-*.log
-*.tmp
-*.bak
+# --- OS and editor noise ---------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
 *.orig
 *.rej
+*.bak
+*.log
 
-
-
-
-reference/*
+# --- Root documentation ----------------------------------------------------
+# Prompt/spec markdown stays local; the public documents are named explicitly.
+/*.md
+!/README.md
+!/CHANGELOG.md
+!/CONTRIBUTING.md
+!/SECURITY.md
+!/CODE_OF_CONDUCT.md
+!/THIRD_PARTY_NOTICES.md
+!/docs/**
+docs/freebuff/
