@@ -2,7 +2,9 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using PCManager.Core;
 using PCManager.Core.Models;
 using PCManager.Services;
 using PCManager.Services.Abstractions;
@@ -48,9 +50,20 @@ public partial class MainWindow : Window
     /// <summary>Puts the caret in the palette search box whenever the palette opens.</summary>
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(MainViewModel.IsCommandPaletteOpen) && _viewModel.IsCommandPaletteOpen)
+        if (e.PropertyName == nameof(MainViewModel.IsCommandPaletteOpen))
         {
-            FocusPaletteQuery();
+            if (_viewModel.IsCommandPaletteOpen)
+            {
+                AnimatePaletteOpen();
+                FocusPaletteQuery();
+            }
+
+            return;
+        }
+
+        if (e.PropertyName == nameof(MainViewModel.CurrentPage))
+        {
+            AnimatePageChange();
             return;
         }
 
@@ -59,6 +72,52 @@ public partial class MainWindow : Window
         {
             Dispatcher.BeginInvoke(new Action(SelectFirstMatch), DispatcherPriority.Input);
         }
+    }
+
+    /// <summary>Fades and lifts the incoming page. With motion disabled the swap is instant.</summary>
+    private void AnimatePageChange()
+    {
+        if (!MotionPreferences.AnimationsEnabled)
+        {
+            PageHost.BeginAnimation(OpacityProperty, null);
+            PageSlide.BeginAnimation(TranslateTransform.YProperty, null);
+            PageHost.Opacity = 1;
+            PageSlide.Y = 0;
+            return;
+        }
+
+        var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+        PageHost.BeginAnimation(
+            OpacityProperty,
+            new DoubleAnimation(0, 1, MotionPolicy.PageDuration) { EasingFunction = easing });
+        PageSlide.BeginAnimation(
+            TranslateTransform.YProperty,
+            new DoubleAnimation(7, 0, MotionPolicy.PageDuration) { EasingFunction = easing });
+    }
+
+    /// <summary>Fades and zooms the palette panel in; skipped entirely when motion is disabled.</summary>
+    private void AnimatePaletteOpen()
+    {
+        if (!MotionPreferences.AnimationsEnabled)
+        {
+            PaletteOverlay.BeginAnimation(OpacityProperty, null);
+            PaletteScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            PaletteScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+            PaletteOverlay.Opacity = 1;
+            PaletteScale.ScaleX = 1;
+            PaletteScale.ScaleY = 1;
+            return;
+        }
+
+        var easing = new QuadraticEase { EasingMode = EasingMode.EaseOut };
+        var zoom = new DoubleAnimation(0.98, 1, MotionPolicy.PaletteDuration) { EasingFunction = easing };
+
+        PaletteOverlay.BeginAnimation(
+            OpacityProperty,
+            new DoubleAnimation(0, 1, MotionPolicy.PaletteDuration) { EasingFunction = easing });
+        PaletteScale.BeginAnimation(ScaleTransform.ScaleXProperty, zoom);
+        PaletteScale.BeginAnimation(ScaleTransform.ScaleYProperty, zoom);
     }
 
     private void FocusPaletteQuery()

@@ -177,21 +177,29 @@
                     </DockPanel>
                 </Border>
 
-                <!-- Hosted Page View -->
-                <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
+                <!-- Hosted Page View: the incoming page fades and lifts into place. -->
+                <ContentControl x:Name="PageHost" Grid.Column="1" Content="{Binding CurrentPage}">
+                    <ContentControl.RenderTransform>
+                        <TranslateTransform x:Name="PageSlide" />
+                    </ContentControl.RenderTransform>
+                </ContentControl>
             </Grid>
 
             <!-- ======================= Command Palette Overlay ======================= -->
-            <Grid Grid.RowSpan="2"
+            <Grid x:Name="PaletteOverlay" Grid.RowSpan="2"
                   Background="#99000000"
                   Visibility="{Binding IsCommandPaletteOpen, Converter={StaticResource BoolToVisibility}}">
-                <Border Width="420" MaxHeight="380"
+                <Border x:Name="PalettePanel" Width="420" MaxHeight="380"
                         VerticalAlignment="Top" Margin="0,48,0,0"
+                        RenderTransformOrigin="0.5,0.2"
                         Background="{DynamicResource App.CardBackground}"
                         BorderBrush="{DynamicResource App.Gold}"
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="14">
+                    <Border.RenderTransform>
+                        <ScaleTransform x:Name="PaletteScale" />
+                    </Border.RenderTransform>
                     <StackPanel>
                         <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>

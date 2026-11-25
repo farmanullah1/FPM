@@ -43,4 +43,147 @@
     <Geometry x:Key="Icon.Speed">M12,3 A9,9 0 0 1 21,12 H17.8 A5.8,5.8 0 0 0 6.2,12 H3 A9,9 0 0 1 12,3 Z M12,14.2 A2.1,2.1 0 1 0 12,18.4 A2.1,2.1 0 1 0 12,14.2 Z M13.2,13.4 L18,6.2 L12,11.8 Z</Geometry>
     <Geometry x:Key="Icon.Window">M3,4.5 H21 V19.5 H3 Z M5,6.5 H19 V9.5 H5 Z M6.5,11.5 H10.5 V13.5 H6.5 Z M12,11.5 H17.5 V13.5 H12 Z M6.5,15 H10.5 V17 H6.5 Z</Geometry>
 
+    <!-- 2.5D hero glyphs: a darker back-plate offset behind the silhouette, the gold face,
+         and a band of light clipped to the face so each icon reads as a raised facet.
+         Drawn on the same 24x24 grid as the line icons and fully vector, so they stay
+         sharp from 13 px to 200% scaling. -->
+
+    <DrawingImage x:Key="Hero.Window">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.85" Y="0.85" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Window}" Brush="#73B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Window}" Brush="#F59E0B" />
+                <DrawingGroup ClipGeometry="{StaticResource Icon.Window}"><GeometryDrawing Geometry="M-4,-4 L28,-4 L28,9 L-4,9 Z" Brush="#42FFFBEB" /></DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="Hero.Speed">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.85" Y="0.85" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Speed}" Brush="#73B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Speed}" Brush="#F59E0B" />
+                <DrawingGroup ClipGeometry="{StaticResource Icon.Speed}"><GeometryDrawing Geometry="M-4,-4 L28,-4 L28,9 L-4,9 Z" Brush="#4DFFFBEB" /></DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="Hero.Bolt">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.85" Y="0.85" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Bolt}" Brush="#73B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Bolt}" Brush="#F59E0B" />
+                <DrawingGroup ClipGeometry="{StaticResource Icon.Bolt}"><GeometryDrawing Geometry="M-4,-4 L28,-4 L28,9 L-4,9 Z" Brush="#4DFFFBEB" /></DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="Hero.Health">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.85" Y="0.85" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Health}" Brush="#73B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Health}" Brush="#F59E0B" />
+                <DrawingGroup ClipGeometry="{StaticResource Icon.Health}"><GeometryDrawing Geometry="M-4,-4 L28,-4 L28,9 L-4,9 Z" Brush="#42FFFBEB" /></DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="Hero.Process">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.85" Y="0.85" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Process}" Brush="#73B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Process}" Brush="#F59E0B" />
+                <DrawingGroup ClipGeometry="{StaticResource Icon.Process}"><GeometryDrawing Geometry="M-4,-4 L28,-4 L28,8 L-4,8 Z" Brush="#3DFFFBEB" /></DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="Hero.Cleanup">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.85" Y="0.85" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Cleanup}" Brush="#73B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Cleanup}" Brush="#F59E0B" />
+                <DrawingGroup ClipGeometry="{StaticResource Icon.Cleanup}"><GeometryDrawing Geometry="M-4,-4 L28,-4 L28,9 L-4,9 Z" Brush="#42FFFBEB" /></DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="Hero.Storage">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.85" Y="0.85" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Storage}" Brush="#73B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Storage}" Brush="#F59E0B" />
+                <DrawingGroup ClipGeometry="{StaticResource Icon.Storage}"><GeometryDrawing Geometry="M-4,-4 L28,-4 L28,8 L-4,8 Z" Brush="#3DFFFBEB" /></DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="Hero.Startup">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.85" Y="0.85" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Startup}" Brush="#73B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Startup}" Brush="#F59E0B" />
+                <DrawingGroup ClipGeometry="{StaticResource Icon.Startup}"><GeometryDrawing Geometry="M-4,-4 L28,-4 L28,9 L-4,9 Z" Brush="#47FFFBEB" /></DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="Hero.Screenshot">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.85" Y="0.85" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Screenshot}" Brush="#73B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Screenshot}" Brush="#F59E0B" />
+                <DrawingGroup ClipGeometry="{StaticResource Icon.Screenshot}"><GeometryDrawing Geometry="M-4,-4 L28,-4 L28,9 L-4,9 Z" Brush="#42FFFBEB" /></DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <!-- Small-size heroes: the same two-layer relief without the specular band, which
+         otherwise turns to mush below 16 px. -->
+
+    <DrawingImage x:Key="HeroSmall.Speed">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.55" Y="0.55" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Speed}" Brush="#59B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Speed}" Brush="#F59E0B" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="HeroSmall.Health">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.55" Y="0.55" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Health}" Brush="#59B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Health}" Brush="#F59E0B" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="HeroSmall.Process">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.55" Y="0.55" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Process}" Brush="#59B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Process}" Brush="#F59E0B" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="HeroSmall.Cleanup">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.55" Y="0.55" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Cleanup}" Brush="#59B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Cleanup}" Brush="#F59E0B" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <DrawingImage x:Key="HeroSmall.Startup">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup><DrawingGroup.Transform><TranslateTransform X="0.55" Y="0.55" /></DrawingGroup.Transform><GeometryDrawing Geometry="{StaticResource Icon.Startup}" Brush="#59B45309" /></DrawingGroup>
+                <GeometryDrawing Geometry="{StaticResource Icon.Startup}" Brush="#F59E0B" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
 </ResourceDictionary>

@@ -39,10 +39,9 @@
                             Background="{DynamicResource App.AccentSoft}"
                             VerticalAlignment="Center">
                         <Grid>
-                            <Path Data="{DynamicResource Icon.Window}"
-                                  Fill="{DynamicResource App.Accent}"
-                                  Width="19" Height="19" Stretch="Uniform"
-                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Image Source="{DynamicResource Hero.Window}"
+                                   Width="19" Height="19" Stretch="Uniform"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
                             <Ellipse Width="6" Height="6" Fill="{DynamicResource App.AccentLabel}"
                                      HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,6,0" />
                         </Grid>
@@ -125,8 +124,8 @@
                 <StackPanel>
                     <Grid>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Path Data="{DynamicResource Icon.Speed}" Fill="#D97706"
-                                  Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" />
+                            <Image Source="{DynamicResource HeroSmall.Speed}"
+                                   Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" />
                             <TextBlock Text="PC boost" FontSize="12.5" FontWeight="Bold"
                                        Margin="6,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
@@ -246,8 +245,8 @@
                         <Grid>
                             <TextBlock Text="Health check" FontSize="11.5" FontWeight="SemiBold" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <Path Data="{DynamicResource Icon.Health}" Fill="{DynamicResource App.Accent}"
-                                      Width="13" Height="13" Stretch="Uniform" />
+                                <Image Source="{DynamicResource HeroSmall.Health}"
+                                       Width="13" Height="13" Stretch="Uniform" />
                                 <TextBlock Text="&#x203A;" FontSize="12" Margin="3,0,0,0"
                                            Foreground="{DynamicResource App.Subtle}" />
                             </StackPanel>
@@ -275,8 +274,8 @@
                         <Grid>
                             <TextBlock Text="Process" FontSize="11.5" FontWeight="SemiBold" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <Path Data="{DynamicResource Icon.Process}" Fill="{DynamicResource App.Accent}"
-                                      Width="13" Height="13" Stretch="Uniform" />
+                                <Image Source="{DynamicResource HeroSmall.Process}"
+                                       Width="13" Height="13" Stretch="Uniform" />
                                 <TextBlock Text="&#x203A;" FontSize="12" Margin="3,0,0,0"
                                            Foreground="{DynamicResource App.Subtle}" />
                             </StackPanel>
@@ -303,8 +302,8 @@
                         <Grid>
                             <TextBlock Text="Deep cleanup" FontSize="11.5" FontWeight="SemiBold" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <Path Data="{DynamicResource Icon.Cleanup}" Fill="{DynamicResource App.Accent}"
-                                      Width="13" Height="13" Stretch="Uniform" />
+                                <Image Source="{DynamicResource HeroSmall.Cleanup}"
+                                       Width="13" Height="13" Stretch="Uniform" />
                                 <TextBlock Text="&#x203A;" FontSize="12" Margin="3,0,0,0"
                                            Foreground="{DynamicResource App.Subtle}" />
                             </StackPanel>
@@ -334,8 +333,8 @@
                         <Grid>
                             <TextBlock Text="Startup" FontSize="11.5" FontWeight="SemiBold" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <Path Data="{DynamicResource Icon.Startup}" Fill="{DynamicResource App.Accent}"
-                                      Width="13" Height="13" Stretch="Uniform" />
+                                <Image Source="{DynamicResource HeroSmall.Startup}"
+                                       Width="13" Height="13" Stretch="Uniform" />
                                 <TextBlock Text="&#x203A;" FontSize="12" Margin="3,0,0,0"
                                            Foreground="{DynamicResource App.Subtle}" />
                             </StackPanel>
@@ -360,9 +359,9 @@
                         <StackPanel Orientation="Horizontal">
                             <Border Width="30" Height="30" CornerRadius="7"
                                     Background="{DynamicResource App.AccentSoft}" VerticalAlignment="Center">
-                                <Path Data="{DynamicResource Icon.Cleanup}" Fill="{DynamicResource App.Accent}"
-                                      Width="16" Height="16" Stretch="Uniform"
-                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Image Source="{DynamicResource Hero.Cleanup}"
+                                       Width="16" Height="16" Stretch="Uniform"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <StackPanel Margin="9,0,8,0" VerticalAlignment="Center">
                                 <TextBlock Text="One-Click Cleanup" FontSize="12.5" FontWeight="Bold" />
