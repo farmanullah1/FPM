@@ -40,12 +40,7 @@ internal static class Program
     {
         string pipeName = ResolvePipeName(args);
 
-        using var server = new NamedPipeServerStream(
-            pipeName,
-            PipeDirection.InOut,
-            1,
-            PipeTransmissionMode.Byte,
-            PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        using var server = PipeEndpoint.Create(pipeName);
 
         using var connectTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(ConnectTimeoutSeconds));
 
