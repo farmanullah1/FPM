@@ -1,5 +1,10 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- Shared content column cap: every page centres its content at this width instead of
+         stretching edge to edge on a maximized window. -->
+    <sys:Double x:Key="App.ContentMaxWidth">1280</sys:Double>
 
     <!-- Gold fill shared by primary buttons; always paired with dark charcoal text. -->
     <LinearGradientBrush x:Key="App.GoldFill" StartPoint="0,0" EndPoint="0,1">

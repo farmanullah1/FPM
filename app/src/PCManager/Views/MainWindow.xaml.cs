@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using PCManager.Core.Models;
 using PCManager.Services;
 using PCManager.Services.Abstractions;
@@ -29,6 +30,8 @@ public partial class MainWindow : Window
 
         RestoreWindowBounds();
 
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+
         Loaded += OnLoaded;
         SizeChanged += OnWindowSizeChanged;
         StateChanged += OnWindowStateChanged;
@@ -40,6 +43,107 @@ public partial class MainWindow : Window
         Loaded -= OnLoaded;
         UpdateLayoutForWidth(ActualWidth);
         await _viewModel.LoadAsync();
+    }
+
+    /// <summary>Puts the caret in the palette search box whenever the palette opens.</summary>
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.IsCommandPaletteOpen) && _viewModel.IsCommandPaletteOpen)
+        {
+            FocusPaletteQuery();
+            return;
+        }
+
+        // A new query means a new result list; keep the highlight on the first match.
+        if (e.PropertyName == nameof(MainViewModel.CommandPaletteQuery) && _viewModel.IsCommandPaletteOpen)
+        {
+            Dispatcher.BeginInvoke(new Action(SelectFirstMatch), DispatcherPriority.Input);
+        }
+    }
+
+    private void FocusPaletteQuery()
+    {
+        Dispatcher.BeginInvoke(
+            new Action(() =>
+            {
+                PaletteQuery.Focus();
+                Keyboard.Focus(PaletteQuery);
+                PaletteQuery.SelectAll();
+                SelectFirstMatch();
+            }),
+            DispatcherPriority.Input);
+    }
+
+    private void SelectFirstMatch()
+    {
+        if (PaletteList.Items.Count == 0)
+        {
+            PaletteList.SelectedIndex = -1;
+            return;
+        }
+
+        PaletteList.SelectedIndex = 0;
+        PaletteList.ScrollIntoView(PaletteList.Items[0]);
+    }
+
+    /// <summary>Escape closes the palette; arrows move the highlight; Enter runs the entry.</summary>
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (!_viewModel.IsCommandPaletteOpen)
+        {
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case Key.Escape:
+                _viewModel.CloseCommandPaletteCommand.Execute(null);
+                e.Handled = true;
+                break;
+
+            case Key.Down:
+                MoveSelection(1);
+                e.Handled = true;
+                break;
+
+            case Key.Up:
+                MoveSelection(-1);
+                e.Handled = true;
+                break;
+
+            case Key.Enter:
+                RunSelectedEntry();
+                e.Handled = true;
+                break;
+        }
+    }
+
+    private void MoveSelection(int delta)
+    {
+        int count = PaletteList.Items.Count;
+
+        if (count == 0)
+        {
+            return;
+        }
+
+        int next = PaletteList.SelectedIndex < 0
+            ? (delta > 0 ? 0 : count - 1)
+            : Math.Clamp(PaletteList.SelectedIndex + delta, 0, count - 1);
+
+        PaletteList.SelectedIndex = next;
+        PaletteList.ScrollIntoView(PaletteList.Items[next]);
+    }
+
+    private void RunSelectedEntry()
+    {
+        object? selection = PaletteList.SelectedItem ??
+                            (PaletteList.Items.Count > 0 ? PaletteList.Items[0] : null);
+
+        if (selection is CommandPaletteEntry entry)
+        {
+            _viewModel.ExecutePaletteCommand.Execute(entry);
+        }
     }
 
     private void RestoreWindowBounds()

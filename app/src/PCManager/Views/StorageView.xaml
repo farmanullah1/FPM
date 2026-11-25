@@ -4,6 +4,7 @@
              xmlns:core="clr-namespace:PCManager.Core.Models;assembly=PCManager.Core">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12,10,12,14">
+        <Grid MaxWidth="{StaticResource App.ContentMaxWidth}" HorizontalAlignment="Stretch">
         <StackPanel>
 
             <Grid Margin="0,0,0,16">
@@ -526,5 +527,6 @@
             <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" />
 
         </StackPanel>
+        </Grid>
     </ScrollViewer>
 </UserControl>

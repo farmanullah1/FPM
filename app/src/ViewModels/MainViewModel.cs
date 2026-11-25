@@ -15,6 +15,12 @@ namespace PCManager.ViewModels;
 public sealed partial class MainViewModel : ObservableObject
 {
     private readonly IThemeService _themeService;
+    private readonly HomeViewModel _home;
+    private readonly ProtectionViewModel _protection;
+    private readonly StorageViewModel _storage;
+    private readonly AppsViewModel _apps;
+    private readonly MemoryViewModel _memory;
+    private readonly SettingsViewModel _settingsPage;
 
     public MainViewModel(
         HomeViewModel home,
@@ -29,6 +35,12 @@ public sealed partial class MainViewModel : ObservableObject
         IThemeService themeService)
     {
         _themeService = themeService;
+        _home = home;
+        _protection = protection;
+        _storage = storage;
+        _apps = apps;
+        _memory = memory;
+        _settingsPage = settingsPage;
 
         Pages = new ObservableCollection<NavigationItem>
         {
@@ -116,6 +128,7 @@ public sealed partial class MainViewModel : ObservableObject
     private void BuildCommandPalette()
     {
         _allCommands.Clear();
+
         _allCommands.Add(new CommandPaletteEntry("Navigate to Home", "Navigation", "Ctrl+1", () => SelectPage(PageKeys.Home)));
         _allCommands.Add(new CommandPaletteEntry("Navigate to Memory", "Navigation", "Ctrl+2", () => SelectPage(PageKeys.Memory)));
         _allCommands.Add(new CommandPaletteEntry("Navigate to Protection", "Navigation", "Ctrl+3", () => SelectPage(PageKeys.Protection)));
@@ -123,14 +136,59 @@ public sealed partial class MainViewModel : ObservableObject
         _allCommands.Add(new CommandPaletteEntry("Navigate to Apps", "Navigation", "Ctrl+5", () => SelectPage(PageKeys.Apps)));
         _allCommands.Add(new CommandPaletteEntry("Navigate to Toolbox", "Navigation", "Ctrl+6", () => SelectPage(PageKeys.Toolbox)));
         _allCommands.Add(new CommandPaletteEntry("Navigate to Settings", "Navigation", "Ctrl+,", () => SelectPage(PageKeys.Settings)));
-        _allCommands.Add(new CommandPaletteEntry("One-Click Cleanup", "Action", "Enter", () => SelectPage(PageKeys.Home)));
-        _allCommands.Add(new CommandPaletteEntry("Analyze Component Store (DISM)", "Action", string.Empty, () => SelectPage(PageKeys.Storage)));
-        _allCommands.Add(new CommandPaletteEntry("Downloads Categorization Manager", "Action", string.Empty, () => SelectPage(PageKeys.Storage)));
-        _allCommands.Add(new CommandPaletteEntry("App Leftovers Deep Cleaner", "Action", string.Empty, () => SelectPage(PageKeys.Apps)));
-        _allCommands.Add(new CommandPaletteEntry("Test Network Diagnostics & Latency", "Action", string.Empty, () => SelectPage(PageKeys.Protection)));
-        _allCommands.Add(new CommandPaletteEntry("Flush DNS Resolver Cache", "Action", string.Empty, () => SelectPage(PageKeys.Protection)));
-        _allCommands.Add(new CommandPaletteEntry("Trigger Windows Defender Quick Scan", "Action", string.Empty, () => SelectPage(PageKeys.Protection)));
+
+        // Actions execute the same command the page's button runs; page-bound commands also
+        // navigate first so their progress and result are visible.
+        _allCommands.Add(new CommandPaletteEntry("Boost memory now", "Action", string.Empty, () => Invoke(_home.BoostCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Capture every screen", "Action", string.Empty, () => Invoke(_home.CaptureCommand)));
+        _allCommands.Add(new CommandPaletteEntry("One-Click Cleanup scan", "Action", string.Empty, () => RunOn(PageKeys.Storage, _storage.ScanCleanupCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Analyze Component Store (DISM)", "Action", string.Empty, () => RunOn(PageKeys.Storage, _storage.AnalyzeDismCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Scan Downloads folder", "Action", string.Empty, () => RunOn(PageKeys.Storage, _storage.ScanDownloadsCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Find duplicate files", "Action", string.Empty, () => RunOn(PageKeys.Storage, _storage.FindDuplicatesCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Windows Defender quick scan", "Action", string.Empty, () => RunOn(PageKeys.Protection, _protection.StartQuickScanCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Flush DNS resolver cache", "Action", string.Empty, () => RunOn(PageKeys.Protection, _protection.FlushDnsCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Network diagnostics and latency test", "Action", string.Empty, () => RunOn(PageKeys.Protection, _protection.RunNetworkDiagnosticsCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Check for Windows updates", "Action", string.Empty, () => RunOn(PageKeys.Protection, _protection.CheckUpdatesCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Scan open windows (pop-ups)", "Action", string.Empty, () => RunOn(PageKeys.Protection, _protection.ScanPopupsCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Remove FPM hosts block", "Action", string.Empty, () => RunOn(PageKeys.Protection, _protection.RemoveHostsBlockCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Refresh process list", "Action", string.Empty, () => RunOn(PageKeys.Apps, _apps.RefreshCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Scan app leftovers", "Action", string.Empty, () => RunOn(PageKeys.Apps, _apps.ScanLeftoversCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Refresh memory diagnostics", "Action", string.Empty, () => RunOn(PageKeys.Memory, _memory.RefreshCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Run readiness check", "Action", string.Empty, () => RunOn(PageKeys.Settings, _settingsPage.RunReadinessCheckCommand)));
+
         FilterCommands();
+    }
+
+    private static void Invoke(IRelayCommand command)
+    {
+        if (command.CanExecute(null))
+        {
+            command.Execute(null);
+        }
+    }
+
+    /// <summary>
+    /// Navigates to a page and then runs its command. Navigation kicks off the page's refresh,
+    /// and most page commands are gated on "not busy", so wait for the guard instead of
+    /// silently dropping the action.
+    /// </summary>
+    private async void RunOn(string pageKey, IRelayCommand command)
+    {
+        try
+        {
+            SelectPage(pageKey);
+
+            for (int attempt = 0; attempt < 20 && !command.CanExecute(null); attempt++)
+            {
+                await Task.Delay(150);
+            }
+
+            Invoke(command);
+        }
+        catch (Exception)
+        {
+            // A palette action must never take the shell down; the page reports its own errors.
+        }
     }
 
     public string ProductName => AppInfo.ProductName;

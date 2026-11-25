@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14,10,14,16">
+        <Grid MaxWidth="{StaticResource App.ContentMaxWidth}" HorizontalAlignment="Stretch">
         <StackPanel>
             <!-- Page Header -->
             <Grid Margin="0,0,0,16">
@@ -163,5 +164,6 @@
                 </StackPanel>
             </Border>
         </StackPanel>
+        </Grid>
     </ScrollViewer>
 </UserControl>

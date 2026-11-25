@@ -442,6 +442,9 @@ internal static class Program
         }
     }
 
+    /// <summary>Newest timestamped hosts backups kept; older ones are pruned on each write.</summary>
+    private const int MaxHostsBackups = HostsBackupRetention.DefaultKeep;
+
     private static string BackupHostsFile()
     {
         string directory = Path.Combine(
@@ -452,7 +455,38 @@ internal static class Program
 
         string path = Path.Combine(directory, $"hosts-{DateTime.Now:yyyyMMdd-HHmmss}.hosts");
         File.Copy(HostsPath, path, overwrite: true);
+        PruneHostsBackups(directory);
         return path;
+    }
+
+    /// <summary>
+    /// Deletes only FPM's own timestamped hosts backups beyond the newest
+    /// <see cref="MaxHostsBackups"/>; unrelated files in the folder are never touched.
+    /// </summary>
+    private static void PruneHostsBackups(string directory)
+    {
+        try
+        {
+            string[] existing = Directory.GetFiles(directory, HostsBackupRetention.SearchPattern);
+
+            foreach (string obsolete in HostsBackupRetention.SelectObsolete(existing, MaxHostsBackups))
+            {
+                try
+                {
+                    File.Delete(obsolete);
+                    Log($"Pruned old hosts backup {Path.GetFileName(obsolete)}.");
+                }
+                catch (Exception ex)
+                {
+                    Log($"Could not delete old hosts backup {obsolete}: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Retention is housekeeping; it must never fail the backup that just succeeded.
+            Log($"Could not prune hosts backups: {ex.Message}");
+        }
     }
 
     private static bool IsValidDomain(string domain)

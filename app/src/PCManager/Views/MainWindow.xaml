@@ -13,7 +13,8 @@
         Foreground="{DynamicResource App.Text}"
         FontFamily="Segoe UI Variable Text, Segoe UI"
         UseLayoutRounding="True"
-        SnapsToDevicePixels="True">
+        SnapsToDevicePixels="True"
+        PreviewKeyDown="Window_PreviewKeyDown">
 
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="32"
@@ -197,19 +198,23 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Text="{Binding CommandPaletteQuery, UpdateSourceTrigger=PropertyChanged}"
+                            <TextBox x:Name="PaletteQuery"
+                                     Text="{Binding CommandPaletteQuery, UpdateSourceTrigger=PropertyChanged}"
                                      FontSize="13" Padding="8,6"
-                                     ToolTip="Search commands or pages" />
+                                     ToolTip="Search commands or pages"
+                                     AutomationProperties.Name="Command palette search" />
                             <Button Grid.Column="1" Content="&#x2715;" Style="{StaticResource PillButton}"
                                     Margin="6,0,0,0" VerticalAlignment="Center"
                                     Command="{Binding CloseCommandPaletteCommand}" />
                         </Grid>
 
-                        <ListBox ItemsSource="{Binding FilteredCommands}"
+                        <ListBox x:Name="PaletteList"
+                                 ItemsSource="{Binding FilteredCommands}"
                                  MaxHeight="260"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                                  BorderThickness="0"
-                                 Background="Transparent">
+                                 Background="Transparent"
+                                 AutomationProperties.Name="Command palette results">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Border Padding="8,6" Margin="0,2" CornerRadius="4"
@@ -241,6 +246,10 @@
                                 </Style>
                             </ListBox.ItemContainerStyle>
                         </ListBox>
+
+                        <TextBlock Text="&#x2191; &#x2193; to move  ·  Enter to run  ·  Esc to close"
+                                   FontSize="9" Foreground="{DynamicResource App.Subtle}"
+                                   Margin="2,8,0,0" />
                     </StackPanel>
                 </Border>
             </Grid>
