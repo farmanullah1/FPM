@@ -141,6 +141,26 @@ public sealed class PopupMonitorService : IPopupMonitorService
         return Task.CompletedTask;
     }
 
+    public Task<IReadOnlyList<string>> GetAllowedAsync()
+    {
+        lock (_gate)
+        {
+            return Task.FromResult<IReadOnlyList<string>>(
+                _allowed.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList());
+        }
+    }
+
+    public Task ClearHistoryAsync()
+    {
+        lock (_gate)
+        {
+            _history.Clear();
+        }
+
+        SaveHistory();
+        return Task.CompletedTask;
+    }
+
     private bool CollectWindow(IntPtr hWnd, IntPtr lParam)
     {
         try

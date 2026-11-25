@@ -14,6 +14,10 @@ public sealed class ProtectionViewModelPopupTests
 
         public List<(string ProcessName, bool Allowed)> Calls { get; } = new();
 
+        public List<string> Allowed { get; } = new();
+
+        public int HistoryClears { get; private set; }
+
         public Task<IReadOnlyList<PopupSourceInfo>> ScanAsync(CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<PopupSourceInfo>>(new[] { Source });
 
@@ -24,6 +28,29 @@ public sealed class ProtectionViewModelPopupTests
         {
             Calls.Add((processName, allowed));
             Source = Source with { IsAllowed = allowed };
+
+            if (allowed)
+            {
+                if (!Allowed.Contains(processName, StringComparer.OrdinalIgnoreCase))
+                {
+                    Allowed.Add(processName);
+                }
+            }
+            else
+            {
+                Allowed.RemoveAll(name => string.Equals(name, processName, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<string>> GetAllowedAsync()
+            => Task.FromResult<IReadOnlyList<string>>(
+                Allowed.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList());
+
+        public Task ClearHistoryAsync()
+        {
+            HistoryClears++;
             return Task.CompletedTask;
         }
     }
@@ -111,5 +138,61 @@ public sealed class ProtectionViewModelPopupTests
         Assert.Equal("notepad", call.ProcessName);
         Assert.False(call.Allowed);
         Assert.False(popups.Source.IsAllowed);
+    }
+
+    [Fact]
+    public async Task Allowed_apps_are_listed_separately_and_can_be_revoked_separately()
+    {
+        var popups = new FakePopupMonitor();
+        popups.Allowed.Add("notepad");
+        popups.Allowed.Add("acrobat");
+
+        var vm = new ProtectionViewModel(
+            new FakeProtectionService(),
+            new FakeRepairService(),
+            new FakeBrowserService(),
+            new TestLogger(),
+            popups: popups);
+
+        await vm.LoadAsync();
+
+        Assert.True(vm.HasAllowedPopups);
+        Assert.Equal(new[] { "acrobat", "notepad" }, vm.AllowedPopups);
+        Assert.Empty(vm.PopupSources);
+
+        await vm.RevokePopupAllowCommand.ExecuteAsync("notepad");
+
+        Assert.Equal(new[] { "acrobat" }, popups.Allowed);
+        Assert.Equal(new[] { "acrobat" }, vm.AllowedPopups);
+        Assert.True(vm.HasAllowedPopups);
+        Assert.Contains("removed from the allow list", vm.PopupSummary);
+
+        await vm.RevokePopupAllowCommand.ExecuteAsync("acrobat");
+
+        Assert.Empty(vm.AllowedPopups);
+        Assert.False(vm.HasAllowedPopups);
+    }
+
+    [Fact]
+    public async Task ClearPopupHistoryCommand_clears_local_counts_and_scan_results()
+    {
+        var popups = new FakePopupMonitor();
+        var vm = new ProtectionViewModel(
+            new FakeProtectionService(),
+            new FakeRepairService(),
+            new FakeBrowserService(),
+            new TestLogger(),
+            popups: popups);
+
+        await vm.ScanPopupsCommand.ExecuteAsync(null);
+        Assert.True(vm.HasPopupResults);
+        Assert.Single(vm.PopupSources);
+
+        await vm.ClearPopupHistoryCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, popups.HistoryClears);
+        Assert.False(vm.HasPopupResults);
+        Assert.Empty(vm.PopupSources);
+        Assert.Contains("sighting history cleared", vm.PopupSummary, StringComparison.OrdinalIgnoreCase);
     }
 }

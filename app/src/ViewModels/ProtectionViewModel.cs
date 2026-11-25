@@ -61,6 +61,8 @@ public sealed partial class ProtectionViewModel : ViewModelBase
         RunSpeedTestCommand = new AsyncRelayCommand(RunSpeedTestAsync, () => !IsBusy && !IsSpeedTesting);
         ScanPopupsCommand = new AsyncRelayCommand(ScanPopupsAsync, () => !IsBusy && !IsScanningPopups);
         TogglePopupAllowCommand = new AsyncRelayCommand<PopupSourceInfo>(TogglePopupAllowAsync);
+        RevokePopupAllowCommand = new AsyncRelayCommand<string>(RevokePopupAllowAsync);
+        ClearPopupHistoryCommand = new AsyncRelayCommand(ClearPopupHistoryAsync);
         ApplyHostsBlockCommand = new AsyncRelayCommand(ApplyHostsBlockAsync, () => !IsBusy);
         RemoveHostsBlockCommand = new AsyncRelayCommand(RemoveHostsBlockAsync, () => !IsBusy);
 
@@ -81,10 +83,15 @@ public sealed partial class ProtectionViewModel : ViewModelBase
     public AsyncRelayCommand RunSpeedTestCommand { get; }
     public AsyncRelayCommand ScanPopupsCommand { get; }
     public AsyncRelayCommand<PopupSourceInfo> TogglePopupAllowCommand { get; }
+    public AsyncRelayCommand<string> RevokePopupAllowCommand { get; }
+    public AsyncRelayCommand ClearPopupHistoryCommand { get; }
     public AsyncRelayCommand ApplyHostsBlockCommand { get; }
     public AsyncRelayCommand RemoveHostsBlockCommand { get; }
 
     public ObservableCollection<PopupSourceInfo> PopupSources { get; } = new();
+
+    /// <summary>Apps on the allow list; shown on their own so an exception can be revoked while closed.</summary>
+    public ObservableCollection<string> AllowedPopups { get; } = new();
 
     [ObservableProperty]
     private string _speedTestEndpoint = "https://speed.cloudflare.com/__down?bytes=10000000";
@@ -103,6 +110,9 @@ public sealed partial class ProtectionViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _popupSummary = "Scan to list apps that currently own visible windows.";
+
+    [ObservableProperty]
+    private bool _hasAllowedPopups;
 
     [ObservableProperty]
     private string _hostsBlockInput = string.Empty;
@@ -179,6 +189,8 @@ public sealed partial class ProtectionViewModel : ViewModelBase
 
         try
         {
+            await RefreshAllowedPopupsAsync();
+
             DefenderStatus defender = await Task.Run(_protection.GetDefenderStatus);
             UpdateStatus update = await Task.Run(_protection.GetUpdateStatus);
             DefaultBrowserSetting browser = await Task.Run(_browser.GetDefaultBrowser);
@@ -462,10 +474,89 @@ public sealed partial class ProtectionViewModel : ViewModelBase
 
         bool allow = !source.IsAllowed;
         await _popups.SetAllowedAsync(source.ProcessName, allow);
+        await RefreshAllowedPopupsAsync();
         StatusMessage = allow
             ? $"{source.ProcessName} will be ignored on the next scan."
             : $"{source.ProcessName} is no longer allowed and will be listed again.";
         await ScanPopupsAsync();
+    }
+
+    private async Task RefreshAllowedPopupsAsync()
+    {
+        AllowedPopups.Clear();
+
+        if (_popups is null)
+        {
+            HasAllowedPopups = false;
+            return;
+        }
+
+        try
+        {
+            foreach (string name in await _popups.GetAllowedAsync())
+            {
+                AllowedPopups.Add(name);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Could not read the popup allow list.", ex);
+        }
+
+        HasAllowedPopups = AllowedPopups.Count > 0;
+    }
+
+    private async Task RevokePopupAllowAsync(string? processName)
+    {
+        if (_popups is null || string.IsNullOrWhiteSpace(processName))
+        {
+            return;
+        }
+
+        try
+        {
+            await _popups.SetAllowedAsync(processName, false);
+        }
+        catch (Exception ex)
+        {
+            PopupSummary = $"Could not revoke {processName}: {ex.Message}";
+            _logger.Error("Could not revoke a popup allow entry.", ex);
+            return;
+        }
+
+        await RefreshAllowedPopupsAsync();
+
+        if (HasPopupResults)
+        {
+            await ScanPopupsAsync();
+        }
+
+        PopupSummary = $"{processName} was removed from the allow list and will be listed again.";
+    }
+
+    private async Task ClearPopupHistoryAsync()
+    {
+        if (_popups is null)
+        {
+            PopupSummary = "The popup monitor is not available.";
+            return;
+        }
+
+        try
+        {
+            await _popups.ClearHistoryAsync();
+        }
+        catch (Exception ex)
+        {
+            PopupSummary = $"Could not clear the sighting history: {ex.Message}";
+            _logger.Error("Could not clear the popup sighting history.", ex);
+            return;
+        }
+
+        PopupSources.Clear();
+        HasPopupResults = false;
+        PopupSummary = "Local 30-day sighting history cleared. Scan again to start a fresh count.";
+        StatusMessage = "Cleared the local pop-up sighting history.";
     }
 
     private async Task ApplyHostsBlockAsync()

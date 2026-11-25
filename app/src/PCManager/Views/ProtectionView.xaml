@@ -180,6 +180,52 @@
                         </ItemsControl>
                     </ScrollViewer>
 
+                    <!-- Allow list + local sighting history -->
+                    <Border Padding="12" Margin="0,8,0,0"
+                            Background="{DynamicResource App.Background}"
+                            BorderBrush="{DynamicResource App.Border}" BorderThickness="1"
+                            CornerRadius="8">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Allowed apps" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Content="Clear sighting history"
+                                        Style="{StaticResource PillButton}"
+                                        ToolTip="Delete the local 30-day sighting counts"
+                                        Command="{Binding ClearPopupHistoryCommand}" />
+                            </Grid>
+                            <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,0,0,6"
+                                       Text="Allow is permanent until you revoke it here, even while the app is closed. Sightings are counted locally in %LOCALAPPDATA%\FPM\popup-history.json and expire after 30 days." />
+
+                            <TextBlock Text="No apps are allowed yet."
+                                       Style="{StaticResource CaptionText}"
+                                       Visibility="{Binding HasAllowedPopups, Converter={StaticResource InverseBoolToVisibility}}" />
+
+                            <ItemsControl ItemsSource="{Binding AllowedPopups}"
+                                          Visibility="{Binding HasAllowedPopups, Converter={StaticResource BoolToVisibility}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <Button Grid.Column="1" Content="Revoke"
+                                                    Style="{StaticResource PillButton}"
+                                                    ToolTip="Stop ignoring this app on future scans"
+                                                    Command="{Binding DataContext.RevokePopupAllowCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
                     <Border Background="{DynamicResource App.AccentSoft}" CornerRadius="8" Padding="12" Margin="0,8,0,0">
                         <StackPanel>
                             <TextBlock Text="Hosts block (administrator)" FontWeight="SemiBold" />

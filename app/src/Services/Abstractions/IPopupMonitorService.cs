@@ -14,4 +14,10 @@ public interface IPopupMonitorService
     Task<bool> IsAllowedAsync(string processName);
 
     Task SetAllowedAsync(string processName, bool allowed);
+
+    /// <summary>Apps on the allow list, so they can be reviewed and revoked while they are closed.</summary>
+    Task<IReadOnlyList<string>> GetAllowedAsync();
+
+    /// <summary>Deletes the local 30-day sighting counts.</summary>
+    Task ClearHistoryAsync();
 }
