@@ -1,0 +1,92 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- ======================================================================
+         U1 spacing tokens. Everything on the 4-px grid: 4 / 8 / 12 / 16 / 20 /
+         24 / 32 / 40. Views and controls consume these through DynamicResource
+         so a single edit retunes the whole app. tools/lint-xaml.ps1 fails a
+         literal Margin/Padding/CornerRadius or hex colour outside the token
+         dictionaries.
+         ====================================================================== -->
+
+    <!-- Grid steps -->
+    <sys:Double x:Key="Space.1">4</sys:Double>
+    <sys:Double x:Key="Space.2">8</sys:Double>
+    <sys:Double x:Key="Space.3">12</sys:Double>
+    <sys:Double x:Key="Space.4">16</sys:Double>
+    <sys:Double x:Key="Space.5">20</sys:Double>
+    <sys:Double x:Key="Space.6">24</sys:Double>
+    <sys:Double x:Key="Space.8">32</sys:Double>
+    <sys:Double x:Key="Space.10">40</sys:Double>
+
+    <!-- Uniform Thickness variants of the same steps -->
+    <Thickness x:Key="Thickness.1">4</Thickness>
+    <Thickness x:Key="Thickness.2">8</Thickness>
+    <Thickness x:Key="Thickness.3">12</Thickness>
+    <Thickness x:Key="Thickness.4">16</Thickness>
+    <Thickness x:Key="Thickness.5">20</Thickness>
+    <Thickness x:Key="Thickness.6">24</Thickness>
+    <Thickness x:Key="Thickness.8">32</Thickness>
+    <Thickness x:Key="Thickness.10">40</Thickness>
+
+    <!-- Page margins: 16 compact / 24 standard / 32 expanded -->
+    <Thickness x:Key="Page.MarginCompact">16</Thickness>
+    <Thickness x:Key="Page.Margin">24</Thickness>
+    <Thickness x:Key="Page.MarginExpanded">32</Thickness>
+
+    <!-- Cards: padding 16 (20 expanded), 12 px gaps (16 expanded) -->
+    <Thickness x:Key="Card.Padding">16</Thickness>
+    <Thickness x:Key="Card.PaddingExpanded">20</Thickness>
+    <Thickness x:Key="Card.Margin">0,0,0,12</Thickness>
+    <Thickness x:Key="Card.MarginExpanded">0,0,0,16</Thickness>
+    <Thickness x:Key="Card.PaddingNarrow">12,10</Thickness>
+
+    <!-- Sections -->
+    <Thickness x:Key="Section.Margin">0,0,0,24</Thickness>
+    <Thickness x:Key="Section.HeaderMargin">0,0,0,8</Thickness>
+
+    <!-- Rows: 48 tall (56 with two lines), padding 12x8 -->
+    <Thickness x:Key="Row.Padding">12,8</Thickness>
+    <Thickness x:Key="Row.Margin">0,0,0,8</Thickness>
+    <sys:Double x:Key="Row.MinHeight">48</sys:Double>
+    <sys:Double x:Key="Row.MinHeightTwoLine">56</sys:Double>
+
+    <!-- Buttons: 36 tall (32 compact), 16x8 padding, 40x40 minimum hit target -->
+    <sys:Double x:Key="Button.MinHeight">36</sys:Double>
+    <sys:Double x:Key="Button.MinHeightCompact">32</sys:Double>
+    <sys:Double x:Key="Button.MinHitTarget">40</sys:Double>
+    <Thickness x:Key="Button.Padding">16,8</Thickness>
+    <Thickness x:Key="Button.PaddingCompact">12,6</Thickness>
+    <sys:Double x:Key="Button.IconGap">8</sys:Double>
+
+    <!-- Icon boxes: 20 nav / 24 buttons / 32-40 card / 64-96 hero -->
+    <sys:Double x:Key="Icon.Nav">20</sys:Double>
+    <sys:Double x:Key="Icon.Button">24</sys:Double>
+    <sys:Double x:Key="Icon.Card">32</sys:Double>
+    <sys:Double x:Key="Icon.CardLarge">40</sys:Double>
+    <sys:Double x:Key="Icon.Hero">64</sys:Double>
+    <sys:Double x:Key="Icon.HeroLarge">96</sys:Double>
+
+    <!-- Radii: 6 small / 8 action card / 10 button / 12 utility card / pill -->
+    <CornerRadius x:Key="Radius.Small">6</CornerRadius>
+    <CornerRadius x:Key="Radius.Card">8</CornerRadius>
+    <CornerRadius x:Key="Radius.Button">10</CornerRadius>
+    <CornerRadius x:Key="Radius.Hero">12</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill">999</CornerRadius>
+
+    <!-- Window chrome: 40-44 title bar, 46x36 caption buttons -->
+    <sys:Double x:Key="TitleBar.Height">40</sys:Double>
+    <sys:Double x:Key="CaptionButton.Width">46</sys:Double>
+    <sys:Double x:Key="CaptionButton.Height">36</sys:Double>
+
+    <!-- Focus ring: 2 px accent with 2 px offset -->
+    <sys:Double x:Key="Focus.RingThickness">2</sys:Double>
+    <sys:Double x:Key="Focus.RingOffset">2</sys:Double>
+
+    <!-- Motion durations shared with PCManager.Core.MotionPolicy (in ms) -->
+    <sys:Double x:Key="Motion.PageMs">180</sys:Double>
+    <sys:Double x:Key="Motion.PaletteMs">140</sys:Double>
+    <sys:Double x:Key="Motion.HoverMs">200</sys:Double>
+
+</ResourceDictionary>

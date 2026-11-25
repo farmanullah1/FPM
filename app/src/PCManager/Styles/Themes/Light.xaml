@@ -28,4 +28,59 @@
     <SolidColorBrush x:Key="App.Gold" Color="#F59E0B" />
     <SolidColorBrush x:Key="App.TextSubtle" Color="#57534E" />
 
+    <!-- ===================== U1: surfaces, states, ramps ===================== -->
+
+    <!-- Elevation. Light mode raises surfaces with shadow, so 2 is a hair warmer
+         than 1 and 3 stays white for dialogs. -->
+    <SolidColorBrush x:Key="Surface.0" Color="#F7F6F2" />
+    <SolidColorBrush x:Key="Surface.1" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="Surface.2" Color="#FFFDF7" />
+    <SolidColorBrush x:Key="Surface.3" Color="#FFFFFF" />
+
+    <!-- Interaction states: 6 % hover tint, 10 % pressed tint over the surface. -->
+    <SolidColorBrush x:Key="State.Hover" Color="#0FF59E0B" />
+    <SolidColorBrush x:Key="State.Pressed" Color="#1AF59E0B" />
+    <SolidColorBrush x:Key="State.Selected" Color="#FEF3C7" />
+
+    <!-- Accent interaction ramp (v7 8.1 / 8.2-D4). Pressed stays light enough
+         for charcoal text to keep 4.5:1. -->
+    <SolidColorBrush x:Key="App.AccentHover" Color="#D97706" />
+    <SolidColorBrush x:Key="App.AccentPressed" Color="#D4730A" />
+    <SolidColorBrush x:Key="App.AccentBorder" Color="#EAB308" />
+
+    <!-- Amber ramp for icons, gradients and charts. -->
+    <SolidColorBrush x:Key="Amber.50" Color="#FFFBEB" />
+    <SolidColorBrush x:Key="Amber.100" Color="#FEF3C7" />
+    <SolidColorBrush x:Key="Amber.200" Color="#FDE68A" />
+    <SolidColorBrush x:Key="Amber.300" Color="#FCD34D" />
+    <SolidColorBrush x:Key="Amber.400" Color="#FBBF24" />
+    <SolidColorBrush x:Key="Amber.500" Color="#F59E0B" />
+    <SolidColorBrush x:Key="Amber.600" Color="#D97706" />
+    <SolidColorBrush x:Key="Amber.700" Color="#B45309" />
+    <SolidColorBrush x:Key="Amber.800" Color="#92400E" />
+    <SolidColorBrush x:Key="Amber.900" Color="#78350F" />
+
+    <!-- Hero-only gradient; every other surface stays flat (v7 8.1). -->
+    <LinearGradientBrush x:Key="Gradient.GoldHero" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FCD34D" Offset="0" />
+        <GradientStop Color="#F59E0B" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Semantic fills for bars/dots/icons, and the text-safe variants that
+         words must use (v7 8.2-D3). -->
+    <SolidColorBrush x:Key="App.Success.Fill" Color="#10B981" />
+    <SolidColorBrush x:Key="App.Warning.Fill" Color="#F59E0B" />
+    <SolidColorBrush x:Key="App.Critical.Fill" Color="#EF4444" />
+    <SolidColorBrush x:Key="App.Success.Text" Color="#047857" />
+    <SolidColorBrush x:Key="App.Warning.Text" Color="#B45309" />
+    <SolidColorBrush x:Key="App.Critical.Text" Color="#B91C1C" />
+
+    <!-- Six distinguishable chart colours (always paired with a label). -->
+    <SolidColorBrush x:Key="Chart.1" Color="#B45309" />
+    <SolidColorBrush x:Key="Chart.2" Color="#15803D" />
+    <SolidColorBrush x:Key="Chart.3" Color="#1D4ED8" />
+    <SolidColorBrush x:Key="Chart.4" Color="#0E7490" />
+    <SolidColorBrush x:Key="Chart.5" Color="#7C3AED" />
+    <SolidColorBrush x:Key="Chart.6" Color="#B91C1C" />
+
 </ResourceDictionary>
