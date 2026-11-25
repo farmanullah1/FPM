@@ -5,8 +5,12 @@ namespace PCManager.Views;
 
 public partial class HomeView : UserControl
 {
-    /// <summary>Content-area width (DIP) at which the Bento two-column arrangement replaces the compact stack.</summary>
-    private const double WideBreakpoint = 760;
+    /// <summary>
+    /// Content-area width (DIP) at which the Bento two-column arrangement replaces the compact stack.
+    /// Below this the 4* utility column would leave each 2x2 card under ~190 DIP, which crowds the
+    /// title, icon and chevron row and wraps the Startup caption, so mid-widths stack instead.
+    /// </summary>
+    private const double WideBreakpoint = 840;
 
     public HomeView()
     {

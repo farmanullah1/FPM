@@ -6,7 +6,9 @@
              mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <Grid x:Name="HomeLayout" MaxWidth="1280" HorizontalAlignment="Stretch" Margin="10,9,10,10">
+        <!-- §8.4/§8.6 Bento: capped at 900 DIP so the 5*/4* split keeps each 2x2 utility card
+             readable; Stretch + MaxWidth centres the column on wider windows. -->
+        <Grid x:Name="HomeLayout" MaxWidth="900" HorizontalAlignment="Stretch" Margin="10,9,10,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="5*" />
                 <ColumnDefinition Width="10" />
