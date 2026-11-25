@@ -201,7 +201,6 @@
                             <TextBox x:Name="PaletteQuery"
                                      Text="{Binding CommandPaletteQuery, UpdateSourceTrigger=PropertyChanged}"
                                      FontSize="13" Padding="8,6"
-                                     ToolTip="Search commands or pages"
                                      AutomationProperties.Name="Command palette search" />
                             <Button Grid.Column="1" Content="&#x2715;" Style="{StaticResource PillButton}"
                                     Margin="6,0,0,0" VerticalAlignment="Center"
