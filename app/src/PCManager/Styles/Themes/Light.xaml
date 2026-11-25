@@ -47,6 +47,8 @@
     <SolidColorBrush x:Key="App.AccentHover" Color="#D97706" />
     <SolidColorBrush x:Key="App.AccentPressed" Color="#D4730A" />
     <SolidColorBrush x:Key="App.AccentBorder" Color="#EAB308" />
+    <!-- Progress/bar fill: darker than the button gold so it clears 3:1 on the track. -->
+    <SolidColorBrush x:Key="App.AccentBar" Color="#B45309" />
 
     <!-- Amber ramp for icons, gradients and charts. -->
     <SolidColorBrush x:Key="Amber.50" Color="#FFFBEB" />
@@ -68,8 +70,10 @@
 
     <!-- Semantic fills for bars/dots/icons, and the text-safe variants that
          words must use (v7 8.2-D3). -->
-    <SolidColorBrush x:Key="App.Success.Fill" Color="#10B981" />
-    <SolidColorBrush x:Key="App.Warning.Fill" Color="#F59E0B" />
+    <!-- The bright 8.1 fills fail 3:1 against the light track, so bars and dots use
+         these darkened variants (v7 8.2-D3 allows exactly this correction). -->
+    <SolidColorBrush x:Key="App.Success.Fill" Color="#047857" />
+    <SolidColorBrush x:Key="App.Warning.Fill" Color="#B45309" />
     <SolidColorBrush x:Key="App.Critical.Fill" Color="#EF4444" />
     <SolidColorBrush x:Key="App.Success.Text" Color="#047857" />
     <SolidColorBrush x:Key="App.Warning.Text" Color="#B45309" />

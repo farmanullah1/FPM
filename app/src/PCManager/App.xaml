@@ -9,6 +9,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <!-- Index 0 is always the theme dictionary; ThemeService swaps it. -->
                 <ResourceDictionary Source="Styles/Themes/Light.xaml" />
+                <ResourceDictionary Source="Styles/Spacing.xaml" />
                 <ResourceDictionary Source="Styles/Icons.xaml" />
                 <ResourceDictionary Source="Styles/Controls.xaml" />
             </ResourceDictionary.MergedDictionaries>

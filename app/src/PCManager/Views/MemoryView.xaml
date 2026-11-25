@@ -50,7 +50,7 @@
                                     BorderBrush="{DynamicResource App.Accent}" BorderThickness="1"
                                     Margin="6,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding PressureText}" FontWeight="SemiBold" FontSize="11"
-                                           Foreground="{DynamicResource App.Accent}" />
+                                           Foreground="{DynamicResource App.AccentBar}" />
                             </Border>
                         </StackPanel>
                         <TextBlock Text="{Binding PressureDescription}" Style="{StaticResource CaptionText}"

@@ -150,7 +150,7 @@
                 <StackPanel>
                     <TextBlock Text="About" FontSize="17" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding ProductName}" FontSize="22" FontWeight="SemiBold"
-                               Foreground="{DynamicResource App.Accent}" Margin="0,8,0,0" />
+                               Foreground="{DynamicResource App.AccentBar}" Margin="0,8,0,0" />
                     <TextBlock Text="{Binding VersionText}" Style="{StaticResource CaptionText}" />
 
                     <TextBlock Text="Settings and logs" Style="{StaticResource SectionTitle}" Margin="0,16,0,6" />

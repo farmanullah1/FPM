@@ -5,6 +5,26 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 
 ## [Unreleased]
 
+### Changed
+- **Design tokens (U1)**: `Styles/Spacing.xaml` adds the 4-px scale (4-40) with `Thickness`
+  variants plus page, card, row, button, icon-box, radius, title-bar, focus and motion tokens.
+  Both theme dictionaries gained elevation surfaces (`Surface.0-3`), interaction state layers
+  (`State.Hover` / `Pressed` / `Selected`), the amber ramp (`Amber.50-900`),
+  `Gradient.GoldHero`, semantic fill and text pairs, six chart colours, and accent
+  hover/pressed/bar brushes. `Card`, `RowCard`, `PrimaryButton`, `SecondaryButton` and
+  `ThinProgress` now consume tokens only.
+- **New base components** in `Styles/Controls.xaml`: `HeroCard` (the only gold-gradient surface),
+  `ListRow` (48 px, separator), `IconButton` (40x40 hit target), `Chip`, `SectionHeader`.
+- **Contrast gate** `tools/contrast-check.ps1` checks 24 documented pairs per theme. It caught the
+  light theme's amber and emerald bar fills at 1.84:1 and 2.17:1 against the track, so bars use the
+  darkened `App.AccentBar` / `App.Success.Fill` / `App.Warning.Fill` (the correction v7 8.2-D3
+  prescribes). All pairs pass in both themes.
+- **XAML lint** `tools/lint-xaml.ps1` flags literal `Margin` / `Padding` / `CornerRadius` and hex
+  colours outside the token files, with `tools/xaml-lint-baseline.json` as a ratchet: 382 existing
+  values across 10 view files, which cards U3/U10 must reduce, and `-Strict` for CI once the
+  count reaches zero.
+
+
 ### Added
 - **Two-phase Cleanup Center** in Storage: a read-only scan builds a numbered table (exact paths,
   measured bytes, file/subfolder counts, age, tier, confidence, running/elevation state), and a

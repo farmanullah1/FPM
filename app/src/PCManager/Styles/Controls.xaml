@@ -53,17 +53,17 @@
     <!-- ============================ Surfaces ============================ -->
 
     <Style x:Key="Card" TargetType="Border">
-        <Setter Property="Background" Value="{DynamicResource App.Card}" />
+        <Setter Property="Background" Value="{DynamicResource Surface.1}" />
         <Setter Property="BorderBrush" Value="{DynamicResource App.Border}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="Padding" Value="12" />
-        <Setter Property="Margin" Value="0,0,0,8" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Card}" />
+        <Setter Property="Padding" Value="{DynamicResource Card.Padding}" />
+        <Setter Property="Margin" Value="{DynamicResource Card.Margin}" />
     </Style>
 
     <Style x:Key="RowCard" TargetType="Border" BasedOn="{StaticResource Card}">
-        <Setter Property="Padding" Value="10" />
-        <Setter Property="Margin" Value="0,0,0,6" />
+        <Setter Property="Padding" Value="{DynamicResource Card.PaddingNarrow}" />
+        <Setter Property="Margin" Value="{DynamicResource Row.Margin}" />
     </Style>
 
     <!-- Bounded, scrollable list of card rows used on the Apps and Storage pages. -->
@@ -84,12 +84,12 @@
 
     <Style x:Key="PrimaryButton" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource App.GoldFill}" />
-        <Setter Property="Foreground" Value="#18181B" />
-        <Setter Property="BorderBrush" Value="#EAB308" />
+        <Setter Property="Foreground" Value="{DynamicResource App.AccentText}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource App.AccentBorder}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Height" Value="32" />
+        <Setter Property="MinHeight" Value="{DynamicResource Button.MinHeightCompact}" />
         <Setter Property="FontSize" Value="11.5" />
-        <Setter Property="Padding" Value="12,5" />
+        <Setter Property="Padding" Value="{DynamicResource Button.PaddingCompact}" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
@@ -101,7 +101,7 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="6"
+                            CornerRadius="{DynamicResource Radius.Button}"
                             Padding="{TemplateBinding Padding}"
                             TextElement.Foreground="{TemplateBinding Foreground}">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
@@ -109,10 +109,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="#EAB308" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource App.AccentHover}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="#D97706" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource App.AccentPressed}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Root" Property="Opacity" Value="0.4" />
@@ -124,9 +124,10 @@
     </Style>
 
     <Style x:Key="SecondaryButton" TargetType="Button">
-        <Setter Property="Background" Value="{DynamicResource App.Card}" />
+        <Setter Property="Background" Value="{DynamicResource Surface.1}" />
         <Setter Property="Foreground" Value="{DynamicResource App.Text}" />
-        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="Padding" Value="{DynamicResource Button.PaddingCompact}" />
+        <Setter Property="MinHeight" Value="{DynamicResource Button.MinHeightCompact}" />
         <Setter Property="FontSize" Value="11" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
@@ -138,7 +139,7 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{DynamicResource App.Border}"
                             BorderThickness="1"
-                            CornerRadius="6"
+                            CornerRadius="{DynamicResource Radius.Button}"
                             Padding="{TemplateBinding Padding}"
                             TextElement.Foreground="{TemplateBinding Foreground}">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
@@ -146,7 +147,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource App.CardHover}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Surface.2}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Root" Property="Opacity" Value="0.4" />
@@ -157,9 +158,83 @@
         </Setter>
     </Style>
 
+    <!-- ======================= U1 base components ======================= -->
+
+    <!-- Hero surface: the only place the gold gradient is allowed (v7 8.1). -->
+    <Style x:Key="HeroCard" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Gradient.GoldHero}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource App.AccentBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Hero}" />
+        <Setter Property="Padding" Value="{DynamicResource Card.PaddingExpanded}" />
+        <Setter Property="Margin" Value="{DynamicResource Card.Margin}" />
+    </Style>
+
+    <!-- One list row: 48 tall, 12x8 padding, 1 px separator. -->
+    <Style x:Key="ListRow" TargetType="Border">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource App.Border}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding" Value="{DynamicResource Row.Padding}" />
+        <Setter Property="MinHeight" Value="{DynamicResource Row.MinHeight}" />
+    </Style>
+
+    <!-- Square icon-only button with a 40x40 hit target and state layers. -->
+    <Style x:Key="IconButton" TargetType="Button">
+        <Setter Property="Width" Value="{DynamicResource Button.MinHitTarget}" />
+        <Setter Property="Height" Value="{DynamicResource Button.MinHitTarget}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource App.Text}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource GoldFocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Border x:Name="HoverLayer" Background="{DynamicResource State.Hover}" Opacity="0"
+                                CornerRadius="{DynamicResource Radius.Button}" />
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{DynamicResource Thickness.1}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="HoverLayer" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="HoverLayer" Property="Background" Value="{DynamicResource State.Pressed}" />
+                            <Setter TargetName="HoverLayer" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Status chip: pill, token padding, icon + label (never colour alone). -->
+    <Style x:Key="Chip" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource App.AccentSoft}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource App.AccentBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Pill}" />
+        <Setter Property="Padding" Value="{DynamicResource Thickness.2}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Card-level heading above a group of cards. -->
+    <Style x:Key="SectionHeader" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI Variable Display, Segoe UI" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource App.Text}" />
+        <Setter Property="Margin" Value="{DynamicResource Section.HeaderMargin}" />
+    </Style>
+
     <Style x:Key="CaptionButton" TargetType="Button">
-        <Setter Property="Width" Value="28" />
-        <Setter Property="Height" Value="24" />
+        <Setter Property="Width" Value="{DynamicResource Space.8}" />
+        <Setter Property="Height" Value="{DynamicResource Space.6}" />
         <Setter Property="FontSize" Value="11" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource App.Text}" />
@@ -274,7 +349,7 @@
     <Style x:Key="ThinProgress" TargetType="ProgressBar">
         <Setter Property="Height" Value="3" />
         <Setter Property="Maximum" Value="100" />
-        <Setter Property="Foreground" Value="{DynamicResource App.Accent}" />
+        <Setter Property="Foreground" Value="{DynamicResource App.AccentBar}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ProgressBar">

@@ -37,7 +37,7 @@
                 <!-- RAM Load Section -->
                 <StackPanel Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="{Binding FreeText}">
                     <TextBlock Text="{Binding LoadText}" FontSize="13" FontWeight="SemiBold"
-                               Foreground="{DynamicResource App.Accent}" />
+                               Foreground="{DynamicResource App.AccentBar}" />
                     <TextBlock Text="RAM" Style="{StaticResource CaptionText}" FontSize="9" />
                 </StackPanel>
 
