@@ -227,12 +227,23 @@ public sealed partial class MainViewModel : ObservableObject
 
             SetProperty(ref _selectedPage, value);
             CurrentPage = value.Page;
-            _ = value.Page.LoadAsync();
+
+            // First visit loads immediately; revisits refresh after the 260 ms transition so
+            // data work never lands inside the incoming animation (U6).
+            _ = value.Page.HasLoadedOnce
+                ? ReloadAfterTransitionAsync(value.Page)
+                : value.Page.EnsureLoadedAsync();
         }
     }
 
     /// <summary>Called by the window once it is on screen.</summary>
-    public Task LoadAsync() => CurrentPage.LoadAsync();
+    public Task LoadAsync() => CurrentPage.EnsureLoadedAsync();
+
+    private static async Task ReloadAfterTransitionAsync(ViewModelBase page)
+    {
+        await Task.Delay(260);
+        await page.LoadAsync();
+    }
 
     private void SelectPage(string pageKey)
     {

@@ -387,8 +387,9 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Root" Property="Background" Value="{DynamicResource App.CardHover}" />
                         </Trigger>
+                        <!-- The selected pill is drawn once by the rail (U6), behind the items. -->
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource App.AccentSoft}" />
+                            <Setter TargetName="Root" Property="Background" Value="Transparent" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

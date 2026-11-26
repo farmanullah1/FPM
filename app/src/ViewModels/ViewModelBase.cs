@@ -35,6 +35,20 @@ public abstract class ViewModelBase : ObservableObject
     /// <summary>Called once when the page is first shown.</summary>
     public virtual Task LoadAsync() => Task.CompletedTask;
 
+    /// <summary>True after the first successful load, so revisits can refresh later.</summary>
+    public bool HasLoadedOnce { get; private set; }
+
+    private Task? _loadTask;
+
+    /// <summary>Loads data the first time the page is shown; later calls are no-ops.</summary>
+    public Task EnsureLoadedAsync() => _loadTask ??= LoadOnceAsync();
+
+    private async Task LoadOnceAsync()
+    {
+        await LoadAsync();
+        HasLoadedOnce = true;
+    }
+
     /// <summary>Override to refresh command CanExecute states when <see cref="IsBusy"/> changes.</summary>
     protected virtual void OnBusyChanged() { }
 }

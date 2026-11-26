@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 using System.Windows.Media;
 using System.Windows.Threading;
 using PCManager.Core;
@@ -24,6 +26,8 @@ public partial class MainWindow : Window
     private readonly ISettingsService _settings;
     private readonly IAppLogger _logger;
     private readonly FrameTimingProbe _frameProbe = new();
+    private readonly Dictionary<object, FrameworkElement> _pageViews = new();
+    private FrameworkElement? _visiblePage;
 
     public MainWindow(MainViewModel viewModel, ISettingsService settings, IAppLogger logger)
     {
@@ -48,6 +52,14 @@ public partial class MainWindow : Window
     {
         Loaded -= OnLoaded;
         UpdateLayoutForWidth(ActualWidth);
+
+        FrameworkElement initial = GetPageView(_viewModel.CurrentPage);
+        initial.Visibility = Visibility.Visible;
+        initial.Opacity = 1;
+        _visiblePage = initial;
+
+        await Dispatcher.Yield(DispatcherPriority.Loaded);
+        UpdateNavPill(animate: false);
         await _viewModel.LoadAsync();
     }
 
@@ -72,6 +84,12 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (e.PropertyName == nameof(MainViewModel.IsExpandedSidebar))
+        {
+            Dispatcher.BeginInvoke(new Action(() => UpdateNavPill(animate: false)), DispatcherPriority.Loaded);
+            return;
+        }
+
         // A new query means a new result list; keep the highlight on the first match.
         if (e.PropertyName == nameof(MainViewModel.CommandPaletteQuery) && _viewModel.IsCommandPaletteOpen)
         {
@@ -79,11 +97,204 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Fades and lifts the incoming page through the motion kit (no motion: instant).</summary>
+    /// <summary>
+    /// Shared-axis page change (U6): the outgoing page fades out in 120 ms while the cached
+    /// incoming page fades in and slides 16 px from the direction of travel. Reduced motion
+    /// keeps the cross-fade; motion off swaps instantly. Cached views keep their scroll offset.
+    /// </summary>
     private void AnimatePageChange()
     {
-        MotionKit.FadeIn(PageHost, MotionPolicy.PageDuration);
-        MotionKit.SlideIn(PageSlide, fromX: 0, fromY: 7, MotionPolicy.PageDuration);
+        FrameworkElement next = GetPageView(_viewModel.CurrentPage);
+        FrameworkElement? previous = _visiblePage;
+
+        if (ReferenceEquals(previous, next))
+        {
+            return;
+        }
+
+        _visiblePage = next;
+
+        bool movingDown = previous is null
+            || IndexOfPage(next.DataContext) >= IndexOfPage(previous.DataContext);
+
+        Panel.SetZIndex(next, 1);
+        next.Visibility = Visibility.Visible;
+
+        var nextShift = (TranslateTransform)next.RenderTransform;
+        double distance = MotionKit.Policy.AllowsTransforms ? 16d : 0d;
+        var enterMotion = TimeSpan.FromMilliseconds(MotionPolicy.PageDuration.TotalMilliseconds);
+        var exitMotion = TimeSpan.FromMilliseconds(120);
+        var enterEase = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var exitEase = new CubicEase { EasingMode = EasingMode.EaseIn };
+
+        if (!MotionKit.Policy.AllowsFades)
+        {
+            next.BeginAnimation(UIElement.OpacityProperty, null);
+            next.Opacity = 1;
+            nextShift.BeginAnimation(TranslateTransform.YProperty, null);
+            nextShift.Y = 0;
+            Collapse(previous);
+            Dispatcher.BeginInvoke(new Action(() => UpdateNavPill(animate: false)), DispatcherPriority.Loaded);
+            return;
+        }
+
+        next.Opacity = 0;
+        nextShift.Y = movingDown ? distance : -distance;
+        next.BeginAnimation(
+            UIElement.OpacityProperty,
+            new DoubleAnimation(0d, 1d, enterMotion) { EasingFunction = enterEase });
+
+        if (distance > 0)
+        {
+            nextShift.BeginAnimation(
+                TranslateTransform.YProperty,
+                new DoubleAnimation(nextShift.Y, 0d, enterMotion) { EasingFunction = enterEase });
+        }
+        else
+        {
+            nextShift.Y = 0;
+        }
+
+        if (previous is not null)
+        {
+            Panel.SetZIndex(previous, 0);
+            var previousShift = (TranslateTransform)previous.RenderTransform;
+            var exit = new DoubleAnimation(1d, 0d, exitMotion) { EasingFunction = exitEase };
+            exit.Completed += (_, _) => Collapse(previous);
+            previous.BeginAnimation(UIElement.OpacityProperty, exit);
+
+            if (distance > 0)
+            {
+                previousShift.BeginAnimation(
+                    TranslateTransform.YProperty,
+                    new DoubleAnimation(0d, movingDown ? -8d : 8d, exitMotion) { EasingFunction = exitEase });
+            }
+        }
+
+        Dispatcher.BeginInvoke(new Action(() => UpdateNavPill(animate: true)), DispatcherPriority.Loaded);
+    }
+
+    private static void Collapse(FrameworkElement? page)
+    {
+        if (page is null)
+        {
+            return;
+        }
+
+        page.BeginAnimation(UIElement.OpacityProperty, null);
+        page.Visibility = Visibility.Collapsed;
+        page.Opacity = 1;
+
+        if (page.RenderTransform is TranslateTransform shift)
+        {
+            shift.BeginAnimation(TranslateTransform.YProperty, null);
+            shift.Y = 0;
+        }
+    }
+
+    /// <summary>
+        /// Builds every page view at idle time, one per dispatcher turn, so the first visit to a
+        /// page does not pay the whole construction cost inside its transition.
+        /// </summary>
+    public void PrewarmPages()
+    {
+        List<ViewModelBase> pages = _viewModel.Pages
+            .Concat(_viewModel.SettingsItems)
+            .Select(item => item.Page)
+            .ToList();
+
+        Dispatcher.BeginInvoke(new Action(() => PrewarmNext(pages, 0)), DispatcherPriority.ApplicationIdle);
+    }
+
+    private void PrewarmNext(List<ViewModelBase> pages, int index)
+    {
+        if (index >= pages.Count)
+        {
+            return;
+        }
+
+        GetPageView(pages[index]);
+        Dispatcher.BeginInvoke(new Action(() => PrewarmNext(pages, index + 1)), DispatcherPriority.ApplicationIdle);
+    }
+
+    /// <summary>One visual per page, created once and reused for the life of the window.</summary>
+    private FrameworkElement GetPageView(object page)
+    {
+        if (_pageViews.TryGetValue(page, out FrameworkElement? cached))
+        {
+            return cached;
+        }
+
+        UserControl view = page switch
+        {
+            HomeViewModel => new HomeView(),
+            MemoryViewModel => new MemoryView(),
+            ProtectionViewModel => new ProtectionView(),
+            StorageViewModel => new StorageView(),
+            AppsViewModel => new AppsView(),
+            ToolboxViewModel => new ToolboxView(),
+            SettingsViewModel => new SettingsView(),
+            _ => throw new InvalidOperationException($"No view is registered for {page.GetType().Name}.")
+        };
+
+        view.DataContext = page;
+        view.Visibility = Visibility.Collapsed;
+        view.Opacity = 0;
+        view.RenderTransform = new TranslateTransform();
+
+        PageHost.Children.Add(view);
+        _pageViews[page] = view;
+        return view;
+    }
+
+    private int IndexOfPage(object? page)
+    {
+        if (page is null)
+        {
+            return 0;
+        }
+
+        int index = 0;
+
+        foreach (NavigationItem item in _viewModel.Pages.Concat(_viewModel.SettingsItems))
+        {
+            if (ReferenceEquals(item.Page, page))
+            {
+                return index;
+            }
+
+            index++;
+        }
+
+        return index;
+    }
+
+    /// <summary>Places the rail's selection pill behind the selected item and slides it there.</summary>
+    private void UpdateNavPill(bool animate)
+    {
+        ListBoxItem? container =
+            PrimaryNav.ItemContainerGenerator.ContainerFromItem(_viewModel.SelectedPage) as ListBoxItem
+            ?? SettingsNav.ItemContainerGenerator.ContainerFromItem(_viewModel.SelectedPage) as ListBoxItem;
+
+        if (container is null || container.ActualHeight <= 0)
+        {
+            return;
+        }
+
+        Point origin = container.TranslatePoint(new Point(0, 0), NavPillLayer);
+        NavPill.Width = Math.Max(0, container.ActualWidth);
+        NavPill.Height = container.ActualHeight;
+        NavPill.Opacity = 1;
+
+        if (animate)
+        {
+            MotionKit.MoveTo(NavPillShift, toX: 0, toY: origin.Y, TimeSpan.FromMilliseconds(180));
+            return;
+        }
+
+        NavPillShift.BeginAnimation(TranslateTransform.XProperty, null);
+        NavPillShift.BeginAnimation(TranslateTransform.YProperty, null);
+        NavPillShift.Y = origin.Y;
     }
 
     /// <summary>Fades and zooms the palette panel in through the motion kit.</summary>
@@ -210,6 +421,7 @@ public partial class MainWindow : Window
     private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
     {
         UpdateLayoutForWidth(e.NewSize.Width);
+        Dispatcher.BeginInvoke(new Action(() => UpdateNavPill(animate: false)), DispatcherPriority.Loaded);
     }
 
     private void UpdateLayoutForWidth(double width)

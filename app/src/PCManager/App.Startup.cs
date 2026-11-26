@@ -70,6 +70,9 @@ public partial class App
             _shellShown = true;
             ShutdownMode = ShutdownMode.OnMainWindowClose;
 
+            // Build the remaining page visuals at idle so later transitions are warm.
+            window.PrewarmPages();
+
             if (_splash is { } splash)
             {
                 _splash = null; // stage updates are done; the watchdog must not close it now

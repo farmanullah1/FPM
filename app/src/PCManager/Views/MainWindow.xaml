@@ -39,6 +39,7 @@
                                      Key="{Binding Icon3DKey}"
                                      Size="18"
                                      Tint="Neutral"
+                                     RenderTransformOrigin="0.5,0.5"
                                      HorizontalAlignment="Center" />
                     <TextBlock x:Name="NavLabel"
                                Text="{Binding Title}"
@@ -59,6 +60,7 @@
                                      Key="{Binding Icon3DKey}"
                                      Size="20"
                                      Tint="Neutral"
+                                     RenderTransformOrigin="0.5,0.5"
                                      VerticalAlignment="Center" HorizontalAlignment="Center" />
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
@@ -84,6 +86,16 @@
                     <Setter TargetName="NavLabel" Property="FontWeight" Value="SemiBold" />
                     <Setter TargetName="NavTitleExpanded" Property="Foreground" Value="{DynamicResource App.AccentLabel}" />
                     <Setter TargetName="NavTitleExpanded" Property="FontWeight" Value="SemiBold" />
+                    <Setter TargetName="NavIcon" Property="RenderTransform">
+                        <Setter.Value>
+                            <ScaleTransform ScaleX="1.08" ScaleY="1.08" />
+                        </Setter.Value>
+                    </Setter>
+                    <Setter TargetName="NavIconExpanded" Property="RenderTransform">
+                        <Setter.Value>
+                            <ScaleTransform ScaleX="1.08" ScaleY="1.08" />
+                        </Setter.Value>
+                    </Setter>
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -164,28 +176,42 @@
                         BorderBrush="{DynamicResource App.Border}"
                         BorderThickness="0,0,1,0"
                         CornerRadius="0,0,0,10">
-                    <DockPanel Margin="4,4,4,8">
-                        <StackPanel DockPanel.Dock="Bottom">
-                            <Border Height="1" Background="{DynamicResource App.Border}" Margin="6,5,6,5" />
-                            <ListBox Style="{StaticResource NavList}"
-                                     ItemsSource="{Binding SettingsItems}"
+                    <Grid Margin="4,4,4,8">
+                        <!-- Sliding selection pill, kept behind the items so text stays crisp. -->
+                        <Canvas x:Name="NavPillLayer" IsHitTestVisible="False">
+                            <Border x:Name="NavPill" Height="44" Opacity="0"
+                                    Background="{DynamicResource App.AccentSoft}"
+                                    BorderBrush="{DynamicResource App.AccentBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="{StaticResource Radius.Button}">
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="NavPillShift" />
+                                </Border.RenderTransform>
+                            </Border>
+                        </Canvas>
+
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Bottom">
+                                <Border Height="1" Background="{DynamicResource App.Border}" Margin="6,5,6,5" />
+                                <ListBox x:Name="SettingsNav"
+                                         Style="{StaticResource NavList}"
+                                         ItemsSource="{Binding SettingsItems}"
+                                         ItemTemplate="{StaticResource NavigationItemTemplate}"
+                                         SelectedItem="{Binding SelectedPage, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <ListBox x:Name="PrimaryNav"
+                                     Style="{StaticResource NavList}"
+                                     ItemsSource="{Binding Pages}"
                                      ItemTemplate="{StaticResource NavigationItemTemplate}"
                                      SelectedItem="{Binding SelectedPage, Mode=TwoWay}" />
-                        </StackPanel>
-
-                        <ListBox Style="{StaticResource NavList}"
-                                 ItemsSource="{Binding Pages}"
-                                 ItemTemplate="{StaticResource NavigationItemTemplate}"
-                                 SelectedItem="{Binding SelectedPage, Mode=TwoWay}" />
-                    </DockPanel>
+                        </DockPanel>
+                    </Grid>
                 </Border>
 
-                <!-- Hosted Page View: the incoming page fades and lifts into place. -->
-                <ContentControl x:Name="PageHost" Grid.Column="1" Content="{Binding CurrentPage}">
-                    <ContentControl.RenderTransform>
-                        <TranslateTransform x:Name="PageSlide" />
-                    </ContentControl.RenderTransform>
-                </ContentControl>
+                <!-- Hosted pages are cached here: one visual per page keeps its scroll position
+                     and re-binding cost is paid once, so transitions stay smooth. -->
+                <Grid x:Name="PageHost" Grid.Column="1" ClipToBounds="True" />
             </Grid>
 
             <!-- ======================= Command Palette Overlay ======================= -->
