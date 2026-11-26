@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <g id="Ocr">
     <path data-role="face" d="M5,2.6 H14.4 L19.4,7.6 V21.4 H5 Z" />
-    <path data-role="neutral" d="M14,2.8 V7.4 H18.8 Z M6.4,6.6 H9.4 V8 H6.4 Z M6.4,19.8 H9.4 V21.2 H6.4 Z M16.6,6.6 H18 V9.6 H16.6 Z M16.6,18.4 H18 V21.2 H16.6 Z M6.4,6.6 H7.8 V9.6 H6.4 Z M6.4,18.4 H7.8 V21.2 H6.4 Z M17.6,12.4 H19 V13.8 H17.6 Z" />
+    <path data-role="neutral" d="M14,2.8 V7.4 H18.8 Z M8,10.8 H15.4 V12.4 H8 Z M8,14.2 H15.4 V15.8 H8 Z M8,17.6 H12.6 V19.2 H8 Z" />
   </g>
   <g id="Translate">
     <path data-role="face" d="M2.4,3.4 H12 V13.4 H7.4 L4.4,16.4 V13.4 H2.4 Z" />
@@ -24,8 +24,8 @@
     <path data-role="neutral" d="M7.8,5.4 H16.2 V8.4 H7.8 Z M7.8,11.4 H10 V13.6 H7.8 Z M11.8,11.4 H14 V13.6 H11.8 Z M7.8,15.8 H10 V18 H7.8 Z M11.8,15.8 H14 V18 H11.8 Z" />
   </g>
   <g id="Weather">
-    <path data-role="face" d="M9,2.6 A4,4 0 1 0 9,10.6 A4,4 0 1 0 9,2.6 Z M9,0.6 H10.4 V2.6 H9 Z M9,10.6 H10.4 V12.6 H9 Z M1.6,5.6 H3.6 V7 H1.6 Z M14.4,5.6 H16.4 V7 H14.4 Z M3.8,1 L5.2,2.4 L3.8,3.8 L3.4,3.4 Z" />
-    <path data-role="neutral" d="M9.4,19.4 A3.6,3.6 0 0 1 8.8,12.2 A5.2,5.2 0 0 1 18.4,13.4 A3.4,3.4 0 0 1 17.6,19.4 Z" />
+    <path data-role="face" d="M15.4,2.2 A3.6,3.6 0 1 0 15.4,9.4 A3.6,3.6 0 1 0 15.4,2.2 Z" />
+    <path data-role="neutral" d="M6.4,19.8 A4.4,4.4 0 0 1 5.4,11.2 A6,6 0 0 1 16.6,10.6 A3.8,3.8 0 0 1 17,19.8 Z" />
   </g>
   <g id="Currency">
     <path data-role="face" d="M12,2.6 A9.4,9.4 0 1 0 12,21.4 A9.4,9.4 0 1 0 12,2.6 Z" />
@@ -37,7 +37,7 @@
   </g>
   <g id="Calendar">
     <path data-role="face" d="M3.4,5.4 H20.6 V21 H3.4 Z" />
-    <path data-role="neutral" d="M3.4,5.4 H20.6 V9 H3.4 Z M6.8,2.4 H8.8 V6 H6.8 Z M15.2,2.4 H17.2 V6 H15.2 Z M7,11.6 H17 V17.8 H7 Z" />
+    <path data-role="neutral" d="M3.4,5.4 H20.6 V9 H3.4 Z M6.8,2.4 H8.8 V6 H6.8 Z M15.2,2.4 H17.2 V6 H15.2 Z M6.8,11.4 H9.2 V13.4 H6.8 Z M10.8,11.4 H13.2 V13.4 H10.8 Z M14.8,11.4 H17.2 V13.4 H14.8 Z M6.8,15.2 H9.2 V17.2 H6.8 Z M10.8,15.2 H13.2 V17.2 H10.8 Z" />
   </g>
   <g id="QuickLinks">
     <path data-role="face" d="M9.6,5.6 H6.4 A6,6 0 0 0 6.4,17.6 H10 V15.2 H6.4 A3.6,3.6 0 0 1 6.4,8 H9.6 Z M14.4,5.6 H17.6 A6,6 0 0 1 17.6,17.6 H14 V15.2 H17.6 A3.6,3.6 0 0 0 17.6,8 H14.4 Z" />

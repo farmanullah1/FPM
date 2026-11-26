@@ -5,6 +5,29 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 
 ## [Unreleased]
 
+### Added
+- **Icon3D system (U2)**: 113 hand-drawn icons on a 24 px grid, each a layered vector built
+  from `tools/icons/*.svg` by the `tools/IconGen` console generator into frozen
+  `PathGeometry` resources under `Assets/Icons3D/` (one dictionary per category, merged by
+  `Assets/Icons3D.xaml`). Every icon has a tinted face and an optional graphite part; the
+  `Icon3D` control adds the soft shadow, 1 px-down-right extrusion, gradient face, specular
+  highlight clipped to the silhouette and the top-left rim, with one upper-left light source.
+  Detail follows size: Small below 28 px (flat gradient, no extrusion), Medium 28-55 px
+  (extrusion and specular band), Large from 56 px (shadow, deeper extrusion, crescent and rim).
+  `Tint` covers Gold/Neutral/Success/Warning/Critical from the `Icon.*` theme brushes, and the
+  optional `Animated` hover tilt (+-3 deg, 160 ms) only runs when Windows animations are on.
+  Icons expose an automation name derived from their key and never replace a label.
+- **Icon inventory** for brand, navigation, Home, Memory, Protection, Storage, Cleanup, Apps,
+  Debloat, toolbox/AI, sensors, window chrome and states, listed in the generated
+  `Assets/Icons3D.g.cs` catalog.
+- **Dev gallery** `FPM.exe --icon-gallery`: every icon at 20/24/32/56/96 px, all three detail
+  levels and five tints, with Light/Dark buttons for review. Not reachable from the normal
+  shell.
+- `Icon3D` palette tokens (`Icon.Gold/Neutral/Success/Warning/Critical.FaceFrom/FaceTo/Depth`,
+  `Icon.Shadow`) in both theme dictionaries.
+- `IconMetrics` in Core maps size to detail level and builds geometry/automation keys, covered
+  by 20 new unit tests (156 total).
+
 ### Changed
 - **Design tokens (U1)**: `Styles/Spacing.xaml` adds the 4-px scale (4-40) with `Thickness`
   variants plus page, card, row, button, icon-box, radius, title-bar, focus and motion tokens.
