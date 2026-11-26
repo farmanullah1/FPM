@@ -55,7 +55,7 @@
                     <Button Grid.Column="2" Style="{StaticResource PrimaryButton}"
                             VerticalAlignment="Center" Command="{Binding CheckUpdatesCommand}">
                         <StackPanel Orientation="Horizontal">
-                            <controls:Icon3D Key="WindowsUpdate" Size="14" Margin="{StaticResource Thickness.1}" />
+                            <controls:Icon3D Key="WindowsUpdate" Size="14" Tint="Neutral" Margin="{StaticResource Thickness.1}" />
                             <TextBlock Text="Check for updates" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>

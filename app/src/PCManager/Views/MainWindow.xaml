@@ -73,9 +73,13 @@
 
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                    <Setter TargetName="NavIcon" Property="Tint" Value="Gold" />
+                    <Setter TargetName="NavIconExpanded" Property="Tint" Value="Gold" />
                     <Setter TargetName="NavLabel" Property="Foreground" Value="{DynamicResource App.AccentLabel}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                    <Setter TargetName="NavIcon" Property="Tint" Value="Gold" />
+                    <Setter TargetName="NavIconExpanded" Property="Tint" Value="Gold" />
                     <Setter TargetName="NavLabel" Property="Foreground" Value="{DynamicResource App.AccentLabel}" />
                     <Setter TargetName="NavLabel" Property="FontWeight" Value="SemiBold" />
                     <Setter TargetName="NavTitleExpanded" Property="Foreground" Value="{DynamicResource App.AccentLabel}" />

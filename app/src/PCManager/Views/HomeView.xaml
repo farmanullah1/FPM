@@ -194,7 +194,7 @@
                                 Command="{Binding BoostCommand}"
                                 ToolTip="Trim process working sets and delete temporary files">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <controls:Icon3D Key="Boost" Size="14" VerticalAlignment="Center" />
+                                <controls:Icon3D Key="Boost" Size="14" Tint="Neutral" VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding BoostButtonText}" FontSize="12" FontWeight="Bold"
                                            Margin="5,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
@@ -371,7 +371,7 @@
                                 Command="{Binding CleanEverythingCommand}"
                                 ToolTip="Open the Cleanup Center to scan and review every supported category">
                             <StackPanel Orientation="Horizontal">
-                                <controls:Icon3D Key="Scan" Size="14" Margin="{StaticResource Thickness.1}" />
+                                <controls:Icon3D Key="Scan" Size="14" Tint="Neutral" Margin="{StaticResource Thickness.1}" />
                                 <TextBlock Text="Scan &amp; review" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>

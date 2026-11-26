@@ -50,7 +50,7 @@
                         Padding="8,0" FontSize="11"
                         Command="{Binding BoostCommand}" ToolTip="Release temporary files">
                     <StackPanel Orientation="Horizontal">
-                        <controls:Icon3D Key="Boost" Size="12" Margin="{StaticResource Thickness.1}" />
+                        <controls:Icon3D Key="Boost" Size="12" Tint="Neutral" Margin="{StaticResource Thickness.1}" />
                         <TextBlock Text="Boost" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
