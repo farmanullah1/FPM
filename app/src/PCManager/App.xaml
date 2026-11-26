@@ -16,7 +16,6 @@
                 <ResourceDictionary Source="Styles/Controls.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <conv:IconKeyToGeometryConverter x:Key="IconKeyConverter" />
             <conv:HealthyToBrushConverter x:Key="HealthyToBrush" />
             <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
             <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
