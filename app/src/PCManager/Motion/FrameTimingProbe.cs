@@ -1,15 +1,18 @@
 using System.Diagnostics;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace PCManager.Motion;
 
 /// <summary>
 /// Opt-in frame pacing measurement for the U4 budget ("no frame above 16 ms").
-/// Enabled only when <c>PCMANAGER_FRAME_TRACE=1</c>; the shell logs the worst frame interval
-/// after each page transition, so normal use pays nothing.
+/// Enabled only when <c>PCMANAGER_FRAME_TRACE=1</c>; it samples for the given window, then
+/// reports the frame count and worst interval, so normal use pays nothing.
 /// </summary>
 internal sealed class FrameTimingProbe
 {
+    private const double BudgetMilliseconds = 16d;
+
     private static readonly bool Enabled =
         string.Equals(Environment.GetEnvironmentVariable("PCMANAGER_FRAME_TRACE"), "1", StringComparison.Ordinal);
 
@@ -17,37 +20,35 @@ internal sealed class FrameTimingProbe
     private TimeSpan _previous;
     private double _worstMilliseconds;
     private int _frames;
-    private bool _running;
+    private DispatcherTimer? _window;
 
-    public void Start()
+    public void Measure(TimeSpan duration, Action<string>? report = null)
     {
-        if (!Enabled || _running)
+        if (!Enabled)
         {
             return;
         }
 
-        _running = true;
+        _clock.Restart();
         _frames = 0;
         _worstMilliseconds = 0;
         _previous = TimeSpan.Zero;
-        _clock.Restart();
 
         CompositionTarget.Rendering += OnRendering;
-    }
 
-    /// <summary>Stops the probe and returns "frames / worst interval"; null when not measuring.</summary>
-    public string? Stop()
-    {
-        if (!_running)
+        _window = new DispatcherTimer(DispatcherPriority.Render) { Interval = duration };
+        _window.Tick += (_, _) =>
         {
-            return null;
-        }
+            _window?.Stop();
+            _window = null;
+            CompositionTarget.Rendering -= OnRendering;
 
-        CompositionTarget.Rendering -= OnRendering;
-        _running = false;
-
-        return $"Motion frame trace: {_frames} frames, worst frame interval " +
-               $"{_worstMilliseconds:0.0} ms, window {_clock.Elapsed.TotalMilliseconds:0} ms.";
+            string verdict = _worstMilliseconds <= BudgetMilliseconds ? "within" : "over";
+            report?.Invoke(
+                $"Motion frame trace: {_frames} frames in {_clock.Elapsed.TotalMilliseconds:0} ms, " +
+                $"worst frame {_worstMilliseconds:0.0} ms ({verdict} the 16 ms budget).");
+        };
+        _window.Start();
     }
 
     private void OnRendering(object? sender, EventArgs e)

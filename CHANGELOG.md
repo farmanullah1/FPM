@@ -5,6 +5,17 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 
 ## [Unreleased]
 
+### Added
+- **Motion kit (U4)**: one `IMotionPolicy` decides between full motion, fades-only and none,
+  from the Windows animation switch, a new "Reduce motion" setting, battery saver, a remote
+  session, Low Resource Mode and window visibility. Every primitive in the new
+  `Motion` namespace consults it: fade, slide, scale, spring, stagger (30 ms, capped at 12
+  items), count-up, progress tween, shake, pulse, shimmer, press ripple, hover lift and the
+  icon tilt. Only opacity and render transforms are animated, never layout. Page changes and
+  the command palette now go through the kit, gold buttons and action cards use the ripple
+  and hover-lift behaviours, and `PCMANAGER_FRAME_TRACE=1` logs the page-transition frame
+  pacing for the 16 ms budget check.
+
 ### Changed
 - **Icon3D applied across the shell (U3)**: the navigation rail (compact and expanded, with a
   gold tint for hover and selection), all seven page headers, Home's tip, boost, quick-action,
@@ -21,6 +32,8 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
   `IconKey` model fields. Navigation items and toolbox tiles carry `Icon3DKey` names instead.
 - The Apps search box moved below the "App management" heading, so the heading and search field
   no longer overlap at 560 px.
+- Settings → Appearance gained a "Reduce motion (fades only)" switch next to the theme toggle; it
+  is stored in `settings.json` and applies immediately without a restart.
 
 ### Added
 - **Icon3D system (U2)**: 113 hand-drawn icons on a 24 px grid, each a layered vector built

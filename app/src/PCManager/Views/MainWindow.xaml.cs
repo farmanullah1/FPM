@@ -67,12 +67,7 @@ public partial class MainWindow : Window
 
         if (e.PropertyName == nameof(MainViewModel.CurrentPage))
         {
-            if (_frameProbe.Stop() is { } report)
-            {
-                _logger.Info(report);
-            }
-
-            _frameProbe.Start();
+            _frameProbe.Measure(MotionPolicy.PageDuration + TimeSpan.FromMilliseconds(80), _logger.Info);
             AnimatePageChange();
             return;
         }

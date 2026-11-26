@@ -56,9 +56,9 @@ internal sealed class RippleAdorner : Adorner
 
         var fade = new DoubleAnimation(1d, 0d, TimeSpan.FromMilliseconds(360))
         {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn },
-            Completed = (_, _) => Detach()
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
         };
+        fade.Completed += (_, _) => Detach();
 
         BeginAnimation(RadiusProperty, grow);
         BeginAnimation(OpacityProperty, fade);
