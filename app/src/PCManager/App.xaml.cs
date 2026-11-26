@@ -117,6 +117,15 @@ public partial class App : Application
             return;
         }
 
+        // Dev-only inventory review surface. Never shown in normal use.
+        if (e.Args.Any(argument => string.Equals(argument, "--icon-gallery", StringComparison.OrdinalIgnoreCase)))
+        {
+            var gallery = new IconGalleryWindow(_services.GetRequiredService<IThemeService>());
+            MainWindow = gallery;
+            gallery.Show();
+            return;
+        }
+
         EnableDiagnostics();
 
         CreateTrayIcon();

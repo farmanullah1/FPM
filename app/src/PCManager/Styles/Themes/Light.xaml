@@ -79,6 +79,26 @@
     <SolidColorBrush x:Key="App.Warning.Text" Color="#B45309" />
     <SolidColorBrush x:Key="App.Critical.Text" Color="#B91C1C" />
 
+    <!-- Icon3D palette (U2). Face gradient (light upper-left to dark lower-right), the
+         extrusion step behind it, and the shadow the compositor uses for its offset copies.
+         Neutral parts (screen cut-outs, secondary glyphs) are graphite in both themes. -->
+    <SolidColorBrush x:Key="Icon.Gold.FaceFrom" Color="#FCD34D" />
+    <SolidColorBrush x:Key="Icon.Gold.FaceTo" Color="#D97706" />
+    <SolidColorBrush x:Key="Icon.Gold.Depth" Color="#92400E" />
+    <SolidColorBrush x:Key="Icon.Neutral.FaceFrom" Color="#A8A29E" />
+    <SolidColorBrush x:Key="Icon.Neutral.FaceTo" Color="#57534E" />
+    <SolidColorBrush x:Key="Icon.Neutral.Depth" Color="#292524" />
+    <SolidColorBrush x:Key="Icon.Success.FaceFrom" Color="#6EE7B7" />
+    <SolidColorBrush x:Key="Icon.Success.FaceTo" Color="#047857" />
+    <SolidColorBrush x:Key="Icon.Success.Depth" Color="#064E3B" />
+    <SolidColorBrush x:Key="Icon.Warning.FaceFrom" Color="#FDE68A" />
+    <SolidColorBrush x:Key="Icon.Warning.FaceTo" Color="#B45309" />
+    <SolidColorBrush x:Key="Icon.Warning.Depth" Color="#78350F" />
+    <SolidColorBrush x:Key="Icon.Critical.FaceFrom" Color="#FCA5A5" />
+    <SolidColorBrush x:Key="Icon.Critical.FaceTo" Color="#B91C1C" />
+    <SolidColorBrush x:Key="Icon.Critical.Depth" Color="#7F1D1D" />
+    <SolidColorBrush x:Key="Icon.Shadow" Color="#3F3A2E" />
+
     <!-- Six distinguishable chart colours (always paired with a label). -->
     <SolidColorBrush x:Key="Chart.1" Color="#B45309" />
     <SolidColorBrush x:Key="Chart.2" Color="#15803D" />

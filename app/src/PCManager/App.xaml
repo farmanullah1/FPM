@@ -11,6 +11,8 @@
                 <ResourceDictionary Source="Styles/Themes/Light.xaml" />
                 <ResourceDictionary Source="Styles/Spacing.xaml" />
                 <ResourceDictionary Source="Styles/Icons.xaml" />
+                <!-- Icon3D geometry, generated from tools/icons/*.svg by tools/IconGen. -->
+                <ResourceDictionary Source="Assets/Icons3D.xaml" />
                 <ResourceDictionary Source="Styles/Controls.xaml" />
             </ResourceDictionary.MergedDictionaries>
 

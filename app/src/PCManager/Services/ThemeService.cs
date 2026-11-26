@@ -1,5 +1,6 @@
 using System.Windows;
 using Microsoft.Win32;
+using PCManager.Controls;
 using PCManager.Core.Models;
 using PCManager.ViewModels;
 
@@ -39,6 +40,9 @@ public sealed class ThemeService : IThemeService
         {
             merged[0] = dictionary;
         }
+
+        // Icon3D bakes the palette into its frozen drawings, so it has to rebuild.
+        Icon3D.NotifyThemeChanged();
     }
 
     /// <summary>Windows stores the app theme under Personalize\AppsUseLightTheme (0 = dark).</summary>

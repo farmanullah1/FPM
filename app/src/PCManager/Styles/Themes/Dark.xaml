@@ -72,6 +72,25 @@
     <SolidColorBrush x:Key="App.Warning.Text" Color="#FBBF24" />
     <SolidColorBrush x:Key="App.Critical.Text" Color="#F87171" />
 
+    <!-- Icon3D palette (U2). The face gradient keeps the amber identity but ends darker so
+         the highlight reads on the dark surface; extrusion steps go near-black. -->
+    <SolidColorBrush x:Key="Icon.Gold.FaceFrom" Color="#FCD34D" />
+    <SolidColorBrush x:Key="Icon.Gold.FaceTo" Color="#B45309" />
+    <SolidColorBrush x:Key="Icon.Gold.Depth" Color="#78350F" />
+    <SolidColorBrush x:Key="Icon.Neutral.FaceFrom" Color="#A8A29E" />
+    <SolidColorBrush x:Key="Icon.Neutral.FaceTo" Color="#6B7280" />
+    <SolidColorBrush x:Key="Icon.Neutral.Depth" Color="#1C1917" />
+    <SolidColorBrush x:Key="Icon.Success.FaceFrom" Color="#6EE7B7" />
+    <SolidColorBrush x:Key="Icon.Success.FaceTo" Color="#047857" />
+    <SolidColorBrush x:Key="Icon.Success.Depth" Color="#022C22" />
+    <SolidColorBrush x:Key="Icon.Warning.FaceFrom" Color="#FDE68A" />
+    <SolidColorBrush x:Key="Icon.Warning.FaceTo" Color="#B45309" />
+    <SolidColorBrush x:Key="Icon.Warning.Depth" Color="#451A03" />
+    <SolidColorBrush x:Key="Icon.Critical.FaceFrom" Color="#FCA5A5" />
+    <SolidColorBrush x:Key="Icon.Critical.FaceTo" Color="#B91C1C" />
+    <SolidColorBrush x:Key="Icon.Critical.Depth" Color="#450A0A" />
+    <SolidColorBrush x:Key="Icon.Shadow" Color="#000000" />
+
     <!-- Six distinguishable chart colours (always paired with a label). -->
     <SolidColorBrush x:Key="Chart.1" Color="#FBBF24" />
     <SolidColorBrush x:Key="Chart.2" Color="#34D399" />
