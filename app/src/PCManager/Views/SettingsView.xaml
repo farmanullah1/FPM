@@ -148,17 +148,21 @@
 
             <!-- Appearance -->
             <Border Style="{StaticResource Card}" Padding="20">
-                <Grid>
-                    <StackPanel>
-                        <TextBlock Text="Appearance" FontSize="17" FontWeight="SemiBold" />
-                        <TextBlock Style="{StaticResource CaptionText}">
-                            <Run Text="Current theme: " /><Run Text="{Binding ThemeLabel, Mode=OneWay}" />
-                        </TextBlock>
-                    </StackPanel>
-                    <CheckBox Style="{StaticResource ToggleSwitch}" Content="Dark theme"
-                              HorizontalAlignment="Right" VerticalAlignment="Center"
-                              IsChecked="{Binding IsDark, Mode=TwoWay}" />
-                </Grid>
+                <StackPanel>
+                    <DockPanel>
+                        <CheckBox Style="{StaticResource ToggleSwitch}" Content="Dark theme"
+                                  DockPanel.Dock="Right" VerticalAlignment="Center"
+                                  IsChecked="{Binding IsDark, Mode=TwoWay}" />
+                        <StackPanel>
+                            <TextBlock Text="Appearance" FontSize="17" FontWeight="SemiBold" />
+                            <TextBlock Style="{StaticResource CaptionText}">
+                                <Run Text="Current theme: " /><Run Text="{Binding ThemeLabel, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </DockPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" Content="Reduce motion (fades only)"
+                              Margin="{StaticResource Thickness.3}" IsChecked="{Binding ReduceMotion, Mode=TwoWay}" />
+                </StackPanel>
             </Border>
 
             <!-- About -->

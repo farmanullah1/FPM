@@ -2,10 +2,10 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using PCManager.Core;
 using PCManager.Core.Models;
+using PCManager.Motion;
 using PCManager.Services;
 using PCManager.Services.Abstractions;
 using PCManager.ViewModels;
@@ -21,13 +21,16 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
     private readonly ISettingsService _settings;
+    private readonly IAppLogger _logger;
+    private readonly FrameTimingProbe _frameProbe = new();
 
-    public MainWindow(MainViewModel viewModel, ISettingsService settings)
+    public MainWindow(MainViewModel viewModel, ISettingsService settings, IAppLogger logger)
     {
         InitializeComponent();
 
         _viewModel = viewModel;
         _settings = settings;
+        _logger = logger;
         DataContext = viewModel;
 
         RestoreWindowBounds();
@@ -63,6 +66,12 @@ public partial class MainWindow : Window
 
         if (e.PropertyName == nameof(MainViewModel.CurrentPage))
         {
+            if (_frameProbe.Stop() is { } report)
+            {
+                _logger.Info(report);
+            }
+
+            _frameProbe.Start();
             AnimatePageChange();
             return;
         }
@@ -74,50 +83,18 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Fades and lifts the incoming page. With motion disabled the swap is instant.</summary>
+    /// <summary>Fades and lifts the incoming page through the motion kit (no motion: instant).</summary>
     private void AnimatePageChange()
     {
-        if (!MotionPreferences.AnimationsEnabled)
-        {
-            PageHost.BeginAnimation(OpacityProperty, null);
-            PageSlide.BeginAnimation(TranslateTransform.YProperty, null);
-            PageHost.Opacity = 1;
-            PageSlide.Y = 0;
-            return;
-        }
-
-        var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
-
-        PageHost.BeginAnimation(
-            OpacityProperty,
-            new DoubleAnimation(0, 1, MotionPolicy.PageDuration) { EasingFunction = easing });
-        PageSlide.BeginAnimation(
-            TranslateTransform.YProperty,
-            new DoubleAnimation(7, 0, MotionPolicy.PageDuration) { EasingFunction = easing });
+        Motion.Motion.FadeIn(PageHost, MotionPolicy.PageDuration);
+        Motion.Motion.SlideIn(PageSlide, fromX: 0, fromY: 7, MotionPolicy.PageDuration);
     }
 
-    /// <summary>Fades and zooms the palette panel in; skipped entirely when motion is disabled.</summary>
+    /// <summary>Fades and zooms the palette panel in through the motion kit.</summary>
     private void AnimatePaletteOpen()
     {
-        if (!MotionPreferences.AnimationsEnabled)
-        {
-            PaletteOverlay.BeginAnimation(OpacityProperty, null);
-            PaletteScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
-            PaletteScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
-            PaletteOverlay.Opacity = 1;
-            PaletteScale.ScaleX = 1;
-            PaletteScale.ScaleY = 1;
-            return;
-        }
-
-        var easing = new QuadraticEase { EasingMode = EasingMode.EaseOut };
-        var zoom = new DoubleAnimation(0.98, 1, MotionPolicy.PaletteDuration) { EasingFunction = easing };
-
-        PaletteOverlay.BeginAnimation(
-            OpacityProperty,
-            new DoubleAnimation(0, 1, MotionPolicy.PaletteDuration) { EasingFunction = easing });
-        PaletteScale.BeginAnimation(ScaleTransform.ScaleXProperty, zoom);
-        PaletteScale.BeginAnimation(ScaleTransform.ScaleYProperty, zoom);
+        Motion.Motion.FadeIn(PaletteOverlay, MotionPolicy.PaletteDuration);
+        Motion.Motion.ScaleIn(PaletteScale, from: 0.98, MotionPolicy.PaletteDuration);
     }
 
     private void FocusPaletteQuery()

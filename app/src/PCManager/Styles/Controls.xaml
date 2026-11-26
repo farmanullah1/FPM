@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:motion="clr-namespace:PCManager.Motion"
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
 
     <!-- Shared content column cap: every page centres its content at this width instead of
@@ -94,6 +95,7 @@
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource GoldFocusVisual}" />
+        <Setter Property="motion:Motion.Ripple" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -533,6 +535,8 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource GoldFocusVisual}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="motion:Motion.HoverLift" Value="True" />
+        <Setter Property="motion:Motion.Ripple" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">

@@ -180,6 +180,24 @@ public sealed partial class SettingsViewModel : ViewModelBase
 
     public string ThemeLabel => IsDark ? "Dark" : "Light";
 
+    /// <summary>App setting read by the motion policy: keeps fades, drops slides/scales/springs.</summary>
+    public bool ReduceMotion
+    {
+        get => _settings.Current.ReduceMotion;
+        set
+        {
+            if (_settings.Current.ReduceMotion == value)
+            {
+                return;
+            }
+
+            _settings.Current.ReduceMotion = value;
+            _settings.Save();
+            OnPropertyChanged();
+            StatusMessage = value ? "Reduced motion: fades only." : "Full motion enabled.";
+        }
+    }
+
     public string QuarantinePolicyText =>
         $"Keeps quarantined files for {_settings.Current.QuarantineRetentionDays} day(s), at most " +
         $"{ByteFormatter.Format(_settings.Current.QuarantineMaxBytes)}. The policy is applied before a " +

@@ -2,9 +2,8 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using PCManager.Core.Design;
-using PCManager.Services;
+using PCManager.Motion;
 
 namespace PCManager.Controls;
 
@@ -192,19 +191,13 @@ public sealed class Icon3D : FrameworkElement
     {
         bool hovered = e.RoutedEvent == MouseEnterEvent;
 
-        if (!Animated || !MotionPreferences.AnimationsEnabled)
+        if (!Animated)
         {
             _tilt.BeginAnimation(RotateTransform.AngleProperty, null);
             _tilt.Angle = 0;
             return;
         }
 
-        var animation = new DoubleAnimation(hovered ? 3d : 0d, TimeSpan.FromMilliseconds(160))
-        {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },
-            FillBehavior = FillBehavior.HoldEnd
-        };
-
-        _tilt.BeginAnimation(RotateTransform.AngleProperty, animation);
+        Motion.Motion.Tilt3D(_tilt, hovered ? 3d : 0d);
     }
 }

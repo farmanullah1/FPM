@@ -70,6 +70,12 @@ public sealed class AppSettings
 
     /// <summary>User-chosen http(s) endpoint for the download speed test.</summary>
     public string SpeedTestEndpoint { get; set; } = "https://speed.cloudflare.com/__down?bytes=10000000";
+
+    /// <summary>App-level reduce motion: keep fades, drop slides, scales, springs and pulses.</summary>
+    public bool ReduceMotion { get; set; }
+
+    /// <summary>Low Resource Mode, reserved for the battery-friendly profile; downgrades motion.</summary>
+    public bool LowResourceModeEnabled { get; set; }
 }
 
 public enum ThemeOption

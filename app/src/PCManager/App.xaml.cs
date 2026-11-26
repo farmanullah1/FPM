@@ -5,6 +5,7 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using PCManager.Cli;
 using PCManager.Core;
+using PCManager.Motion;
 using PCManager.Services;
 using PCManager.Services.Abstractions;
 using PCManager.Services.DependencyInjection;
@@ -52,6 +53,7 @@ public partial class App : Application
 
         // WPF-only services.
         collection.AddSingleton<IThemeService, ThemeService>();
+        collection.AddSingleton<IMotionPolicy, AppMotionPolicy>();
         collection.AddSingleton<IFloatingToolbarHost, FloatingToolbarHost>();
         collection.AddSingleton<IUserConfirmationService, MessageBoxConfirmationService>();
 
@@ -76,6 +78,9 @@ public partial class App : Application
         collection.AddSingleton<FloatingToolbarWindow>();
 
         _services = collection.BuildServiceProvider();
+
+        // One motion policy for the whole shell: system settings, app settings, power and RDP.
+        Motion.Motion.UsePolicy(_services.GetRequiredService<IMotionPolicy>());
 
         // Run legacy data migration preflight (FarmanullahPCManager -> FPM)
         try
