@@ -5,6 +5,23 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 
 ## [Unreleased]
 
+### Changed
+- **Icon3D applied across the shell (U3)**: the navigation rail (compact and expanded, with a
+  gold tint for hover and selection), all seven page headers, Home's tip, boost, quick-action,
+  one-click-cleanup and capture cards, Protection's status banner and four tool cards, the
+  Defender/Update detail cards, Memory's header, relief banner and app-relief card, every
+  Storage card heading and the Cleanup Center buttons, the Apps section headings, the Settings
+  cards and the floating toolbar (RAM tile, Boost, screenshot, Notepad, calculator, Task Manager
+  and Open) now draw the layered `Icon3D` artwork. Icons inside gold primary buttons use the
+  neutral tint so they stay readable. The tray menu's Open and Boost-now entries render the same
+  artwork through `IconRasterizer`, so the tray no longer uses a second icon style.
+- **Removed the superseded icon set**: `Styles/Icons.xaml` now holds only the brand emblem and
+  the 12 px title-bar pin glyph; the flat `Icon.*` geometries and the 2.5D `Hero.*` /
+  `HeroSmall.*` drawings are gone, along with the unused `IconKeyToGeometryConverter` and its
+  `IconKey` model fields. Navigation items and toolbox tiles carry `Icon3DKey` names instead.
+- The Apps search box moved below the "App management" heading, so the heading and search field
+  no longer overlap at 560 px.
+
 ### Added
 - **Icon3D system (U2)**: 113 hand-drawn icons on a 24 px grid, each a layered vector built
   from `tools/icons/*.svg` by the `tools/IconGen` console generator into frozen
