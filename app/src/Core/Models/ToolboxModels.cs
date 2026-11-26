@@ -76,6 +76,9 @@ public sealed class AppSettings
 
     /// <summary>Low Resource Mode, reserved for the battery-friendly profile; downgrades motion.</summary>
     public bool LowResourceModeEnabled { get; set; }
+
+    /// <summary>Shows the startup splash unless the app was launched with --no-splash.</summary>
+    public bool ShowSplash { get; set; } = true;
 }
 
 public enum ThemeOption

@@ -19,6 +19,27 @@
         </DrawingImage.Drawing>
     </DrawingImage>
 
+    <!-- The same four brand facets as separate pieces, for the U5 splash assembly.
+         Colours live here because this file is the allow-listed home of brand artwork. -->
+    <Geometry x:Key="Brand.Petal.Top">M12,1 L12,12 L4,7 Z</Geometry>
+    <Geometry x:Key="Brand.Petal.Right">M23,12 L12,12 L17,5 Z</Geometry>
+    <Geometry x:Key="Brand.Petal.Bottom">M12,23 L12,12 L20,17 Z</Geometry>
+    <Geometry x:Key="Brand.Petal.Left">M1,12 L12,12 L7,19 Z</Geometry>
+    <Geometry x:Key="Brand.Petal.Core">M12,9.4 L14.6,12 L12,14.6 L9.4,12 Z</Geometry>
+
+    <SolidColorBrush x:Key="Brand.Fill.Top" Color="#FDE68A" />
+    <SolidColorBrush x:Key="Brand.Fill.Right" Color="#FACC15" />
+    <SolidColorBrush x:Key="Brand.Fill.Bottom" Color="#D97706" />
+    <SolidColorBrush x:Key="Brand.Fill.Left" Color="#F59E0B" />
+    <SolidColorBrush x:Key="Brand.Fill.Core" Color="#FFFBEB" />
+
+    <!-- Soft light sweep used by the splash; white with alpha, so it works on both themes. -->
+    <LinearGradientBrush x:Key="Brand.Sweep" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#00FFFFFF" Offset="0" />
+        <GradientStop Color="#8CFFFFFF" Offset="0.5" />
+        <GradientStop Color="#00FFFFFF" Offset="1" />
+    </LinearGradientBrush>
+
     <Geometry x:Key="Icon.Pin">M15,2 L22,9 L19,10.2 L14.6,14.6 V18.2 L11.4,15 L5,21.4 L2.6,19 L9,12.6 L5.8,9.4 H9.4 L13.8,5 Z</Geometry>
 
 </ResourceDictionary>

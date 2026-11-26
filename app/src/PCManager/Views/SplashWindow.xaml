@@ -1,0 +1,118 @@
+<Window x:Class="PCManager.Views.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="FPM"
+        Width="480" Height="300"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False"
+        Topmost="True"
+        AllowsTransparency="True"
+        Background="Transparent"
+        AutomationProperties.Name="FPM is starting"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+
+    <Border x:Name="Root"
+            Background="{DynamicResource Surface.0}"
+            BorderBrush="{DynamicResource App.Border}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource Radius.Hero}">
+        <Grid>
+            <Border Height="3" VerticalAlignment="Top"
+                    Background="{DynamicResource Gradient.GoldHero}"
+                    CornerRadius="{StaticResource Radius.Hero}" />
+
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Margin="{StaticResource Thickness.6}">
+
+                <!-- Emblem: 24 px brand geometry scaled to 96 px, one path per petal. -->
+                <Grid x:Name="EmblemHost" Width="112" Height="112"
+                      HorizontalAlignment="Center" ClipToBounds="True">
+                    <Canvas x:Name="Emblem" Width="24" Height="24"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            RenderTransformOrigin="0.5,0.5">
+                        <Canvas.LayoutTransform>
+                            <ScaleTransform ScaleX="4" ScaleY="4" />
+                        </Canvas.LayoutTransform>
+                        <Canvas.RenderTransform>
+                            <ScaleTransform x:Name="EmblemScale" />
+                        </Canvas.RenderTransform>
+
+                        <Path x:Name="PetalTop" Data="{StaticResource Brand.Petal.Top}"
+                              Fill="{StaticResource Brand.Fill.Top}" Opacity="0">
+                            <Path.RenderTransform>
+                                <TranslateTransform x:Name="TopShift" X="0" Y="-44" />
+                            </Path.RenderTransform>
+                        </Path>
+                        <Path x:Name="PetalRight" Data="{StaticResource Brand.Petal.Right}"
+                              Fill="{StaticResource Brand.Fill.Right}" Opacity="0">
+                            <Path.RenderTransform>
+                                <TranslateTransform x:Name="RightShift" X="44" Y="0" />
+                            </Path.RenderTransform>
+                        </Path>
+                        <Path x:Name="PetalBottom" Data="{StaticResource Brand.Petal.Bottom}"
+                              Fill="{StaticResource Brand.Fill.Bottom}" Opacity="0">
+                            <Path.RenderTransform>
+                                <TranslateTransform x:Name="BottomShift" X="0" Y="44" />
+                            </Path.RenderTransform>
+                        </Path>
+                        <Path x:Name="PetalLeft" Data="{StaticResource Brand.Petal.Left}"
+                              Fill="{StaticResource Brand.Fill.Left}" Opacity="0">
+                            <Path.RenderTransform>
+                                <TranslateTransform x:Name="LeftShift" X="-44" Y="0" />
+                            </Path.RenderTransform>
+                        </Path>
+                        <Path x:Name="PetalCore" Data="{StaticResource Brand.Petal.Core}"
+                              Fill="{StaticResource Brand.Fill.Core}" Opacity="0" />
+                    </Canvas>
+
+                    <!-- Soft light sweep, clipped to the emblem area. -->
+                    <Border x:Name="Sweep" Width="34" Height="160" Opacity="0"
+                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Background="{StaticResource Brand.Sweep}"
+                            IsHitTestVisible="False"
+                            RenderTransformOrigin="0.5,0.5">
+                        <Border.RenderTransform>
+                            <TransformGroup>
+                                <RotateTransform Angle="18" />
+                                <TranslateTransform x:Name="SweepShift" X="-150" />
+                            </TransformGroup>
+                        </Border.RenderTransform>
+                    </Border>
+                </Grid>
+
+                <TextBlock x:Name="AppName" Text="FPM"
+                           FontFamily="Segoe UI Variable Display, Segoe UI"
+                           FontSize="30" FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Margin="{StaticResource Thickness.2}" Opacity="0">
+                    <TextBlock.RenderTransform>
+                        <TranslateTransform x:Name="TitleShift" Y="8" />
+                    </TextBlock.RenderTransform>
+                </TextBlock>
+
+                <TextBlock x:Name="VersionText"
+                           Style="{StaticResource CaptionText}"
+                           HorizontalAlignment="Center" Opacity="0" />
+
+                <Border x:Name="WelcomeBadge" Style="{StaticResource Chip}"
+                        HorizontalAlignment="Center" Visibility="Collapsed"
+                        Margin="{StaticResource Thickness.2}">
+                    <TextBlock Text="Welcome" FontSize="10.5" FontWeight="SemiBold"
+                               Foreground="{DynamicResource App.AccentLabel}" />
+                </Border>
+
+                <TextBlock x:Name="StatusText" Text="Loading settings…"
+                           Style="{StaticResource CaptionText}"
+                           HorizontalAlignment="Center" Opacity="0"
+                           Margin="{StaticResource Thickness.2}" />
+
+                <ProgressBar x:Name="SplashProgress" Style="{StaticResource ThinProgress}"
+                             Width="280" Height="2" Maximum="100" Value="0"
+                             HorizontalAlignment="Center" Margin="{StaticResource Thickness.1}" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

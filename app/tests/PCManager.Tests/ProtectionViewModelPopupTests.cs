@@ -86,6 +86,8 @@ public sealed class ProtectionViewModelPopupTests
     {
         public AppSettings Current { get; } = new();
 
+        public bool IsFirstRun => false;
+
         public int SaveCount { get; private set; }
 
         public void Save() => SaveCount++;

@@ -160,8 +160,10 @@
                             </TextBlock>
                         </StackPanel>
                     </DockPanel>
+                    <CheckBox Style="{StaticResource ToggleSwitch}" Content="Show splash screen"
+                              Margin="{StaticResource Thickness.3}" IsChecked="{Binding ShowSplash, Mode=TwoWay}" />
                     <CheckBox Style="{StaticResource ToggleSwitch}" Content="Reduce motion (fades only)"
-                              Margin="{StaticResource Thickness.3}" IsChecked="{Binding ReduceMotion, Mode=TwoWay}" />
+                              Margin="{StaticResource Thickness.2}" IsChecked="{Binding ReduceMotion, Mode=TwoWay}" />
                 </StackPanel>
             </Border>
 

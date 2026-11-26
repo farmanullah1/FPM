@@ -45,8 +45,9 @@ public partial class App : Application
             return;
         }
 
-        // Closing the main window exits the app even if the floating toolbar is open.
-        ShutdownMode = ShutdownMode.OnMainWindowClose;
+        // Explicit during startup so closing the splash cannot terminate the app; the shell
+        // switches this back to OnMainWindowClose once it is visible.
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         var collection = new ServiceCollection();
 
@@ -82,17 +83,6 @@ public partial class App : Application
 
         // One motion policy for the whole shell: system settings, app settings, power and RDP.
         MotionKit.UsePolicy(_services.GetRequiredService<IMotionPolicy>());
-
-        // Run legacy data migration preflight (FarmanullahPCManager -> FPM)
-        try
-        {
-            var migrationService = _services.GetService<ILegacyIdentityMigrationService>();
-            migrationService?.MigrateIfNecessary();
-        }
-        catch (Exception ex)
-        {
-            _services.GetService<IAppLogger>()?.Error($"Legacy migration failed: {ex.Message}", ex);
-        }
 
         // Cleanup CLI shares the exact same engine as the UI. --scan deletes nothing;
         // --clean requires an explicit --ids list.
@@ -132,16 +122,8 @@ public partial class App : Application
             return;
         }
 
-        EnableDiagnostics();
-
-        CreateTrayIcon();
-
-        var window = _services.GetRequiredService<MainWindow>();
-        MainWindow = window;
-        window.Show();
-
-        _services.GetRequiredService<IAppLogger>()
-            .Info($"{AppInfo.ProductName} started (pid {Environment.ProcessId}).");
+        // Splash first, then the staged startup (settings -> services -> theme -> shell).
+        _ = StartShellAsync(e.Args);
     }
 
     /// <summary>

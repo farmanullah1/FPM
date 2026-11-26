@@ -6,6 +6,15 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Splash screen (U5)**: a borderless 480×300 splash now appears before the shell and reports the
+  real startup stages (loading settings, preparing services, applying the theme, building the
+  shell) on a thin gold progress line. Its four brand petals fly in and assemble, light sweeps the
+  emblem and the wordmark fades up; reduced motion shows the assembled emblem with fades only, and
+  motion-off paints the final frame. Version is read from `AppInfo`, first run adds a "Welcome"
+  chip, and the window is skippable with a click or Esc. It stays visible at least 600 ms, closes
+  by 3 s, and fades into the shell; `--no-splash` skips it and Settings → Appearance can turn it
+  off permanently. Startup is now staged rather than one synchronous block, so the splash paints
+  before the main window is built.
 - **Motion kit (U4)**: one `IMotionPolicy` decides between full motion, fades-only and none,
   from the Windows animation switch, a new "Reduce motion" setting, battery saver, a remote
   session, Low Resource Mode and window visibility. Every primitive in the new
@@ -32,8 +41,10 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
   `IconKey` model fields. Navigation items and toolbox tiles carry `Icon3DKey` names instead.
 - The Apps search box moved below the "App management" heading, so the heading and search field
   no longer overlap at 560 px.
-- Settings → Appearance gained a "Reduce motion (fades only)" switch next to the theme toggle; it
-  is stored in `settings.json` and applies immediately without a restart.
+- Settings → Appearance gained "Show splash screen" and "Reduce motion (fades only)" switches next
+  to the theme toggle; both are stored in `settings.json` and apply immediately without a restart.
+  The shell now starts with `ShutdownMode.OnExplicitShutdown` and switches to
+  `OnMainWindowClose` when the main window is shown, so the splash can close independently.
 
 ### Added
 - **Icon3D system (U2)**: 113 hand-drawn icons on a 24 px grid, each a layered vector built

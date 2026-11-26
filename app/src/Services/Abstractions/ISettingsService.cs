@@ -6,5 +6,9 @@ namespace PCManager.Services.Abstractions;
 public interface ISettingsService
 {
     AppSettings Current { get; }
+
+    /// <summary>True when no settings file existed at load, so this is the first run.</summary>
+    bool IsFirstRun { get; }
+
     void Save();
 }

@@ -20,10 +20,13 @@ public sealed class SettingsService : ISettingsService
     {
         Directory.CreateDirectory(AppInfo.DataFolder);
         _path = AppInfo.SettingsFile;
+        IsFirstRun = !File.Exists(_path);
         Current = Load();
     }
 
     public AppSettings Current { get; private set; }
+
+    public bool IsFirstRun { get; }
 
     public void Save()
     {

@@ -33,7 +33,7 @@ public static partial class Motion
     public static void UsePolicy(IMotionPolicy policy) => _policy = policy;
 
     /// <summary>Fade from <paramref name="from"/> to <paramref name="to"/>.</summary>
-    public static void Fade(UIElement element, double from, double to, TimeSpan? duration = null)
+    public static void Fade(UIElement element, double from, double to, TimeSpan? duration = null, TimeSpan delay = default)
     {
         MotionLevel level = Level;
 
@@ -48,13 +48,14 @@ public static partial class Motion
             UIElement.OpacityProperty,
             new DoubleAnimation(from, to, duration ?? MotionPolicy.StandardDuration)
             {
+                BeginTime = delay,
                 EasingFunction = EnterEase(),
                 FillBehavior = FillBehavior.HoldEnd
             });
     }
 
-    public static void FadeIn(UIElement element, TimeSpan? duration = null, double from = 0d) =>
-        Fade(element, from, 1d, duration);
+    public static void FadeIn(UIElement element, TimeSpan? duration = null, double from = 0d, TimeSpan delay = default) =>
+        Fade(element, from, 1d, duration, delay);
 
     public static void FadeOut(UIElement element, TimeSpan? duration = null) =>
         Fade(element, 1d, 0d, duration);
@@ -64,7 +65,8 @@ public static partial class Motion
         TranslateTransform transform,
         double fromX,
         double fromY,
-        TimeSpan? duration = null)
+        TimeSpan? duration = null,
+        TimeSpan delay = default)
     {
         if (!MotionPolicy.AllowsTransforms(Level))
         {
@@ -80,10 +82,10 @@ public static partial class Motion
 
         transform.BeginAnimation(
             TranslateTransform.XProperty,
-            new DoubleAnimation(fromX, 0d, motion) { EasingFunction = easing });
+            new DoubleAnimation(fromX, 0d, motion) { EasingFunction = easing, BeginTime = delay });
         transform.BeginAnimation(
             TranslateTransform.YProperty,
-            new DoubleAnimation(fromY, 0d, motion) { EasingFunction = easing });
+            new DoubleAnimation(fromY, 0d, motion) { EasingFunction = easing, BeginTime = delay });
     }
 
     /// <summary>Slide a named edge into place around an element's own transform.</summary>
@@ -107,7 +109,7 @@ public static partial class Motion
         ScaleIn(EnsureScale(element), from, duration);
     }
 
-    public static void ScaleIn(ScaleTransform transform, double from, TimeSpan? duration = null)
+    public static void ScaleIn(ScaleTransform transform, double from, TimeSpan? duration = null, TimeSpan delay = default)
     {
         if (!MotionPolicy.AllowsTransforms(Level))
         {
@@ -120,10 +122,33 @@ public static partial class Motion
 
         transform.BeginAnimation(
             ScaleTransform.ScaleXProperty,
-            new DoubleAnimation(from, 1d, motion) { EasingFunction = easing });
+            new DoubleAnimation(from, 1d, motion) { EasingFunction = easing, BeginTime = delay });
         transform.BeginAnimation(
             ScaleTransform.ScaleYProperty,
-            new DoubleAnimation(from, 1d, motion) { EasingFunction = easing });
+            new DoubleAnimation(from, 1d, motion) { EasingFunction = easing, BeginTime = delay });
+    }
+
+    /// <summary>Moves a transform to an absolute offset (light sweeps, hero motion). Full only.</summary>
+    public static void MoveTo(TranslateTransform transform, double toX, double toY, TimeSpan? duration = null, TimeSpan delay = default)
+    {
+        if (!MotionPolicy.AllowsTransforms(Level))
+        {
+            transform.BeginAnimation(TranslateTransform.XProperty, null);
+            transform.BeginAnimation(TranslateTransform.YProperty, null);
+            transform.X = toX;
+            transform.Y = toY;
+            return;
+        }
+
+        TimeSpan motion = duration ?? MotionPolicy.StandardDuration;
+        IEasingFunction easing = EnterEase();
+
+        transform.BeginAnimation(
+            TranslateTransform.XProperty,
+            new DoubleAnimation(toX, motion) { EasingFunction = easing, BeginTime = delay });
+        transform.BeginAnimation(
+            TranslateTransform.YProperty,
+            new DoubleAnimation(toY, motion) { EasingFunction = easing, BeginTime = delay });
     }
 
     /// <summary>Springy scale for toggles and the logo. Full motion only.</summary>

@@ -180,6 +180,24 @@ public sealed partial class SettingsViewModel : ViewModelBase
 
     public string ThemeLabel => IsDark ? "Dark" : "Light";
 
+    /// <summary>Shows the startup splash; --no-splash overrides it for a single launch.</summary>
+    public bool ShowSplash
+    {
+        get => _settings.Current.ShowSplash;
+        set
+        {
+            if (_settings.Current.ShowSplash == value)
+            {
+                return;
+            }
+
+            _settings.Current.ShowSplash = value;
+            _settings.Save();
+            OnPropertyChanged();
+            StatusMessage = value ? "Splash screen enabled." : "Splash screen disabled.";
+        }
+    }
+
     /// <summary>App setting read by the motion policy: keeps fades, drops slides/scales/springs.</summary>
     public bool ReduceMotion
     {
