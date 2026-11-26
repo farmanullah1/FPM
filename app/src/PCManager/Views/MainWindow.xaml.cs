@@ -7,6 +7,7 @@ using PCManager.Core;
 using PCManager.Core.Models;
 using PCManager.Motion;
 using PCManager.Services;
+using MotionKit = PCManager.Motion.Motion;
 using PCManager.Services.Abstractions;
 using PCManager.ViewModels;
 
@@ -86,15 +87,15 @@ public partial class MainWindow : Window
     /// <summary>Fades and lifts the incoming page through the motion kit (no motion: instant).</summary>
     private void AnimatePageChange()
     {
-        Motion.Motion.FadeIn(PageHost, MotionPolicy.PageDuration);
-        Motion.Motion.SlideIn(PageSlide, fromX: 0, fromY: 7, MotionPolicy.PageDuration);
+        MotionKit.FadeIn(PageHost, MotionPolicy.PageDuration);
+        MotionKit.SlideIn(PageSlide, fromX: 0, fromY: 7, MotionPolicy.PageDuration);
     }
 
     /// <summary>Fades and zooms the palette panel in through the motion kit.</summary>
     private void AnimatePaletteOpen()
     {
-        Motion.Motion.FadeIn(PaletteOverlay, MotionPolicy.PaletteDuration);
-        Motion.Motion.ScaleIn(PaletteScale, from: 0.98, MotionPolicy.PaletteDuration);
+        MotionKit.FadeIn(PaletteOverlay, MotionPolicy.PaletteDuration);
+        MotionKit.ScaleIn(PaletteScale, from: 0.98, MotionPolicy.PaletteDuration);
     }
 
     private void FocusPaletteQuery()

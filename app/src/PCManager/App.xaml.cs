@@ -7,6 +7,7 @@ using PCManager.Cli;
 using PCManager.Core;
 using PCManager.Motion;
 using PCManager.Services;
+using MotionKit = PCManager.Motion.Motion;
 using PCManager.Services.Abstractions;
 using PCManager.Services.DependencyInjection;
 using PCManager.ViewModels;
@@ -80,7 +81,7 @@ public partial class App : Application
         _services = collection.BuildServiceProvider();
 
         // One motion policy for the whole shell: system settings, app settings, power and RDP.
-        Motion.Motion.UsePolicy(_services.GetRequiredService<IMotionPolicy>());
+        MotionKit.UsePolicy(_services.GetRequiredService<IMotionPolicy>());
 
         // Run legacy data migration preflight (FarmanullahPCManager -> FPM)
         try

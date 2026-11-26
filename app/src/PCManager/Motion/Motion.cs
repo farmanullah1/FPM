@@ -21,7 +21,7 @@ public enum SlideEdge
 /// Only RenderTransform and Opacity are animated; geometry, layout and brushes are never
 /// animated, so no primitive can trigger a layout pass.
 /// </summary>
-public static class Motion
+public static partial class Motion
 {
     private static IMotionPolicy _policy = new SystemMotionPolicy();
 

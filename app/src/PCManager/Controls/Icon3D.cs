@@ -3,7 +3,7 @@ using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Media;
 using PCManager.Core.Design;
-using PCManager.Motion;
+using MotionKit = PCManager.Motion.Motion;
 
 namespace PCManager.Controls;
 
@@ -198,6 +198,6 @@ public sealed class Icon3D : FrameworkElement
             return;
         }
 
-        Motion.Motion.Tilt3D(_tilt, hovered ? 3d : 0d);
+        MotionKit.Tilt3D(_tilt, hovered ? 3d : 0d);
     }
 }
