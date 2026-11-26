@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g id="Temperature">
+    <path data-role="face" d="M10.4,2.6 H13.6 V14 H10.4 Z M9,14.2 A3,3 0 1 0 15,14.2 A3,3 0 1 0 9,14.2 Z" />
+    <path data-role="neutral" d="M14.4,4.8 H16.8 V6.2 H14.4 Z M14.4,8 H16 H16.4 V9.4 H14.4 Z M11.2,5.8 H12.8 V12 H11.2 Z" />
+  </g>
+  <g id="CpuTemp">
+    <path data-role="face" d="M4.4,4.4 H19.6 V19.6 H4.4 Z" />
+    <path data-role="neutral" d="M6.4,2.4 H8.2 V4.4 H6.4 Z M10.6,2.4 H12.4 V4.4 H10.6 Z M14.8,2.4 H16.6 V4.4 H14.8 Z M6.4,19.6 H8.2 V21.6 H6.4 Z M10.6,19.6 H12.4 V21.6 H10.6 Z M14.8,19.6 H16.6 V21.6 H14.8 Z M8.6,7.4 H10.2 V13.2 H8.6 Z M13.4,8.4 H15 V13.2 H13.4 Z M10.6,14.6 H12.8 V17.4 H10.6 Z" />
+  </g>
+  <g id="GpuTemp">
+    <path data-role="face" d="M2.4,6.4 H21.6 V17.6 H2.4 Z" />
+    <path data-role="neutral" d="M7.4,8.6 A2.6,2.6 0 1 0 12.6,8.6 A2.6,2.6 0 1 0 7.4,8.6 Z M9,8.6 A1,1 0 1 1 11,8.6 A1,1 0 1 1 9,8.6 Z M14.6,8.8 H19.4 V10.4 H14.6 Z M14.6,12.2 H19.4 V13.8 H14.6 Z M2.4,17.6 H21.6 V19.6 H2.4 Z" />
+  </g>
+  <g id="LaptopTemp">
+    <path data-role="face" d="M4.4,4.6 H19.6 V15.4 H4.4 Z M2.4,16.4 H21.6 V19.4 H2.4 Z" />
+    <path data-role="neutral" d="M10.6,6.4 H11.8 V12 H10.6 Z M9.6,12 A1.6,1.6 0 1 0 12.8,12 A1.6,1.6 0 1 0 9.6,12 Z M14.2,7.6 H17 V8.8 H14.2 Z M14.2,10 H16.2 V11.2 H14.2 Z" />
+  </g>
+  <g id="Battery">
+    <path data-role="face" d="M3,6.8 H18.4 V17.2 H3 Z" />
+    <path data-role="neutral" d="M18.4,9.8 H21.4 V14.2 H18.4 Z M5,8.8 H12.4 V15.2 H5 Z" />
+  </g>
+  <g id="BatteryCharging">
+    <path data-role="face" d="M3,6.8 H18.4 V17.2 H3 Z" />
+    <path data-role="neutral" d="M18.4,9.8 H21.4 V14.2 H18.4 Z M12.6,7.8 L9.2,12.4 H11.4 L9.8,16.4 L13.8,11.4 H11.6 Z" />
+  </g>
+  <g id="BatteryTime">
+    <path data-role="face" d="M3,6.8 H15.4 V17.2 H3 Z" />
+    <path data-role="neutral" d="M15.4,9.8 H18.4 V14.2 H15.4 Z M16.2,2.4 A5.6,5.6 0 1 0 16.2,13.6 A5.6,5.6 0 1 0 16.2,2.4 Z M15.6,4.6 H16.8 V8.4 H19.6 V9.6 H15.6 Z" />
+  </g>
+  <g id="NetworkDown">
+    <path data-role="face" d="M10.4,3 H13.6 V12.8 H16.8 L12,18 L7.2,12.8 H10.4 Z" />
+    <path data-role="neutral" d="M3.4,19 H5.8 V22 H3.4 Z M8.2,17.4 H10.6 V22 H8.2 Z M13,20 H15.4 V22 H13 Z M17.8,18.6 H20.2 V22 H17.8 Z" />
+  </g>
+  <g id="NetworkUp">
+    <path data-role="face" d="M10.4,18 H13.6 V8.2 H16.8 L12,3 L7.2,8.2 H10.4 Z" />
+    <path data-role="neutral" d="M3.4,19 H5.8 V22 H3.4 Z M8.2,17.4 H10.6 V22 H8.2 Z M13,20 H15.4 V22 H13 Z M17.8,18.6 H20.2 V22 H17.8 Z" />
+  </g>
+  <g id="Cpu">
+    <path data-role="face" d="M4.4,4.4 H19.6 V19.6 H4.4 Z" />
+    <path data-role="neutral" d="M6.4,2.4 H8.2 V4.4 H6.4 Z M10.6,2.4 H12.4 V4.4 H10.6 Z M14.8,2.4 H16.6 V4.4 H14.8 Z M6.4,19.6 H8.2 V21.6 H6.4 Z M10.6,19.6 H12.4 V21.6 H10.6 Z M14.8,19.6 H16.6 V21.6 H14.8 Z M8.4,8.4 H15.6 V15.6 H8.4 Z" />
+  </g>
+  <g id="Gpu">
+    <path data-role="face" d="M2.4,6.4 H21.6 V17.6 H2.4 Z" />
+    <path data-role="neutral" d="M7.4,8.6 A2.6,2.6 0 1 0 12.6,8.6 A2.6,2.6 0 1 0 7.4,8.6 Z M9,8.6 A1,1 0 1 1 11,8.6 A1,1 0 1 1 9,8.6 Z M14.6,8.8 H19.4 V10.4 H14.6 Z M14.6,12.2 H19.4 V13.8 H14.6 Z" />
+  </g>
+</svg>

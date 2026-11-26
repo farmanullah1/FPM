@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g id="ProcessList">
+    <path data-role="face" d="M3,4.6 H16.4 V6.8 H3 Z M3,10.9 H16.4 V13.1 H3 Z M3,17.2 H16.4 V19.4 H3 Z" />
+    <path data-role="neutral" d="M18.4,4.6 H21 V6.8 H18.4 Z M18.4,10.9 H21 V13.1 H18.4 Z M18.4,17.2 H21 V19.4 H18.4 Z" />
+  </g>
+  <g id="DeepUninstall">
+    <path data-role="face" d="M4.4,10.4 H19.6 V21 H4.4 Z" />
+    <path data-role="neutral" d="M10.6,2.8 H13.4 V8.4 H16.6 L12,12.6 L7.4,8.4 H10.6 Z M8,17.4 H16 V18.8 H8 Z" />
+  </g>
+  <g id="Store">
+    <path data-role="face" d="M5,7.6 H19 L20.6,21 H3.4 Z" />
+    <path data-role="neutral" d="M8.4,7.6 V6.2 A3.6,3.6 0 0 1 15.6,6.2 V7.6 H13.8 V6.2 A1.8,1.8 0 0 0 10.2,6.2 V7.6 Z M7.6,10.6 H9.4 V12.4 H7.6 Z" />
+  </g>
+  <g id="StartupApps">
+    <path data-role="face" d="M10.8,2 H13.2 V9 H10.8 Z" />
+    <path data-role="neutral" d="M12,4.2 A5.8,5.8 0 1 0 17.8,10 H14.8 A2.8,2.8 0 1 1 9.2,10 H6.2 A5.8,5.8 0 0 1 12,4.2 Z M4,17 H20 V18.8 H4 Z M4,20 H14 V21.8 H4 Z" />
+  </g>
+</svg>

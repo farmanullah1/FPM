@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g id="Drive">
+    <path data-role="face" d="M3.4,6.4 H20.6 V17.6 H3.4 Z" />
+    <path data-role="neutral" d="M5.2,9 H12 V11 H5.2 Z M5.2,14.6 H8.4 V16 H5.2 Z M17,14.2 A1.4,1.4 0 1 0 17,17 A1.4,1.4 0 1 0 17,14.2 Z" />
+  </g>
+  <g id="DiskAnalysis">
+    <path data-role="face" d="M4,5.4 C4,3.8 7.6,2.5 12,2.5 C16.4,2.5 20,3.8 20,5.4 V18.6 C20,20.2 16.4,21.5 12,21.5 C7.6,21.5 4,20.2 4,18.6 Z" />
+    <path data-role="neutral" d="M5.6,10 C5.6,11.6 8.4,12.9 12,12.9 C15.6,12.9 18.4,11.6 18.4,10 V12.9 C18.4,14.5 15.6,15.8 12,15.8 C8.4,15.8 5.6,14.5 5.6,12.9 Z M7.4,16.4 H9.4 V19.4 H7.4 Z M11,15.4 H13 V19.4 H11 Z M14.6,17 H16.6 V19.4 H14.6 Z" />
+  </g>
+  <g id="Downloads">
+    <path data-role="neutral" d="M10.6,2.6 H13.4 V10.4 H16.6 L12,15.4 L7.4,10.4 H10.6 Z" />
+    <path data-role="face" d="M3.4,15.6 H7.2 L8.6,18 H15.4 L16.8,15.6 H20.6 V20.6 H3.4 Z" />
+  </g>
+  <g id="LargeFiles">
+    <path data-role="face" d="M5,2.6 H14.4 L19.4,7.6 V21.4 H5 Z" />
+    <path data-role="neutral" d="M14,2.8 V7.4 H18.8 Z M8.2,11 H16.2 V12.4 H8.2 Z M8.2,14.4 H16.2 V15.8 H8.2 Z M8.2,17.8 H12.8 V19.2 H8.2 Z" />
+  </g>
+  <g id="Duplicates">
+    <path data-role="face" d="M3.4,3.4 H13.4 V13.4 H3.4 Z" />
+    <path data-role="neutral" d="M10.6,10.6 H20.6 V20.6 H10.6 Z" />
+  </g>
+  <g id="StorageSense">
+    <path data-role="face" d="M4,5.4 C4,3.8 7.6,2.5 12,2.5 C16.4,2.5 20,3.8 20,5.4 V18.6 C20,20.2 16.4,21.5 12,21.5 C7.6,21.5 4,20.2 4,18.6 Z" />
+    <path data-role="neutral" d="M13.8,8.4 L8.4,14.8 H11.6 L10.2,19.8 L15.8,13.2 H12.4 Z" />
+  </g>
+  <g id="RecycleBin">
+    <path data-role="face" d="M6,6.4 H18 L16.8,21.6 H7.2 Z" />
+    <path data-role="neutral" d="M4,4.4 H20 V6.4 H4 Z M9,2.4 H15 V4.4 H9 Z M9.4,9 H10.8 V19 H9.4 Z M13.2,9 H14.6 V19 H13.2 Z" />
+  </g>
+  <g id="DriveHealth">
+    <path data-role="face" d="M3.4,6.4 H20.6 V17.6 H3.4 Z" />
+    <path data-role="neutral" d="M11,8.8 H13 V11.4 H15.6 V13.4 H13 V16 H11 V13.4 H8.4 V11.4 H11 Z" />
+  </g>
+  <g id="Treemap">
+    <path data-role="face" d="M3,3.4 H11 V11.4 H3 Z M12.6,3.4 H21 V8 H12.6 Z M12.6,9.6 H21 V21 H12.6 Z M3,13 H11 V21 H3 Z" />
+  </g>
+</svg>

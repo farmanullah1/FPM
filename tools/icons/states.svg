@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g id="Success">
+    <path data-role="face" d="M12,2.6 A9.4,9.4 0 1 0 12,21.4 A9.4,9.4 0 1 0 12,2.6 Z" />
+    <path data-role="neutral" d="M10.4,16.2 L6.4,12.2 L8,10.6 L10.4,13 L16,7.4 L17.6,9 Z" />
+  </g>
+  <g id="Warning">
+    <path data-role="face" d="M12,2.4 L22,20.6 H2 Z" />
+    <path data-role="neutral" d="M11,8.4 H13 V14.4 H11 Z M11,16.2 H13 V18.2 H11 Z" />
+  </g>
+  <g id="Error">
+    <path data-role="face" d="M7,2.4 H17 L21.6,7 V17 L17,21.6 H7 L2.4,17 V7 Z" />
+    <path data-role="neutral" d="M9,9 L10.4,7.6 L16.4,13.6 L15,15 Z M15,7.6 L16.4,9 L10.4,15 L9,13.6 Z" />
+  </g>
+  <g id="Info">
+    <path data-role="face" d="M12,2.6 A9.4,9.4 0 1 0 12,21.4 A9.4,9.4 0 1 0 12,2.6 Z" />
+    <path data-role="neutral" d="M11,9.8 H13 V17.6 H11 Z M11,6 H13 V8.2 H11 Z" />
+  </g>
+  <g id="Empty">
+    <path data-role="face" d="M4,10 H20 V21 H4 Z" />
+    <path data-role="neutral" d="M4,10 H20 V12 H4 Z M5.6,4.4 L9.4,10 H7.4 L4,4.4 Z M18.4,4.4 L14.6,10 H16.6 L20,4.4 Z M9.4,14 H14.6 V16 H9.4 Z" />
+  </g>
+  <g id="Offline">
+    <path data-role="face" d="M7,18.4 A4.4,4.4 0 0 1 5,10.4 A6.4,6.4 0 0 1 17.2,9.2 A3.8,3.8 0 0 1 18,18.4 Z" />
+    <path data-role="neutral" d="M3.4,4.2 L4.6,3 L20.6,19 L19.4,20.2 Z" />
+  </g>
+  <g id="Locked">
+    <path data-role="face" d="M6.4,10 H17.6 V21 H6.4 Z" />
+    <path data-role="neutral" d="M8.8,10 V7.2 A3.2,3.2 0 0 1 15.2,7.2 V10 H13.4 V7.2 A1.4,1.4 0 0 0 10.6,7.2 V10 Z M10.6,12.8 H13.4 V15.8 H10.6 Z" />
+  </g>
+</svg>

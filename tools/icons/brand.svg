@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Original FPM emblem. Four facets around an inset centre diamond, same geometry as
+       the 2.5D brand mark already shipped in Styles/Icons.xaml. -->
+  <g id="Logo">
+    <path data-role="face" d="M12,1.4 L12,12 L4,7.2 Z M22.6,12 L12,12 L17,5.2 Z M12,22.6 L12,12 L20,16.8 Z M1.4,12 L12,12 L7,18.8 Z" />
+    <path data-role="neutral" d="M12,9.4 L14.6,12 L12,14.6 L9.4,12 Z" />
+  </g>
+  <g id="LogoMono">
+    <path data-role="face" d="M12,1.4 L12,12 L4,7.2 Z M22.6,12 L12,12 L17,5.2 Z M12,22.6 L12,12 L20,16.8 Z M1.4,12 L12,12 L7,18.8 Z" />
+  </g>
+</svg>

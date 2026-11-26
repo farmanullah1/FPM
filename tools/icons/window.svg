@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g id="Toolbar">
+    <path data-role="face" d="M3,4.4 H21 V9 H3 Z M3,11 H21 V19.6 H3 Z" />
+    <path data-role="neutral" d="M5.4,5.8 H7.2 V7.6 H5.4 Z M8.6,5.8 H10.4 V7.6 H8.6 Z M12.4,12.6 H18.6 V13.8 H12.4 Z M5.4,12.6 H10 V17.6 H5.4 Z" />
+  </g>
+  <g id="Pin">
+    <path data-role="face" d="M15,2 L22,9 L19,10.2 L14.6,14.6 V18.2 L11.4,15 L5,21.4 L2.6,19 L9,12.6 L5.8,9.4 H9.4 L13.8,5 Z" />
+  </g>
+  <g id="Dock">
+    <path data-role="face" d="M4,3.6 H20 V14 H4 Z M4,16 H20 V21 H4 Z" />
+    <path data-role="neutral" d="M6.4,5.6 H17.6 V12 H6.4 Z M7.4,17.6 H10 V19.4 H7.4 Z M11.6,17.6 H14.2 V19.4 H11.6 Z" />
+  </g>
+  <g id="Minimize">
+    <path data-role="face" d="M4,10.6 H20 V13.4 H4 Z" />
+  </g>
+  <g id="Maximize">
+    <path data-role="face" d="M4,4 H20 V20 H4 Z" />
+    <path data-role="neutral" d="M6.4,6.4 H17.6 V17.6 H6.4 Z" />
+  </g>
+  <g id="Close">
+    <path data-role="face" d="M4.6,6 L6,4.6 L19.4,18 L18,19.4 Z M18,4.6 L19.4,6 L6,19.4 L4.6,18 Z" />
+  </g>
+</svg>
