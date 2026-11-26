@@ -1,6 +1,7 @@
 <Window x:Class="PCManager.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:PCManager.Controls"
         Title="FPM"
         Icon="pack://application:,,,/Assets/fpm.ico"
         Width="560" Height="780"
@@ -34,10 +35,11 @@
                 <!-- Compact & Standard Rail Layout (< 960 px) -->
                 <StackPanel HorizontalAlignment="Center" Margin="0,4"
                             Visibility="{Binding DataContext.IsExpandedSidebar, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBoolToVisibility}}">
-                    <Path x:Name="NavIcon"
-                          Data="{Binding IconKey, Converter={StaticResource IconKeyConverter}}"
-                          Fill="{DynamicResource App.Subtle}"
-                          Width="17" Height="17" Stretch="Uniform" HorizontalAlignment="Center" />
+                    <controls:Icon3D x:Name="NavIcon"
+                                     Key="{Binding Icon3DKey}"
+                                     Size="18"
+                                     Tint="Neutral"
+                                     HorizontalAlignment="Center" />
                     <TextBlock x:Name="NavLabel"
                                Text="{Binding Title}"
                                FontSize="9.5" FontWeight="Medium"
@@ -53,11 +55,11 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <Path x:Name="NavIconExpanded"
-                          Data="{Binding IconKey, Converter={StaticResource IconKeyConverter}}"
-                          Fill="{DynamicResource App.Subtle}"
-                          Width="18" Height="18" Stretch="Uniform"
-                          VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    <controls:Icon3D x:Name="NavIconExpanded"
+                                     Key="{Binding Icon3DKey}"
+                                     Size="20"
+                                     Tint="Neutral"
+                                     VerticalAlignment="Center" HorizontalAlignment="Center" />
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
                         <TextBlock x:Name="NavTitleExpanded" Text="{Binding Title}"
@@ -71,12 +73,9 @@
 
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                    <Setter TargetName="NavIcon" Property="Fill" Value="{DynamicResource App.Accent}" />
-                    <Setter TargetName="NavIconExpanded" Property="Fill" Value="{DynamicResource App.Accent}" />
+                    <Setter TargetName="NavLabel" Property="Foreground" Value="{DynamicResource App.AccentLabel}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                    <Setter TargetName="NavIcon" Property="Fill" Value="{DynamicResource App.Accent}" />
-                    <Setter TargetName="NavIconExpanded" Property="Fill" Value="{DynamicResource App.Accent}" />
                     <Setter TargetName="NavLabel" Property="Foreground" Value="{DynamicResource App.AccentLabel}" />
                     <Setter TargetName="NavLabel" Property="FontWeight" Value="SemiBold" />
                     <Setter TargetName="NavTitleExpanded" Property="Foreground" Value="{DynamicResource App.AccentLabel}" />

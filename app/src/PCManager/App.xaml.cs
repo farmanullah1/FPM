@@ -177,8 +177,8 @@ public partial class App : Application
             };
 
             var menu = new System.Windows.Forms.ContextMenuStrip();
-            menu.Items.Add("Open FPM", null, (_, _) => ShowMainWindow());
-            menu.Items.Add("Boost now", null, async (_, _) => await TrayBoostAsync());
+            menu.Items.Add("Open FPM", IconRasterizer.ToBitmap("Logo", 16), (_, _) => ShowMainWindow());
+            menu.Items.Add("Boost now", IconRasterizer.ToBitmap("Memory", 16), async (_, _) => await TrayBoostAsync());
             menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
             menu.Items.Add("Exit", null, (_, _) => Shutdown());
             _tray.ContextMenuStrip = menu;

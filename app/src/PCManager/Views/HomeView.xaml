@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:PCManager.Controls"
              mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -39,9 +40,9 @@
                             Background="{DynamicResource App.AccentSoft}"
                             VerticalAlignment="Center">
                         <Grid>
-                            <Image Source="{DynamicResource Hero.Window}"
-                                   Width="19" Height="19" Stretch="Uniform"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <controls:Icon3D Key="Tips" Size="21"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Animated="True" />
                             <Ellipse Width="6" Height="6" Fill="{DynamicResource App.AccentLabel}"
                                      HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,6,0" />
                         </Grid>
@@ -124,8 +125,7 @@
                 <StackPanel>
                     <Grid>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Image Source="{DynamicResource HeroSmall.Speed}"
-                                   Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center" />
+                            <controls:Icon3D Key="Boost" Size="19" VerticalAlignment="Center" Animated="True" />
                             <TextBlock Text="PC boost" FontSize="12.5" FontWeight="Bold"
                                        Margin="6,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
@@ -194,8 +194,7 @@
                                 Command="{Binding BoostCommand}"
                                 ToolTip="Trim process working sets and delete temporary files">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Path Data="{DynamicResource Icon.Bolt}" Fill="#18181B"
-                                      Width="12" Height="12" Stretch="Uniform" VerticalAlignment="Center" />
+                                <controls:Icon3D Key="Boost" Size="14" VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding BoostButtonText}" FontSize="12" FontWeight="Bold"
                                            Margin="5,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
@@ -206,8 +205,7 @@
                                 Command="{Binding CleanEverythingCommand}"
                                 ToolTip="Run unified scan across all supported categories">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Path Data="{DynamicResource Icon.Storage}" Fill="{DynamicResource App.Text}"
-                                      Width="12" Height="12" Stretch="Uniform" VerticalAlignment="Center" />
+                                <controls:Icon3D Key="Scan" Size="14" VerticalAlignment="Center" />
                                 <TextBlock Text="Clean Everything" FontSize="11" FontWeight="SemiBold"
                                            Margin="5,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
@@ -245,8 +243,7 @@
                         <Grid>
                             <TextBlock Text="Health check" FontSize="11.5" FontWeight="SemiBold" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <Image Source="{DynamicResource HeroSmall.Health}"
-                                       Width="13" Height="13" Stretch="Uniform" />
+                                <controls:Icon3D Key="HealthCheck" Size="20" Animated="True" />
                                 <TextBlock Text="&#x203A;" FontSize="12" Margin="3,0,0,0"
                                            Foreground="{DynamicResource App.Subtle}" />
                             </StackPanel>
@@ -274,8 +271,7 @@
                         <Grid>
                             <TextBlock Text="Process" FontSize="11.5" FontWeight="SemiBold" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <Image Source="{DynamicResource HeroSmall.Process}"
-                                       Width="13" Height="13" Stretch="Uniform" />
+                                <controls:Icon3D Key="Process" Size="20" Animated="True" />
                                 <TextBlock Text="&#x203A;" FontSize="12" Margin="3,0,0,0"
                                            Foreground="{DynamicResource App.Subtle}" />
                             </StackPanel>
@@ -302,8 +298,7 @@
                         <Grid>
                             <TextBlock Text="Deep cleanup" FontSize="11.5" FontWeight="SemiBold" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <Image Source="{DynamicResource HeroSmall.Cleanup}"
-                                       Width="13" Height="13" Stretch="Uniform" />
+                                <controls:Icon3D Key="DeepCleanup" Size="20" Animated="True" />
                                 <TextBlock Text="&#x203A;" FontSize="12" Margin="3,0,0,0"
                                            Foreground="{DynamicResource App.Subtle}" />
                             </StackPanel>
@@ -333,8 +328,7 @@
                         <Grid>
                             <TextBlock Text="Startup" FontSize="11.5" FontWeight="SemiBold" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <Image Source="{DynamicResource HeroSmall.Startup}"
-                                       Width="13" Height="13" Stretch="Uniform" />
+                                <controls:Icon3D Key="Startup" Size="20" Animated="True" />
                                 <TextBlock Text="&#x203A;" FontSize="12" Margin="3,0,0,0"
                                            Foreground="{DynamicResource App.Subtle}" />
                             </StackPanel>
@@ -359,9 +353,9 @@
                         <StackPanel Orientation="Horizontal">
                             <Border Width="30" Height="30" CornerRadius="7"
                                     Background="{DynamicResource App.AccentSoft}" VerticalAlignment="Center">
-                                <Image Source="{DynamicResource Hero.Cleanup}"
-                                       Width="16" Height="16" Stretch="Uniform"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <controls:Icon3D Key="OneClickCleanup" Size="22"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                 Animated="True" />
                             </Border>
                             <StackPanel Margin="9,0,8,0" VerticalAlignment="Center">
                                 <TextBlock Text="One-Click Cleanup" FontSize="12.5" FontWeight="Bold" />
@@ -371,17 +365,26 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <Button Grid.Column="1" Content="Scan &amp; review"
+                        <Button Grid.Column="1"
                                 Style="{StaticResource PrimaryButton}" Height="28"
                                 VerticalAlignment="Center"
                                 Command="{Binding CleanEverythingCommand}"
-                                ToolTip="Open the Cleanup Center to scan and review every supported category" />
+                                ToolTip="Open the Cleanup Center to scan and review every supported category">
+                            <StackPanel Orientation="Horizontal">
+                                <controls:Icon3D Key="Scan" Size="14" Margin="{StaticResource Thickness.1}" />
+                                <TextBlock Text="Scan &amp; review" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                     </Grid>
 
                     <StackPanel Orientation="Horizontal" Margin="0,9,0,0">
                         <Button Style="{StaticResource PillButton}" Command="{Binding OpenMemoryCommand}"
                                 ToolTip="Open the Memory page">
-                            <TextBlock Text="{Binding MemoryChipText}" FontSize="10" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal">
+                                <controls:Icon3D Key="Memory" Size="14" Margin="{StaticResource Thickness.1}" />
+                                <TextBlock Text="{Binding MemoryChipText}" FontSize="10" FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
                         </Button>
                         <Button Style="{StaticResource PillButton}" Margin="6,0,0,0"
                                 Command="{Binding OpenStorageCommand}"
@@ -406,11 +409,10 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Width="26" Height="26" CornerRadius="6"
-                                Background="{StaticResource App.GoldFill}" VerticalAlignment="Center">
-                            <Path Data="{DynamicResource Icon.Screenshot}" Fill="#FFFBEB"
-                                  Width="14" Height="14" Stretch="Uniform"
-                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                <Border Width="30" Height="30" CornerRadius="6"
+                                Background="{DynamicResource App.AccentSoft}" VerticalAlignment="Center">
+                            <controls:Icon3D Key="Screenshot" Size="20" Tint="Neutral"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <StackPanel Margin="9,0,6,0" VerticalAlignment="Center">
                             <TextBlock Text="Quick capture" FontSize="12" FontWeight="Bold" />
@@ -420,10 +422,15 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <Button Grid.Column="1" Style="{StaticResource OutlineGoldButton}"
-                            Content="Capture" Command="{Binding CaptureCommand}"
-                            VerticalAlignment="Center"
-                            ToolTip="{Binding StatusMessage}" />
+                                            <Button Grid.Column="1" Style="{StaticResource OutlineGoldButton}"
+                                Command="{Binding CaptureCommand}"
+                                VerticalAlignment="Center"
+                                ToolTip="{Binding StatusMessage}">
+                            <StackPanel Orientation="Horizontal">
+                                <controls:Icon3D Key="Screenshot" Size="14" Margin="{StaticResource Thickness.1}" />
+                                <TextBlock Text="Capture" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                 </Grid>
             </Border>
 

@@ -44,18 +44,18 @@ public sealed partial class MainViewModel : ObservableObject
 
         Pages = new ObservableCollection<NavigationItem>
         {
-            new(PageKeys.Home, "Home", "Boost and health", "Icon.Home", home),
-            new(PageKeys.Memory, "Memory", "RAM and process relief", "Icon.Performance", memory),
-            new(PageKeys.Protection, "Protection", "Security and updates", "Icon.Health", protection),
-            new(PageKeys.Storage, "Storage", "Cleanup and disks", "Icon.Storage", storage),
-            new(PageKeys.Apps, "Apps", "Processes and startup", "Icon.Process", apps),
-            new(PageKeys.Toolbox, "Toolbox", "Everyday utilities", "Icon.Toolbox", toolbox)
+            new(PageKeys.Home, "Home", "Boost and health", "Home", home),
+            new(PageKeys.Memory, "Memory", "RAM and process relief", "Memory", memory),
+            new(PageKeys.Protection, "Protection", "Security and updates", "Protection", protection),
+            new(PageKeys.Storage, "Storage", "Cleanup and disks", "Storage", storage),
+            new(PageKeys.Apps, "Apps", "Processes and startup", "Apps", apps),
+            new(PageKeys.Toolbox, "Toolbox", "Everyday utilities", "Toolbar", toolbox)
         };
 
         // Settings is pinned under the rail separator, so it lives in its own one-item list.
         SettingsItems = new ObservableCollection<NavigationItem>
         {
-            new(PageKeys.Settings, "Settings", "Preferences and about", "Icon.Settings", settingsPage)
+            new(PageKeys.Settings, "Settings", "Preferences and about", "Settings", settingsPage)
         };
 
         navigation.Handler = SelectPage;

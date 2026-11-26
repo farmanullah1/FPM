@@ -1,6 +1,7 @@
 <Window x:Class="PCManager.Views.FloatingToolbarWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:PCManager.Controls"
         Title="FPM Toolbar"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -29,22 +30,30 @@
                 <!-- FPM Logo / Open action -->
                 <Button Style="{StaticResource CaptionButton}" Width="24" Height="24"
                         Command="{Binding OpenFpmCommand}" ToolTip="Open FPM" Margin="0,0,4,0">
-                    <Image Source="{StaticResource Brand.Emblem}"
-                           Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center"
-                           AutomationProperties.Name="FPM emblem" />
+                    <controls:Icon3D Key="Logo" Size="16" VerticalAlignment="Center"
+                                     AutomationProperties.Name="FPM emblem" />
                 </Button>
 
                 <!-- RAM Load Section -->
-                <StackPanel Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="{Binding FreeText}">
-                    <TextBlock Text="{Binding LoadText}" FontSize="13" FontWeight="SemiBold"
-                               Foreground="{DynamicResource App.AccentBar}" />
-                    <TextBlock Text="RAM" Style="{StaticResource CaptionText}" FontSize="9" />
+                <StackPanel Orientation="Horizontal" Margin="6,0,0,0" VerticalAlignment="Center"
+                            ToolTip="{Binding FreeText}">
+                    <controls:Icon3D Key="Memory" Size="18" Margin="{StaticResource Thickness.1}" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding LoadText}" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource App.AccentBar}" />
+                        <TextBlock Text="RAM" Style="{StaticResource CaptionText}" FontSize="9" />
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Inline Boost Button -->
-                <Button Content="Boost" Style="{StaticResource PillButton}" Margin="8,0,0,0" Height="24"
+                <Button Style="{StaticResource PillButton}" Margin="8,0,0,0" Height="24"
                         Padding="8,0" FontSize="11"
-                        Command="{Binding BoostCommand}" ToolTip="Release temporary files" />
+                        Command="{Binding BoostCommand}" ToolTip="Release temporary files">
+                    <StackPanel Orientation="Horizontal">
+                        <controls:Icon3D Key="Boost" Size="12" Margin="{StaticResource Thickness.1}" />
+                        <TextBlock Text="Boost" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
 
                 <!-- Divider -->
                 <Border Width="1" Height="22" Background="{DynamicResource App.Border}" Margin="10,0" />
@@ -61,12 +70,16 @@
                 <Border Width="1" Height="22" Background="{DynamicResource App.Border}" Margin="10,0" />
 
                 <!-- Drawer Expand/Collapse Button -->
-                <Button Content="⋮" Style="{StaticResource CaptionButton}" Width="24" Height="24"
-                        Command="{Binding ToggleDrawerCommand}" ToolTip="Quick tools" />
+                <Button Style="{StaticResource CaptionButton}" Width="24" Height="24"
+                        Command="{Binding ToggleDrawerCommand}" ToolTip="Quick tools">
+                    <controls:Icon3D Key="More" Size="14" Tint="Neutral" />
+                </Button>
 
                 <!-- Hide Toolbar Button -->
-                <Button Content="✕" Style="{StaticResource CaptionButton}" Width="24" Height="24" Margin="2,0,0,0"
-                        Click="Close_Click" ToolTip="Hide toolbar" />
+                <Button Style="{StaticResource CaptionButton}" Width="24" Height="24" Margin="2,0,0,0"
+                        Click="Close_Click" ToolTip="Hide toolbar">
+                    <controls:Icon3D Key="Close" Size="12" Tint="Neutral" />
+                </Button>
             </StackPanel>
 
             <!-- Collapsible Quick Tools Drawer -->
@@ -74,16 +87,41 @@
                     Margin="0,8,0,0" Padding="0,6,0,0"
                     BorderBrush="{DynamicResource App.Border}" BorderThickness="0,1,0,0">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button Content="Shot" Style="{StaticResource PillButton}" Margin="0,0,6,0" Height="24"
-                            Padding="8,0" FontSize="11" Command="{Binding ScreenshotCommand}" ToolTip="Take full screenshot" />
-                    <Button Content="Note" Style="{StaticResource PillButton}" Margin="0,0,6,0" Height="24"
-                            Padding="8,0" FontSize="11" Command="{Binding NotepadCommand}" ToolTip="Open Notepad" />
-                    <Button Content="Calc" Style="{StaticResource PillButton}" Margin="0,0,6,0" Height="24"
-                            Padding="8,0" FontSize="11" Command="{Binding CalculatorCommand}" ToolTip="Open Calculator" />
-                    <Button Content="Task" Style="{StaticResource PillButton}" Margin="0,0,6,0" Height="24"
-                            Padding="8,0" FontSize="11" Command="{Binding TaskManagerCommand}" ToolTip="Open Task Manager" />
-                    <Button Content="Open" Style="{StaticResource PillButton}" Height="24"
-                            Padding="8,0" FontSize="11" Command="{Binding OpenFpmCommand}" ToolTip="Open FPM Window" />
+                    <Button Style="{StaticResource PillButton}" Margin="0,0,6,0" Height="24"
+                            Padding="8,0" FontSize="11" Command="{Binding ScreenshotCommand}" ToolTip="Take full screenshot">
+                        <StackPanel Orientation="Horizontal">
+                            <controls:Icon3D Key="Screenshot" Size="12" Margin="{StaticResource Thickness.1}" />
+                            <TextBlock Text="Shot" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PillButton}" Margin="0,0,6,0" Height="24"
+                            Padding="8,0" FontSize="11" Command="{Binding NotepadCommand}" ToolTip="Open Notepad">
+                        <StackPanel Orientation="Horizontal">
+                            <controls:Icon3D Key="Notepad" Size="12" Margin="{StaticResource Thickness.1}" />
+                            <TextBlock Text="Note" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PillButton}" Margin="0,0,6,0" Height="24"
+                            Padding="8,0" FontSize="11" Command="{Binding CalculatorCommand}" ToolTip="Open Calculator">
+                        <StackPanel Orientation="Horizontal">
+                            <controls:Icon3D Key="Calculator" Size="12" Margin="{StaticResource Thickness.1}" />
+                            <TextBlock Text="Calc" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PillButton}" Margin="0,0,6,0" Height="24"
+                            Padding="8,0" FontSize="11" Command="{Binding TaskManagerCommand}" ToolTip="Open Task Manager">
+                        <StackPanel Orientation="Horizontal">
+                            <controls:Icon3D Key="ProcessList" Size="12" Margin="{StaticResource Thickness.1}" />
+                            <TextBlock Text="Task" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PillButton}" Height="24"
+                            Padding="8,0" FontSize="11" Command="{Binding OpenFpmCommand}" ToolTip="Open FPM Window">
+                        <StackPanel Orientation="Horizontal">
+                            <controls:Icon3D Key="Logo" Size="12" Margin="{StaticResource Thickness.1}" />
+                            <TextBlock Text="Open" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Border>
         </StackPanel>

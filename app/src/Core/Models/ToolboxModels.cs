@@ -6,7 +6,7 @@ public sealed class ToolboxTool
     public string Id { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public string IconKey { get; set; } = string.Empty;
+    public string Icon3DKey { get; set; } = string.Empty;
 }
 
 /// <summary>The browser Windows currently uses for http/https links.</summary>

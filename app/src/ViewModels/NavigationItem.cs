@@ -19,11 +19,14 @@ public interface INavigationService
 }
 
 /// <summary>One entry of the left navigation rail.</summary>
-public sealed class NavigationItem(string key, string title, string subtitle, string iconKey, ViewModelBase page)
+public sealed class NavigationItem(string key, string title, string subtitle, string icon3DKey, ViewModelBase page)
 {
     public string Key { get; } = key;
     public string Title { get; } = title;
     public string Subtitle { get; } = subtitle;
-    public string IconKey { get; } = iconKey;
+
+    /// <summary>Icon3D inventory name, e.g. "Home" or "ProcessList".</summary>
+    public string Icon3DKey { get; } = icon3DKey;
+
     public ViewModelBase Page { get; } = page;
 }

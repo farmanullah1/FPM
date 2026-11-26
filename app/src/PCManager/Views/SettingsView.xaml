@@ -1,16 +1,20 @@
 <UserControl x:Class="PCManager.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PCManager.Controls">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12,10,12,14">
         <Grid MaxWidth="{StaticResource App.ContentMaxWidth}" HorizontalAlignment="Stretch">
         <StackPanel>
 
             <Grid Margin="0,0,0,16">
-                <StackPanel>
-                    <TextBlock Text="Settings" Style="{StaticResource PageTitle}" />
-                    <TextBlock Style="{StaticResource CaptionText}"
-                               Text="Preferences, automation and where this app keeps its files." />
+                <StackPanel Orientation="Horizontal">
+                    <controls:Icon3D Key="Settings" Size="44" Margin="{StaticResource Thickness.3}" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Settings" Style="{StaticResource PageTitle}" />
+                        <TextBlock Style="{StaticResource CaptionText}"
+                                   Text="Preferences, automation and where this app keeps its files." />
+                    </StackPanel>
                 </StackPanel>
             </Grid>
 
@@ -18,7 +22,10 @@
             <Border Style="{StaticResource Card}" Padding="20">
                 <Grid>
                     <StackPanel>
-                        <TextBlock Text="Start with Windows" FontSize="17" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal">
+                            <controls:Icon3D Key="Startup" Size="24" Margin="{StaticResource Thickness.1}" />
+                            <TextBlock Text="Start with Windows" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
                         <TextBlock Style="{StaticResource CaptionText}"
                                    Text="Registers this app under its own Run value so it never touches Microsoft PC Manager's entry." />
                         <TextBlock Text="{Binding RunValueText}" Style="{StaticResource CaptionText}"
@@ -35,7 +42,10 @@
                 <StackPanel>
                     <Grid>
                         <StackPanel>
-                            <TextBlock Text="Smart Boost" FontSize="17" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal">
+                                <controls:Icon3D Key="SmartBoost" Size="24" Margin="{StaticResource Thickness.1}" />
+                                <TextBlock Text="Smart Boost" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            </StackPanel>
                             <TextBlock Text="{Binding SmartBoostThresholdText}" Style="{StaticResource CaptionText}" />
                         </StackPanel>
                         <CheckBox Style="{StaticResource ToggleSwitch}" Content="Enabled"
@@ -57,7 +67,10 @@
                 <StackPanel>
                     <Grid>
                         <StackPanel>
-                            <TextBlock Text="Protected paths" FontSize="17" FontWeight="SemiBold" />
+                            <StackPanel Orientation="Horizontal">
+                                <controls:Icon3D Key="Whitelist" Size="24" Margin="{StaticResource Thickness.1}" />
+                                <TextBlock Text="Protected paths" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            </StackPanel>
                             <TextBlock Text="{Binding WhitelistCountText}" Style="{StaticResource CaptionText}" />
                         </StackPanel>
                         <Button Content="Reload" Style="{StaticResource PillButton}"
@@ -101,7 +114,10 @@
             <!-- Quarantine -->
             <Border Style="{StaticResource Card}" Padding="20">
                 <StackPanel>
-                    <TextBlock Text="Quarantine" FontSize="17" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal">
+                        <controls:Icon3D Key="Quarantine" Size="24" Margin="{StaticResource Thickness.1}" />
+                        <TextBlock Text="Quarantine" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
                     <TextBlock Text="{Binding QuarantinePolicyText}" Style="{StaticResource CaptionText}"
                                TextWrapping="Wrap" Margin="0,2,0,0" />
 
@@ -147,8 +163,11 @@
 
             <!-- About -->
             <Border Style="{StaticResource Card}" Padding="20">
-                <StackPanel>
-                    <TextBlock Text="About" FontSize="17" FontWeight="SemiBold" />
+                                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <controls:Icon3D Key="Logo" Size="24" Margin="{StaticResource Thickness.1}" />
+                            <TextBlock Text="About" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
                     <TextBlock Text="{Binding ProductName}" FontSize="22" FontWeight="SemiBold"
                                Foreground="{DynamicResource App.AccentBar}" Margin="0,8,0,0" />
                     <TextBlock Text="{Binding VersionText}" Style="{StaticResource CaptionText}" />

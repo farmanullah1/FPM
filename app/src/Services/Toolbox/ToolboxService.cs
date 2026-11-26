@@ -37,13 +37,13 @@ public sealed class ToolboxService : IToolboxService
 
     public IReadOnlyList<ToolboxTool> GetTools() => new List<ToolboxTool>
     {
-        new() { Id = "screenshot", Title = "Screenshot", Description = "Capture every screen and save a PNG.", IconKey = "Icon.Screenshot" },
-        new() { Id = "screen-recorder", Title = "Screen recorder", Description = "Record the screen with Windows Game Bar.", IconKey = "Icon.Record" },
-        new() { Id = "calculator", Title = "Calculator", Description = "Open the Windows calculator.", IconKey = "Icon.Calculator" },
-        new() { Id = "notepad", Title = "Notepad", Description = "Open a blank text document.", IconKey = "Icon.Notepad" },
-        new() { Id = "taskmgr", Title = "Task Manager", Description = "Open Windows Task Manager.", IconKey = "Icon.Performance" },
-        new() { Id = "dns-flush", Title = "DNS / network flush", Description = "Clear the DNS cache and renew the resolver state.", IconKey = "Icon.Network" },
-        new() { Id = "quick-links", Title = "Quick web links", Description = "Open Bing, GitHub and Microsoft Learn.", IconKey = "Icon.Links" }
+        new() { Id = "screenshot", Title = "Screenshot", Description = "Capture every screen and save a PNG.", Icon3DKey = "Screenshot" },
+        new() { Id = "screen-recorder", Title = "Screen recorder", Description = "Record the screen with Windows Game Bar.", Icon3DKey = "Screenshot" },
+        new() { Id = "calculator", Title = "Calculator", Description = "Open the Windows calculator.", Icon3DKey = "Calculator" },
+        new() { Id = "notepad", Title = "Notepad", Description = "Open a blank text document.", Icon3DKey = "Notepad" },
+        new() { Id = "taskmgr", Title = "Task Manager", Description = "Open Windows Task Manager.", Icon3DKey = "ProcessList" },
+        new() { Id = "dns-flush", Title = "DNS / network flush", Description = "Clear the DNS cache and renew the resolver state.", Icon3DKey = "Network" },
+        new() { Id = "quick-links", Title = "Quick web links", Description = "Open Bing, GitHub and Microsoft Learn.", Icon3DKey = "QuickLinks" }
     };
 
     public async Task<OperationResult> LaunchAsync(string toolId, CancellationToken cancellationToken = default)
