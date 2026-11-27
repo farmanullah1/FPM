@@ -110,6 +110,9 @@ public sealed class AppSettings
     /// <summary>App-level reduce motion: keep fades, drop slides, scales, springs and pulses.</summary>
     public bool ReduceMotion { get; set; }
 
+    /// <summary>T2: temperature display unit; the stored value is always Celsius.</summary>
+    public TemperatureUnit TemperatureUnit { get; set; }
+
     /// <summary>Low Resource Mode, reserved for the battery-friendly profile; downgrades motion.</summary>
     public bool LowResourceModeEnabled { get; set; }
 

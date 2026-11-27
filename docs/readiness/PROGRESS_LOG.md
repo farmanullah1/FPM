@@ -178,7 +178,30 @@ marked done. W5 itself is done: same rule, same state machine, works in toolbar-
 no-battery desktop path, live discharge “time remaining”, charging “time to full”, and the
 `NeedsPermission`/`Error` visuals were only covered by fixtures, not by a real capture.
 
-Next card: **T2** (CPU/GPU/laptop temperatures).
+## 2026-11-27 — T2 landed (temperatures, unprivileged path); elevated hardware sensors open
+
+| Step | Evidence | Result |
+|---|---|---|
+| Typed reading | `Core/Models/TemperatureModels.cs`: name, °C, source, `Status`, `Reason`, `SampledAt`; never a bare number | model in place |
+| Central rules | `Core/Formatting/TemperatureText.cs`: thresholds 70/85 °C, °C/°F conversion, unit symbols, zone labels and reasons; `SensorCadence` reused | tests |
+| Shared sampler | `SensorService` now samples battery **and** temperature on the one existing timer; `ISensorService.Temperatures` + `TemperatureChanged`; the same `SetDemand` owner set drives it | sample A `16:36:50` → B `16:36:55` |
+| Probes | `WindowsTemperatureProbe`: NVIDIA `nvml.dll` when present, then ACPI `root\WMI MSAcpi_ThermalZoneTemperature` (tenths of Kelvin converted, implausible zones skipped); `ManagementException.AccessDenied` → `NeedsPermission` with a reason | log: `Temperature: NeedsPermission: Windows blocks thermal zone access…` |
+| Labels | ACPI zone is `System thermal zone` with source in the tooltip; nothing calls it a CPU temperature | Home/toolbar screenshots |
+| Shared visual | `ViewModels/TemperatureStatusViewModel` + `Controls/TemperatureTile` (compact toolbar variant keeps the zone label); Home, toolbar and Settings bind to the same object | screenshots |
+| Runtime: Home | `Unavailable · System thermal zone · Windows blocks thermal zone access; hardware sensors need administrator rights` | screenshot |
+| Runtime: toolbar / hidden main / toolbar-only | same state in the toolbar, after closing the main window to tray, and in `--toolbar-only` | screenshots |
+| Runtime: Settings | Temperature card with Unavailable + reason, `Show Fahrenheit (°F)` toggle and `Sampled 16:36:50` refreshing on the shared cadence | screenshot |
+| Gates | build 0/0, **218 tests**, lint 367 (unchanged), contrast OK | pass |
+
+**Not exercised / not built:** this machine denies the ACPI thermal zone to standard users and has no
+NVIDIA NVML, so a real temperature value was never rendered; present-value, thresholds and °F are
+fixture-tested only (R-24). The card's priority-1 **LibreHardwareMonitorLib inside the elevated
+helper**, a typed helper `ReadSensors` command, the ADLX source, the performance-counter fallback and
+the “Enable hardware sensors” button are **not implemented**: LHM ships a kernel-mode driver and
+needs an administrator opt-in and a Defender check that only the owner can approve, so T2 is
+**partial** — see DECISIONS D-043 and the owner question at the end of the log.
+
+Next: **T3** only after the LHM/helper decision.
 
 ## Earlier entry
 

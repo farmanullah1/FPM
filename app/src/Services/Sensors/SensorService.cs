@@ -5,27 +5,36 @@ using PCManager.Services.Abstractions;
 namespace PCManager.Services.Sensors;
 
 /// <summary>
-/// One timer for every battery surface (T1). The service owns the sample and the derived labels'
-/// inputs; the probe is the only Windows-specific part, so the decision logic is unit-tested.
+/// One timer for every sensor surface (T1 battery, T2 temperatures). The service owns the samples
+/// and the inputs to every label; probes are the only Windows-specific parts, so the decisions are
+/// unit-tested. 5 s while a surface is visible, 30 s otherwise.
 /// </summary>
-public sealed class BatterySensorService : ISensorService
+public sealed class SensorService : ISensorService
 {
-    private readonly IBatteryProbe _probe;
+    private readonly IBatteryProbe _batteryProbe;
+    private readonly ITemperatureProbe _temperatureProbe;
     private readonly IAppLogger _logger;
     private readonly object _sync = new();
 
     private BatteryReading? _battery;
+    private IReadOnlyList<TemperatureReading> _temperatures = Array.Empty<TemperatureReading>();
     private Timer? _timer;
     private bool _sampled;
     private bool _disposed;
 
-    public BatterySensorService(IBatteryProbe probe, IAppLogger logger)
+    public SensorService(
+        IBatteryProbe batteryProbe,
+        ITemperatureProbe temperatureProbe,
+        IAppLogger logger)
     {
-        _probe = probe;
+        _batteryProbe = batteryProbe;
+        _temperatureProbe = temperatureProbe;
         _logger = logger;
     }
 
     public event EventHandler<BatteryReading>? BatteryChanged;
+
+    public event EventHandler<IReadOnlyList<TemperatureReading>>? TemperatureChanged;
 
     public BatteryReading Battery
     {
@@ -35,27 +44,42 @@ public sealed class BatterySensorService : ISensorService
             {
                 if (_battery is null)
                 {
-                    _battery = Sample();
-                    _sampled = true;
+                    SampleAll();
                 }
 
-                return _battery;
+                return _battery!;
+            }
+        }
+    }
+
+    public IReadOnlyList<TemperatureReading> Temperatures
+    {
+        get
+        {
+            lock (_sync)
+            {
+                if (!_sampled)
+                {
+                    SampleAll();
+                }
+
+                return _temperatures;
             }
         }
     }
 
     public void Refresh()
     {
-        BatteryReading reading;
+        BatteryReading battery;
+        IReadOnlyList<TemperatureReading> temperatures;
 
         lock (_sync)
         {
-            reading = Sample();
-            _battery = reading;
-            _sampled = true;
+            (battery, temperatures) = SampleAll();
         }
 
-        BatteryChanged?.Invoke(this, reading);
+        BatteryChanged?.Invoke(this, battery);
+        TemperatureChanged?.Invoke(this, temperatures);
     }
 
     public void SetDemand(bool visible)
@@ -73,21 +97,28 @@ public sealed class BatterySensorService : ISensorService
             // A demand change samples immediately so a newly shown surface never displays a stale
             // reading, then keeps the shared cadence.
             _timer.Change(TimeSpan.Zero, interval);
-
-            if (_sampled)
-            {
-                return;
-            }
         }
     }
 
-    private BatteryReading Sample()
+    private (BatteryReading Battery, IReadOnlyList<TemperatureReading> Temperatures) SampleAll()
+    {
+        BatteryReading battery = SampleBattery();
+        IReadOnlyList<TemperatureReading> temperatures = SampleTemperatures();
+
+        _battery = battery;
+        _temperatures = temperatures;
+        _sampled = true;
+
+        return (battery, temperatures);
+    }
+
+    private BatteryReading SampleBattery()
     {
         try
         {
-            BatteryReading reading = Build(_probe.Read(), DateTime.Now);
+            BatteryReading reading = Build(_batteryProbe.Read(), DateTime.Now);
 
-            if (!_sampled || _battery is null || Changed(_battery, reading))
+            if (_battery is null || Changed(_battery, reading))
             {
                 _logger.Info(
                     $"Battery: {BatteryText.Percent(reading.Percent)}, {BatteryText.Detail(reading)}, " +
@@ -109,6 +140,83 @@ public sealed class BatterySensorService : ISensorService
                 SampledAt = DateTime.Now,
             };
         }
+    }
+
+    private IReadOnlyList<TemperatureReading> SampleTemperatures()
+    {
+        DateTime now = DateTime.Now;
+
+        try
+        {
+            TemperatureProbeResult raw = _temperatureProbe.Read();
+            IReadOnlyList<TemperatureReading> readings = raw.Status == SensorStatus.Ok
+                ? raw.Readings
+                    .Select(reading => new TemperatureReading
+                    {
+                        Status = SensorStatus.Ok,
+                        Name = reading.Name,
+                        Celsius = reading.Celsius,
+                        Source = reading.Source,
+                        SampledAt = now,
+                    })
+                    .ToList()
+                : new[]
+                {
+                    new TemperatureReading
+                    {
+                        Status = raw.Status,
+                        Reason = raw.Reason,
+                        Name = TemperatureText.SystemZoneName,
+                        Source = TemperatureText.SystemZoneSource,
+                        SampledAt = now,
+                    },
+                };
+
+            string summary = readings.Count > 0 && readings[0].Celsius is { } celsius
+                ? $"{readings[0].Name}: {celsius:0.0} °C ({readings[0].Source})"
+                : $"{raw.Status}: {raw.Reason}";
+
+            if (_temperatures.Count == 0 || Changed(_temperatures, readings))
+            {
+                _logger.Info($"Temperature: {summary}.");
+            }
+
+            return readings;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Temperature sample failed.", ex);
+            return new[]
+            {
+                new TemperatureReading
+                {
+                    Status = SensorStatus.Error,
+                    Reason = "Temperature sample failed",
+                    Name = TemperatureText.SystemZoneName,
+                    SampledAt = now,
+                },
+            };
+        }
+    }
+
+    private static bool Changed(IReadOnlyList<TemperatureReading> previous, IReadOnlyList<TemperatureReading> next)
+    {
+        if (previous.Count != next.Count)
+        {
+            return true;
+        }
+
+        for (int i = 0; i < previous.Count; i++)
+        {
+            if (previous[i].Status != next[i].Status ||
+                previous[i].Celsius != next[i].Celsius ||
+                previous[i].Reason != next[i].Reason)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool Changed(BatteryReading previous, BatteryReading next) =>

@@ -49,6 +49,10 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-41 | CI: build, tests, lint, contrast, icons (R4) | R4 | `.github/workflows/ci.yml` | actionlint exit 0; every `run:` executed locally green (`PROGRESS_LOG.md`) |
 | TR-42 | Secret scan over working tree **and history** (R1, R4) | R4 | `tools/secret-scan.ps1`, CI `secret-scan` job | gitleaks 8.30.1: 77 commits, no leaks; checksum-verified install branch tested |
 | TR-43 | Reproducible SDK for local and CI builds | R4 | `global.json` | `dotnet --version` = 8.0.428; Release build `-warnaserror` + 166 tests green |
+| TR-64 | Typed temperature readings with zone/source labels (T2) | T2 | `Core/Models/TemperatureModels.cs`, `Services/Sensors/WindowsTemperatureProbe.cs` | 8 temperature tests; ACPI Kelvin fixture |
+| TR-65 | ACPI zone never called CPU; unavailable/needs-permission with reason (T2) | T2 | `TemperatureText`, `TemperatureTile`, `TemperatureStatusViewModel` | live `NeedsPermission` on Home, toolbar, toolbar-only, Settings |
+| TR-66 | Same sampled temperature in Home and toolbar, refreshing on the shared cadence (T2) | T2 | `SensorService`, `SensorCadence` | Samples 16:36:50 → 16:36:55 |
+| TR-67 | °C/°F setting and 70/85 thresholds (T2) | T2 | `AppSettings.TemperatureUnit`, `TemperatureText` | fixture tests; toggle not captured |
 | TR-60 | Typed battery readings, never fabricated (T1) | T1 | `Core/Models/SensorModels.cs`, `Core/Formatting/BatteryText.cs` | 8 service tests incl. no-battery and unknown-state paths |
 | TR-61 | Shared 5 s / 30 s sampler, paused demand (T1) | T1 | `Services/Sensors/BatterySensorService.cs`, `ISensorService` | Settings sample time advanced 16:25:09 → 16:25:19; log 5 s steps |
 | TR-62 | Battery on Home, toolbar (docked, hidden main, toolbar-only) and Settings (T1) | T1 | `BatteryStatusViewModel`, `Controls/BatteryTile.xaml`, `HomeView.xaml`, `FloatingToolbarWindow.xaml`, `SettingsView.xaml` | screenshots at 100 % / AC in all four surfaces |

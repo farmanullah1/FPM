@@ -75,7 +75,8 @@ public static class ServiceCollectionExtensions
 
         // T1: one battery sampler for Home, the toolbar and Settings.
         services.AddSingleton<PCManager.Services.Sensors.IBatteryProbe, PCManager.Services.Sensors.WindowsBatteryProbe>();
-        services.AddSingleton<ISensorService, PCManager.Services.Sensors.BatterySensorService>();
+        services.AddSingleton<PCManager.Services.Sensors.ITemperatureProbe, PCManager.Services.Sensors.WindowsTemperatureProbe>();
+        services.AddSingleton<ISensorService, PCManager.Services.Sensors.SensorService>();
         services.AddSingleton<IStorageIntelligenceService, PCManager.Services.Storage.StorageIntelligenceService>();
         services.AddSingleton<IAppLeftoverScanner, PCManager.Services.Apps.AppLeftoverScanner>();
         services.AddSingleton<INetworkDiagnosticsService, PCManager.Services.Network.NetworkDiagnosticsService>();

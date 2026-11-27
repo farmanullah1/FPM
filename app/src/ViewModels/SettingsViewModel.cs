@@ -33,6 +33,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         IWhitelistService whitelist,
         IAppLogger logger,
         BatteryStatusViewModel battery,
+        TemperatureStatusViewModel temperature,
         IMaintenanceReadinessService? readinessService = null)
     {
         _appStartup = appStartup;
@@ -42,6 +43,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         _whitelist = whitelist;
         _logger = logger;
         Battery = battery;
+        Temperature = temperature;
         _readinessService = readinessService;
 
         OpenDataFolderCommand = new RelayCommand(() => OpenFolder(AppInfo.DataFolder));
@@ -71,6 +73,27 @@ public sealed partial class SettingsViewModel : ViewModelBase
 
     /// <summary>T1: the same shared battery reading, including its honest unavailable state.</summary>
     public BatteryStatusViewModel Battery { get; }
+
+    /// <summary>T2: shared temperature reading and the °C/°F choice.</summary>
+    public TemperatureStatusViewModel Temperature { get; }
+
+    public bool IsFahrenheit
+    {
+        get => _settings.Current.TemperatureUnit == TemperatureUnit.Fahrenheit;
+        set
+        {
+            TemperatureUnit unit = value ? TemperatureUnit.Fahrenheit : TemperatureUnit.Celsius;
+            if (_settings.Current.TemperatureUnit == unit)
+            {
+                return;
+            }
+
+            _settings.Current.TemperatureUnit = unit;
+            _settings.Save();
+            Temperature.RefreshUnits();
+            OnPropertyChanged();
+        }
+    }
 
     public ObservableCollection<string> WhitelistEntries { get; } = new();
     public ObservableCollection<ReadinessCheckItem> ReadinessChecks { get; } = new();

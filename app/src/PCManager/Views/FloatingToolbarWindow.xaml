@@ -72,6 +72,8 @@
                     <!-- T1: the shared battery tile; hides itself when Windows reports no battery. -->
                     <controls:BatteryTile IsCompact="True" DataContext="{Binding Battery}"
                                          Margin="{StaticResource Thickness.2}" />
+                    <controls:TemperatureTile IsCompact="True" DataContext="{Binding Temperature}"
+                                              Margin="{StaticResource Thickness.2}" />
 
                     <Button Style="{StaticResource PillButton}" Margin="8,0,0,0" Height="24"
                             FontSize="11"

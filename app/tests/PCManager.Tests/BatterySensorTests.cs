@@ -138,7 +138,7 @@ public sealed class BatterySensorTests
             AcOnline = true,
             Percent = 80,
         });
-        using var service = new BatterySensorService(probe, new TestLogger());
+        using var service = new SensorService(probe, new NoTemperatureProbe(), new TestLogger());
         BatteryReading? seen = null;
         service.BatteryChanged += (_, reading) => seen = reading;
 
@@ -149,8 +149,17 @@ public sealed class BatterySensorTests
         Assert.Equal(1, probe.Reads);
     }
 
-    private static BatterySensorService Service(BatteryProbeResult result) =>
-        new(new FakeProbe(result), new TestLogger());
+    private static SensorService Service(BatteryProbeResult result) =>
+        new(new FakeProbe(result), new NoTemperatureProbe(), new TestLogger());
+
+    private sealed class NoTemperatureProbe : ITemperatureProbe
+    {
+        public TemperatureProbeResult Read() => new()
+        {
+            Status = SensorStatus.Unavailable,
+            Reason = TemperatureText.NoZoneReason,
+        };
+    }
 
     private sealed class FakeProbe(BatteryProbeResult result) : IBatteryProbe
     {

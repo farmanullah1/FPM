@@ -10,7 +10,12 @@ public interface ISensorService : IDisposable
 {
     BatteryReading Battery { get; }
 
+    /// <summary>T2: zero or more temperature readings; an unavailable state is one reading with the reason.</summary>
+    IReadOnlyList<TemperatureReading> Temperatures { get; }
+
     event EventHandler<BatteryReading>? BatteryChanged;
+
+    event EventHandler<IReadOnlyList<TemperatureReading>>? TemperatureChanged;
 
     /// <summary>True while at least one surface displays the battery (5 s cadence).</summary>
     void SetDemand(bool visible);

@@ -6,6 +6,13 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Temperature sensor (T2, unprivileged)**: the shared sampler now also reads an NVIDIA GPU
+  temperature through NVML when present and the ACPI thermal zone otherwise, labelled “System
+  thermal zone” and never “CPU”. Thresholds (70/85 °C), °C/°F display and every unavailable reason
+  live in one formatting class; Home, the toolbar and Settings show the same reading, including an
+  honest “NeedsPermission” state when Windows blocks the zone.
+
+### Added
 - **Battery sensor (T1)**: one shared sampler feeds Home, the floating toolbar and Settings —
   battery percent, AC/charging state, time remaining (OS value, or a rate-based “(estimated)” value),
   and design-vs-full battery health, with 5 s sampling while visible and 30 s otherwise. Machines

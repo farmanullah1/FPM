@@ -192,6 +192,22 @@
                 </StackPanel>
             </Border>
 
+            <!-- Temperature (T2): system thermal zone, with the honest unavailable reason. -->
+            <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.5}">
+                <StackPanel>
+                    <TextBlock Text="Temperature" FontSize="17" FontWeight="SemiBold" />
+                    <controls:TemperatureTile DataContext="{Binding Temperature}"
+                                              Margin="{StaticResource Thickness.3}" />
+                    <CheckBox Style="{StaticResource ToggleSwitch}" Content="Show Fahrenheit (°F)"
+                              Margin="{StaticResource Thickness.2}"
+                              IsChecked="{Binding IsFahrenheit, Mode=TwoWay}" />
+                    <TextBlock Text="{Binding Temperature.SampledText}" Style="{StaticResource CaptionText}"
+                               Margin="{StaticResource Thickness.1}" />
+                    <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                               Text="ACPI thermal zones need administrator rights on many machines. FPM never labels a zone reading as a CPU temperature." />
+                </StackPanel>
+            </Border>
+
             <!-- Virtual desktops (W2) -->
             <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.5}">
                 <StackPanel>
