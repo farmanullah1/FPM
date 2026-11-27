@@ -6,6 +6,12 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Licence and community files (R2)**: FPM now ships the full GPL-3.0 text in `LICENSE`,
+  `THIRD_PARTY_NOTICES.md` (Win11Debloat MIT notice verbatim, the Universal Android Debloater
+  GPL reference, the Android platform-tools consent note, and every resolved NuGet dependency with
+  its licence), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue templates, a pull
+  request checklist, Dependabot for NuGet and Actions, and CODEOWNERS. The README's licence section
+  now states GPL-3.0-or-later, the use-at-your-own-risk warning and the non-affiliation disclaimer.
 - **Page transitions and cached pages (U6)**: the shell now creates one visual per page on first
   use and reuses it, so revisits keep their list/scroll position (verified: Memory's relief list
   stays at 60 % after leaving and returning) and no longer rebuild the whole page. Page changes
