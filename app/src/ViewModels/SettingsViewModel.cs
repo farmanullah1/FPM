@@ -34,6 +34,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         IAppLogger logger,
         BatteryStatusViewModel battery,
         TemperatureStatusViewModel temperature,
+        DebloatEngineViewModel debloat,
         IMaintenanceReadinessService? readinessService = null)
     {
         _appStartup = appStartup;
@@ -44,6 +45,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         _logger = logger;
         Battery = battery;
         Temperature = temperature;
+        Debloat = debloat;
         _readinessService = readinessService;
 
         OpenDataFolderCommand = new RelayCommand(() => OpenFolder(AppInfo.DataFolder));
@@ -76,6 +78,9 @@ public sealed partial class SettingsViewModel : ViewModelBase
 
     /// <summary>T2: shared temperature reading and the °C/°F choice.</summary>
     public TemperatureStatusViewModel Temperature { get; }
+
+    /// <summary>D2 engine surface (preview; D3 replaces it with the full Debloat page).</summary>
+    public DebloatEngineViewModel Debloat { get; }
 
     public bool IsFahrenheit
     {

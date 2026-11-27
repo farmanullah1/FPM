@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCManager.Core.Debloat;
 using PCManager.Services.Debloat;
-using PCManager.Services.Abstractions;
 
 namespace PCManager.ViewModels;
 

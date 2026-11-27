@@ -208,6 +208,33 @@
                 </StackPanel>
             </Border>
 
+            <!-- Windows debloat engine (D2 preview; D3 owns the full page). -->
+            <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.5}">
+                <StackPanel DataContext="{Binding Debloat}">
+                    <TextBlock Text="Windows debloat (engine preview)" FontSize="17" FontWeight="SemiBold" />
+                    <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                               Text="Typed catalog tweaks, applied only through the elevated helper, with a .reg backup, journal and undo. Nothing is applied without administrator approval." />
+                    <ComboBox ItemsSource="{Binding Tweaks}" SelectedItem="{Binding SelectedTweak, Mode=TwoWay}"
+                              DisplayMemberPath="Title" Margin="{StaticResource Thickness.3}"
+                              AutomationProperties.Name="Debloat tweak" />
+                    <TextBlock Text="{Binding PlanText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding DetectedText}" Style="{StaticResource CaptionText}"
+                               Margin="{StaticResource Thickness.1}" />
+                    <StackPanel Orientation="Horizontal" Margin="{StaticResource Thickness.2}">
+                        <Button Content="Detect" Style="{StaticResource PillButton}"
+                                Command="{Binding DetectCommand}" Margin="{StaticResource Thickness.1}"
+                                AutomationProperties.Name="Detect tweak" />
+                        <Button Content="Apply" Style="{StaticResource PillButton}"
+                                Command="{Binding ApplyCommand}" Margin="{StaticResource Thickness.1}"
+                                AutomationProperties.Name="Apply tweak" />
+                        <Button Content="Undo last run" Style="{StaticResource PillButton}"
+                                Command="{Binding UndoCommand}"
+                                AutomationProperties.Name="Undo debloat run" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding StatusText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
             <!-- Virtual desktops (W2) -->
             <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.5}">
                 <StackPanel>
