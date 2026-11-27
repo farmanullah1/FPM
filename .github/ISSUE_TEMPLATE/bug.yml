@@ -1,0 +1,69 @@
+name: Bug report
+description: Something in FPM does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Do not paste tokens, keys, personal file paths or file contents.**
+        Security issues must go through SECURITY.md, not a public issue.
+  - type: input
+    id: version
+    attributes:
+      label: FPM version
+      description: About page in Settings, or the installer filename.
+      placeholder: "3.23.3"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and architecture
+      placeholder: "Windows 11 23H2, x64, 125% DPI"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How is FPM installed?
+      options:
+        - Installer
+        - Portable zip
+        - Built from source
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, including the page and theme.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include the exact error text and whether the elevated helper was involved.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log lines (redacted)
+      description: From %LOCALAPPDATA%\FPM\logs. Remove personal paths and any secrets.
+      render: text
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmations
+      options:
+        - label: I have removed personal data and secrets from this report.
+          required: true
+        - label: This is not a security vulnerability (those go through SECURITY.md).
+          required: true

@@ -1,0 +1,9 @@
+# Every change is reviewed by the repository owner.
+* @farmanullah1
+
+# Safety-critical areas require explicit owner review.
+/app/src/Services/ @farmanullah1
+/app/src/Helper/ @farmanullah1
+/app/src/Core/Models/ @farmanullah1
+/installer/ @farmanullah1
+/.github/workflows/ @farmanullah1

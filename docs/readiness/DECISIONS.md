@@ -20,6 +20,14 @@ accepted decision marked **owner**.
 | D-013 | 2026-11-27 | Two project skills are authored (`fpm-wpf-verification`, `fpm-safety-contract`) and kept in `docs/readiness/skills/` because the account library is full. | Skill install is blocked at 50/50; the content is still available to the agent. | provisional — owner to free a slot or accept repo-only |
 | D-014 | 2026-11-27 | Commit after every green card on `main`; no branches or history rewrites without the owner. | Matches START §1.7; keeps the history reviewable. | accepted |
 
+| D-015 | 2026-11-27 | Phase 1 readiness pack approved as written. | Owner confirmed the baseline, scope, decisions, risks, checklist and plan. | accepted (owner) |
+| D-016 | 2026-11-27 | Execution order: **R2 → R4 → W1 → U7–U12**, then windows/toolbar/sensors, debloat and release. | CI and the frame-budget fix guard the later cards. | accepted (owner) |
+| D-017 | 2026-11-27 | The two FPM skills stay repo-only (`docs/readiness/skills/`). | Account library is full; repo copies are read directly by the agent. | accepted (owner) |
+| D-018 | 2026-11-27 | Localization: build the `.resx` foundation at **U10**, then convert strings progressively. | Avoids a single risky sweep; new strings become keys from U10 onward. | accepted (owner) |
+| D-019 | 2026-11-27 | W1 may replace `AllowsTransparency` with DWM rounded corners after visual regression captures. | Needed for the 16 ms frame budget; keeps the chrome appearance checked. | accepted (owner) |
+| D-020 | 2026-11-27 | Commits stay local; push and signing are decided at R4. | No CI or notices were in place before R2. | accepted (owner) |
+| D-021 | 2026-11-27 | Accept `REA_REFERENCE_AUDIT.md` as the parity gate; per-card reports + phase-gate reviews. | Existing audit is sufficient; no re-run requested. | accepted by default (Q-07 unanswered) |
+
 ## Pending owner decisions
 
 | ID | Question | Recommendation |

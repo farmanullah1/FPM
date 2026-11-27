@@ -20,6 +20,20 @@ Only verified work is recorded here. Each entry: date, item, command/evidence, r
 | Wrote readiness artefacts | `docs/readiness/*.md`, `AGENTS.md` | README, baseline, skills, tools, decisions, risks, checklist, traceability, phase-2 plan |
 | Phase 1 gate | This log + owner confirmation | **Pending owner** (Q-02 and Q-07) |
 
+## 2026-11-27 — Phase 1 gate approved, R2 complete
+
+| Step | Evidence | Result |
+|---|---|---|
+| Owner answers recorded | owner replies to Q-01…Q-06; Q-07 defaulted | D-015…D-021 written in `DECISIONS.md` |
+| **Phase 1 gate (G-1)** | approval of the readiness pack | **approved** |
+| R2 licence text | copied the GPL-3.0 text from the read-only UAD reference (`LICENSE`, 674 lines, verified header and tail; gnu.org was unreachable) | `LICENSE` added; “or later” stated in README/notices |
+| R2 notices | `dotnet list package` on 2026-11-27; Win11Debloat `LICENSE` read from the reference | `THIRD_PARTY_NOTICES.md` lists the MIT notice verbatim, UAD GPL reference, platform-tools note and all 10 resolved packages |
+| R2 community files | files written and staged | `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md`, `.github/ISSUE_TEMPLATE/{bug,feature}.yml`, `PULL_REQUEST_TEMPLATE.md`, `dependabot.yml`, `CODEOWNERS` |
+| R2 README disclaimer | patched the outdated “personal and educational” licence section | GPL-3.0-or-later, risk warning, non-affiliation, trademark attribution |
+| R2 gate evidence | `dotnet build …` → 0 warnings/0 errors; `dotnet test` → 166 passed | docs-only card, gates re-run and green |
+
+**Next card: R4** (CI workflow, secret scan tool, SDK pin).
+
 ## Carried state from the last code cards
 
 - U5 splash committed; U6 page caching/transitions committed as `ccdbff4`.

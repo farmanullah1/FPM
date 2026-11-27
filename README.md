@@ -162,5 +162,14 @@ capture predates the Cleanup Center; the new table and approval gate have not be
 
 ## License & attribution
 
-Personal and educational Windows system management. All branding, titles and icons belong to
-Farmanullah PC Manager; no Microsoft visual assets are redistributed.
+FPM is **free software licensed under GPL-3.0-or-later**; the full text is in [`LICENSE`](LICENSE).
+Third-party notices (Win11Debloat's MIT catalogue notice, the Universal Android Debloater GPL
+reference, NuGet dependencies) are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+All FPM branding, text and artwork are original to this project. No Microsoft or Google code,
+icons, text or other assets are redistributed.
+
+**Use at your own risk.** FPM can delete files and change Windows settings; every destructive action
+is reviewed and confirmed first, but you are responsible for backups. FPM is **not affiliated with,
+endorsed by, or supported by Microsoft or Google**. Microsoft PC Manager and Windows are trademarks
+of Microsoft Corporation; Android is a trademark of Google LLC.

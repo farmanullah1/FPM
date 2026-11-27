@@ -57,10 +57,13 @@ Present: `README.md`, `PROJECT_SPEC.md`, `BUILD_STATUS.md`, `CHANGELOG.md`,
 `REA_REFERENCE_AUDIT.md`, `docs/dev/REPO_AUDIT.md`, `installer/FPM.iss`, `.editorconfig`,
 `.gitattributes`, `tools/` (IconGen, lint, contrast), `app/screenshots/*.png` (older set).
 
-**Missing and required by the plan:** `LICENSE`, `THIRD_PARTY_NOTICES.md`,
-`.github/workflows/ci.yml`, `.github/workflows/release.yml`, issue/PR templates, `SECURITY.md`,
-`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `docs/images/` (README screenshots), and an
-`AGENTS.md` entry point for agents (added by this phase).
+Added by R2: `LICENSE` (GPL-3.0), `THIRD_PARTY_NOTICES.md`, `CONTRIBUTING.md`, `SECURITY.md`,
+`CODE_OF_CONDUCT.md`, `.github/` templates, dependabot and CODEOWNERS. Added by Phase 1:
+`AGENTS.md` and `docs/readiness/`.
+
+**Still missing and required by the plan:** `.github/workflows/ci.yml`,
+`.github/workflows/release.yml`, `docs/images/` (README screenshots, R5), and the
+`gitleaks`/`trufflehog` secret-scan tool.
 
 ## 5. Known gaps carried into the plan
 
