@@ -1,3 +1,4 @@
+using PCManager.Core.Debloat;
 using PCManager.Core.Elevation;
 using PCManager.Services.Abstractions;
 using PCManager.Services.Elevation;
@@ -103,6 +104,13 @@ public sealed class ElevatedHelperTests
             LastRuleId = ruleId;
             return Task.FromResult(new ElevationOutcome(true, false, 0, 0, 0, "created"));
         }
+
+        public Task<DebloatHelperOutcome> RunDebloatAsync(
+            HelperCommand command,
+            string tweakId,
+            IReadOnlyList<RegistryValueState>? restore = null,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new DebloatHelperOutcome { Success = true, Message = "ok" });
     }
 
     private sealed class FakeLogger : IAppLogger

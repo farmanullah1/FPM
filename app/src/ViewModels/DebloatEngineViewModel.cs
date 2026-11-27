@@ -29,11 +29,10 @@ public sealed partial class DebloatEngineViewModel : ObservableObject
             Tweaks.Add(tweak);
         }
 
-        SelectedTweak = Tweaks.FirstOrDefault();
-
         DetectCommand = new AsyncRelayCommand(DetectAsync, () => !IsBusy && SelectedTweak is not null);
         ApplyCommand = new AsyncRelayCommand(ApplyAsync, () => !IsBusy && SelectedTweak is not null);
         UndoCommand = new AsyncRelayCommand(UndoAsync, () => !IsBusy);
+        SelectedTweak = Tweaks.FirstOrDefault();
         StatusText = "Choose a tweak and preview it. Apply asks for administrator permission.";
         PreviewPlan();
     }

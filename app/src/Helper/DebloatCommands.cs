@@ -148,18 +148,25 @@ internal static class DebloatCommands
 
         foreach (DebloatAction action in actions)
         {
-            if (action is not (RegistrySetAction or RegistryDeleteAction))
+            string? name = action switch
+            {
+                RegistrySetAction set => set.RegistryName,
+                RegistryDeleteAction delete => delete.RegistryName,
+                _ => null,
+            };
+
+            if (name is null)
             {
                 continue;
             }
 
-            string key = $"{action.Hive}\\{action.Path}\\{action.Name}";
+            string key = $"{action.Hive}\\{action.Path}\\{name}";
             if (!seen.Add(key))
             {
                 continue;
             }
 
-            states.Add(ReadState(action.Hive, action.Path, action.Name));
+            states.Add(ReadState(action.Hive, action.Path, name));
         }
 
         return states;
@@ -250,8 +257,8 @@ internal static class DebloatCommands
                     continue;
                 }
 
-                using RegistryKey key = hive.CreateSubKey(state.Path, writable: true);
-                key.SetValue(state.Name, ToClr(state.Value, state.ValueType), ToKind(state.ValueType));
+                using RegistryKey valueKey = hive.CreateSubKey(state.Path, writable: true);
+                valueKey.SetValue(state.Name, ToClr(state.Value, state.ValueType), ToKind(state.ValueType));
             }
             catch (Exception ex)
             {
@@ -303,7 +310,7 @@ internal static class DebloatCommands
             state.Name == equals.RegistryName &&
             state.Existed &&
             state.ValueType == equals.ValueType &&
-            JsonElement.DeepEquals(state.Value, equals.Value)),
+            SameJson(state.Value, equals.Value)),
         RegistryAbsentProbe absent => values.Any(state =>
             state.Hive == absent.Hive &&
             state.Path == absent.Path &&
@@ -312,6 +319,9 @@ internal static class DebloatCommands
         OptionalFeatureProbe feature => IsFeatureEnabled(feature.FeatureName) == feature.ExpectEnabled,
         _ => false,
     };
+
+    private static bool SameJson(JsonElement? left, JsonElement right) =>
+        left is { } value && value.GetRawText() == right.GetRawText();
 
     private static bool IsFeatureEnabled(string name)
     {
