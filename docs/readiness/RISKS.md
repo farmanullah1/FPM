@@ -19,6 +19,7 @@ mitigation that is actionable inside the plan.
 | R-12 | **Proprietary Microsoft material** in history or assets (installer, REA screenshots). | M | H | R1 audit; history check; owner approval before any history rewrite; never publish those files. | Owner | open |
 | R-13 | **Verification theatre**: claims without fresh output. | M | M | `verification-before-completion` + `fpm-wpf-verification`; evidence in `PROGRESS_LOG.md`; state what was not checked. | Agent | open |
 | R-14 | **Toolchain drift** (SDK 10 building net8.0 projects; future SDK removal). | L | M | `global.json` pins 8.0.428 with `latestFeature`; CI installs 8.0.x; build/tests re-verified under the pin. Re-check when the SDK is removed. | Agent | mitigated (R4) |
+| R-16 | **Local, untracked evidence contains a JWT.** `investigation.cany/evidence/…` (ignored, never committed) triggers the `jwt` rule on a working-tree scan. | M | M | Not in the repo or its history, so nothing is published. Owner should delete the evidence folder or treat that token as compromised/rotate it if it is live; keep `investigation.cany/` ignored. | Owner | open |
 | R-15 | **UI automation brittleness** (DPI virtualization, PrintWindow on layered windows). | M | L | DPI-aware capture; UIA selectors with fallbacks; accept manual verification when automation fails and say so. | Agent | open |
 
 ## Resolved in R4

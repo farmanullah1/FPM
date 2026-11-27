@@ -12,8 +12,9 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
   `tools/secret-scan.ps1` pins gitleaks 8.30.1, verifies the release checksum before installing it
   into `%LOCALAPPDATA%\FPM\tools`, prints findings redacted and preserves the exit code, so CI and
   a local run execute the identical command. `global.json` pins SDK 8.0.428 (`latestFeature`);
-  build, tests, lint, contrast, icon check and a 77-commit gitleaks scan were all re-run locally
-  and pass under the pin.
+  build, tests, lint, contrast, icon check and a full-history gitleaks scan were all re-run locally
+  and pass under the pin (a working-tree scan found only two JWT matches inside the ignored,
+  never-committed `investigation.cany/` evidence folder; see `docs/readiness/RISKS.md` R-16).
 - **Licence and community files (R2)**: FPM now ships the full GPL-3.0 text in `LICENSE`,
   `THIRD_PARTY_NOTICES.md` (Win11Debloat MIT notice verbatim, the Universal Android Debloater
   GPL reference, the Android platform-tools consent note, and every resolved NuGet dependency with
