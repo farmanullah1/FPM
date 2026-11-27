@@ -6,6 +6,14 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Page transitions and cached pages (U6)**: the shell now creates one visual per page on first
+  use and reuses it, so revisits keep their list/scroll position (verified: Memory's relief list
+  stays at 60 % after leaving and returning) and no longer rebuild the whole page. Page changes
+  fade and slide 16 px along the nav direction (incoming 200 ms, outgoing 120 ms), reduced motion
+  keeps only the cross-fade, motion-off swaps instantly. The rail draws one selection pill behind
+  the items and slides it between them (render transform only), the active icon scales to 1.08 and
+  tints gold. Pages are pre-warmed one per idle dispatcher turn after the shell appears, and
+  revisit data refreshes start after the 260 ms transition instead of inside it.
 - **Splash screen (U5)**: a borderless 480×300 splash now appears before the shell and reports the
   real startup stages (loading settings, preparing services, applying the theme, building the
   shell) on a thin gold progress line. Its four brand petals fly in and assemble, light sweeps the
