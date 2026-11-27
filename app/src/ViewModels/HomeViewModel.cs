@@ -1,4 +1,5 @@
 using System.IO;
+using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -6,6 +7,7 @@ using PCManager.Core;
 using PCManager.Core.Formatting;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
+using PCManager.Services.Boost;
 
 namespace PCManager.ViewModels;
 
@@ -36,6 +38,7 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
     };
 
     private readonly IPcBoostService _boost;
+    private readonly BoostCoordinator _boostCoordinator;
     private readonly ITempFileCleaner _tempCleaner;
     private readonly ISettingsService _settings;
     private readonly INavigationService _navigation;
@@ -51,6 +54,7 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
 
     public HomeViewModel(
         IPcBoostService boost,
+        BoostCoordinator boostCoordinator,
         ITempFileCleaner tempCleaner,
         ISettingsService settings,
         INavigationService navigation,
@@ -61,6 +65,7 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         IAppLogger logger)
     {
         _boost = boost;
+        _boostCoordinator = boostCoordinator;
         _tempCleaner = tempCleaner;
         _settings = settings;
         _navigation = navigation;
@@ -85,6 +90,15 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         OpenStorageCommand = new RelayCommand(() => _navigation.Navigate(PageKeys.Storage));
 
         StatusMessage = "Ready.";
+
+        _boostCoordinator.Changed += OnBoostChanged;
+        _boostCoordinator.Changed += (_, _) =>
+        {
+            if (_boostCoordinator.Phase == BoostPhase.Completed)
+            {
+                _logger.Info($"Boost result: {_boostCoordinator.ResultText}");
+            }
+        };
 
         // Live gauge: GlobalMemoryStatusEx is allocation-free, so a 4 s poll is cheap.
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
@@ -345,27 +359,27 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>Shared state for the Boost animation host (U7/W5).</summary>
+    public BoostPhase BoostPhase => _boostCoordinator.Phase;
+
+    public string BoostHeadline => _boostCoordinator.Headline;
+
+    public string BoostResultText => _boostCoordinator.ResultText;
+
+    public long BoostFreedBytes => _boostCoordinator.TempFreedBytes;
+
     private Task BoostAsync() => BoostAsync(smart: false);
 
     private async Task BoostAsync(bool smart)
     {
         IsBusy = true;
-        StatusMessage = smart ? "Smart Boost is trimming memory..." : "Trimming process working sets...";
 
         try
         {
-            MemoryTrimResult trim = await _boost.OptimizeAsync();
-            ApplySnapshot(trim.After);
-
-            long tempFreed = await _boost.CleanTempFilesAsync();
+            await _boostCoordinator.RunAsync(smart ? BoostTrigger.Automatic : BoostTrigger.Manual);
+            RefreshMemory();
             await RefreshTempAsync();
-
-            // Trimming working sets does not free memory; report what the OS actually did.
-            ResultText = DescribeBoost(trim, tempFreed);
-            BoostStatusText = $"{ByteFormatter.Format(tempFreed)} of temporary files released.";
             StatusMessage = smart ? "Smart Boost finished." : "Boost complete.";
-            _logger.Info(
-                $"Boost: {trim.WorkingSetsTrimmed} working sets trimmed, available {trim.Before.AvailableBytes} -> {trim.After.AvailableBytes} bytes ({trim.AvailableDeltaBytes}), {tempFreed} bytes of temp removed.");
         }
         catch (Exception ex)
         {
@@ -378,16 +392,39 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private static string DescribeBoost(MemoryTrimResult trim, long tempFreed)
+    private void OnBoostChanged(object? sender, EventArgs e)
     {
-        string trimmed = trim.WorkingSetsTrimmed == 1
-            ? "1 working set trimmed"
-            : $"{trim.WorkingSetsTrimmed} working sets trimmed";
+        void Apply()
+        {
+            if (_boostCoordinator.LastResult is { } trim)
+            {
+                ApplySnapshot(trim.After);
+                ResultText = $"{trim.WorkingSetsTrimmed} working sets trimmed · {trim.AvailableDeltaText} available";
+            }
 
-        string memory =
-            $"available memory {ByteFormatter.Format((long)trim.Before.AvailableBytes)} → {ByteFormatter.Format((long)trim.After.AvailableBytes)} ({trim.AvailableDeltaText})";
+            if (_boostCoordinator.Phase == BoostPhase.Completed)
+            {
+                BoostStatusText = $"{ByteFormatter.Format(_boostCoordinator.TempFreedBytes)} of temporary files released.";
+            }
 
-        return $"{trimmed}; {memory}; {ByteFormatter.Format(tempFreed)} of temporary files removed.";
+            if (BoostPhase is BoostPhase.Measuring or BoostPhase.Working)
+            {
+                StatusMessage = _boostCoordinator.Headline;
+            }
+
+            OnPropertyChanged(nameof(BoostPhase));
+            OnPropertyChanged(nameof(BoostHeadline));
+            OnPropertyChanged(nameof(BoostResultText));
+            OnPropertyChanged(nameof(BoostFreedBytes));
+        }
+
+        if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
+        {
+            dispatcher.Invoke(Apply);
+            return;
+        }
+
+        Apply();
     }
 
     private void ApplySnapshot(MemorySnapshot snapshot)
@@ -396,7 +433,11 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         AvailableText = $"{ByteFormatter.Format((long)snapshot.AvailableBytes)} free of {ByteFormatter.Format((long)snapshot.TotalPhysicalBytes)}";
     }
 
-    public void Dispose() => _timer.Stop();
+    public void Dispose()
+    {
+        _timer.Stop();
+        _boostCoordinator.Changed -= OnBoostChanged;
+    }
 
     private sealed record HomeTip(string Title, string Body, string LinkText);
 }

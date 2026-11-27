@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using PCManager.Core.Formatting;
 using PCManager.Core.Models;
 using PCManager.Services.Abstractions;
+using PCManager.Services.Boost;
 
 namespace PCManager.ViewModels;
 
@@ -15,20 +16,23 @@ namespace PCManager.ViewModels;
 public sealed partial class FloatingToolbarViewModel : ObservableObject, IDisposable
 {
     private readonly IPcBoostService _boost;
+    private readonly BoostCoordinator _boostCoordinator;
     private readonly IToolboxService _toolbox;
     private readonly INetworkThroughputService _network;
     private readonly DispatcherTimer _timer;
 
     public FloatingToolbarViewModel(
         IPcBoostService boost,
+        BoostCoordinator boostCoordinator,
         IToolboxService toolbox,
         INetworkThroughputService network)
     {
         _boost = boost;
+        _boostCoordinator = boostCoordinator;
         _toolbox = toolbox;
         _network = network;
 
-        BoostCommand = new AsyncRelayCommand(BoostAsync);
+        BoostCommand = new AsyncRelayCommand(() => _boostCoordinator.RunAsync(BoostTrigger.Manual));
         ScreenshotCommand = new AsyncRelayCommand(() => RunToolAsync("screenshot"));
         NotepadCommand = new AsyncRelayCommand(() => RunToolAsync("notepad"));
         CalculatorCommand = new AsyncRelayCommand(() => RunToolAsync("calculator"));
@@ -36,6 +40,7 @@ public sealed partial class FloatingToolbarViewModel : ObservableObject, IDispos
         ToggleDrawerCommand = new RelayCommand(() => IsDrawerOpen = !IsDrawerOpen);
         OpenFpmCommand = new RelayCommand(OpenFpm);
 
+        _boostCoordinator.Changed += OnBoostChanged;
         Refresh();
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -69,6 +74,15 @@ public sealed partial class FloatingToolbarViewModel : ObservableObject, IDispos
     [ObservableProperty]
     private bool _isDrawerOpen;
 
+    // Shared Boost state, rendered by BoostAnimationHost at compact scale (W5).
+    public BoostPhase BoostPhase => _boostCoordinator.Phase;
+
+    public string BoostHeadline => _boostCoordinator.Headline;
+
+    public string BoostResultText => _boostCoordinator.ResultText;
+
+    public long BoostFreedBytes => _boostCoordinator.TempFreedBytes;
+
     private void Refresh()
     {
         try
@@ -95,16 +109,28 @@ public sealed partial class FloatingToolbarViewModel : ObservableObject, IDispos
         }
     }
 
-    private async Task BoostAsync()
+    private void OnBoostChanged(object? sender, EventArgs e)
     {
-        try
+        void Apply()
         {
-            ApplySnapshot((await _boost.OptimizeAsync()).After);
+            if (_boostCoordinator.LastResult is { } trim)
+            {
+                ApplySnapshot(trim.After);
+            }
+
+            OnPropertyChanged(nameof(BoostPhase));
+            OnPropertyChanged(nameof(BoostHeadline));
+            OnPropertyChanged(nameof(BoostResultText));
+            OnPropertyChanged(nameof(BoostFreedBytes));
         }
-        catch (Exception)
+
+        if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
         {
-            LoadText = "-";
+            dispatcher.Invoke(Apply);
+            return;
         }
+
+        Apply();
     }
 
     private Task RunToolAsync(string toolId) => _toolbox.LaunchAsync(toolId);
@@ -128,5 +154,9 @@ public sealed partial class FloatingToolbarViewModel : ObservableObject, IDispos
         FreeText = $"{ByteFormatter.Format((long)snapshot.AvailableBytes)} free";
     }
 
-    public void Dispose() => _timer.Stop();
+    public void Dispose()
+    {
+        _timer.Stop();
+        _boostCoordinator.Changed -= OnBoostChanged;
+    }
 }

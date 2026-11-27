@@ -6,6 +6,13 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Boost inside the toolbar (W5)**: Home and the floating toolbar now share one Boost run — the same
+  Idle/Measuring/Working/Completed/Failed state machine, the same rule that only an explicit Boost may
+  delete temporary files, and the same rocket/flame animation with a count-up result chip (0.6× in the
+  toolbar). It works with the main window hidden and in `--toolbar-only` mode, and the result updates
+  Home when it next appears.
+
+### Added
 - **Toolbar edge docking (W4)**: drag the toolbar to a screen edge and it snaps into a 32 px tab
   showing the RAM metric; hovering or clicking expands it (150 ms) into the full tool drawer, which
   collapses 1.5 s after the pointer leaves unless pinned. Right-click offers docking, an opacity

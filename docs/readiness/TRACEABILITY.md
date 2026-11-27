@@ -49,6 +49,9 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-41 | CI: build, tests, lint, contrast, icons (R4) | R4 | `.github/workflows/ci.yml` | actionlint exit 0; every `run:` executed locally green (`PROGRESS_LOG.md`) |
 | TR-42 | Secret scan over working tree **and history** (R1, R4) | R4 | `tools/secret-scan.ps1`, CI `secret-scan` job | gitleaks 8.30.1: 77 commits, no leaks; checksum-verified install branch tested |
 | TR-43 | Reproducible SDK for local and CI builds | R4 | `global.json` | `dotnet --version` = 8.0.428; Release build `-warnaserror` + 166 tests green |
+| TR-57 | One Boost state machine and confirmation rule app-wide (W5/U7) | W5 | `Core/Models/BoostPhase.cs`, `Services/Boost/BoostCoordinator.cs` | 6 tests; toolbar run logged “Boost (Manual)…” |
+| TR-58 | Compact Boost animation in the toolbar, working hidden/toolbar-only (W5) | W5 | `Controls/BoostAnimationHost.xaml(.cs)`, `FloatingToolbarWindow.xaml` | toolbar chip “2 MB freed” with main window hidden; working-state screenshot |
+| TR-59 | Boost result updates Home (W5) | W5 | `HomeViewModel` subscription to the coordinator | Home automation text “2 MB of temporary files released.” |
 | TR-54 | Dock the toolbar to any edge with a slim tab and hover expansion (W4) | W4 | `Core/Models/ToolbarDock.cs`, `FloatingToolbarWindow.xaml(.cs)` | docked 40×210 px, expanded 442×105 px with drawer, collapsed back; 6 tests |
 | TR-55 | Toolbar opacity, always-on-top, pin, reset and hide, persisted (W4) | W4 | `ToolboxModels.cs`, context menu, `FloatingToolbarWindow.xaml.cs` | slider + presets wired; persistence saved; menu items not clicked |
 | TR-56 | Hide the toolbar under fullscreen apps, never steal focus (W4) | W4 | `SHQueryUserNotificationState` poll, `ShowActivated=False`, host without `Activate` | inspection only; fullscreen not exercised (R-21) |

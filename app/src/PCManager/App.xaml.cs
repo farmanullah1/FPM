@@ -67,6 +67,9 @@ public partial class App : Application
         collection.AddSingleton<IFloatingToolbarHost, FloatingToolbarHost>();
         collection.AddSingleton<IUserConfirmationService, MessageBoxConfirmationService>();
 
+        // One Boost run shared by Home and the floating toolbar (U7/W5).
+        collection.AddSingleton<PCManager.Services.Boost.BoostCoordinator>();
+
         // Navigation is a broker so pages never reference the shell.
         collection.AddSingleton<NavigationService>();
         collection.AddSingleton<INavigationService>(sp => sp.GetRequiredService<NavigationService>());

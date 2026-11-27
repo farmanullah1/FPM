@@ -7,6 +7,6 @@
     "Views/MemoryView.xaml":  25,
     "Views/MainWindow.xaml":  23,
     "Views/SettingsView.xaml":  31,
-    "Views/FloatingToolbarWindow.xaml":  19,
+    "Views/FloatingToolbarWindow.xaml":  10,
     "Views/ProtectionView.xaml":  52
 }

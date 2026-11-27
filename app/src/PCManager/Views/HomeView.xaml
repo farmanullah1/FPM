@@ -140,6 +140,13 @@
                                FontSize="10.5" Foreground="{DynamicResource App.Subtle}"
                                Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
 
+                    <controls:BoostAnimationHost Margin="{StaticResource Thickness.2}"
+                                                 Phase="{Binding BoostPhase}"
+                                                 Headline="{Binding BoostHeadline}"
+                                                 ResultText="{Binding BoostResultText}"
+                                                 FreedBytes="{Binding BoostFreedBytes}"
+                                                 AutomationProperties.Name="Boost progress" />
+
                     <Grid Margin="0,10,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -192,6 +199,7 @@
                         <Button Grid.Column="0" Style="{StaticResource PrimaryButton}" Height="30"
                                 HorizontalAlignment="Stretch"
                                 Command="{Binding BoostCommand}"
+                                AutomationProperties.Name="Boost"
                                 ToolTip="Trim process working sets and delete temporary files">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <controls:Icon3D Key="Boost" Size="14" Tint="Neutral" VerticalAlignment="Center" />

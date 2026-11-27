@@ -140,7 +140,25 @@ and were not implied as passed.
 | Persistence | dock edge, pin, opacity, topmost and floating position stored per monitor + DPI (`ToolbarBoundsByMonitor`) | save path wired |
 | Gates | build 0/0, **194 tests**, lint 376, contrast OK | pass |
 
-Next card: **W5** (Boost inside the toolbar).
+## 2026-11-27 — W5 complete (Boost inside the toolbar), U7 host delivered
+
+| Step | Evidence | Result |
+|---|---|---|
+| Shared state machine | `Core/Models/BoostPhase.cs` + `Services/Boost/BoostCoordinator.cs`: Idle → Measuring → Working → Completed/Failed, one run app-wide, duplicate presses ignored | 6 tests (manual, automatic, rule, failure, duplicate, change notifications) |
+| Confirmation rule | `BoostPolicy.AllowsTempCleanup`: only an explicit **manual** Boost deletes temporary files; Smart/Automatic trims working sets and touches no files | tested |
+| Shared host | `Controls/BoostAnimationHost`: rocket, flame, pulse while measuring, bob/flame while working, count-up result chip, shake on failure, `IsCompact` 0.6×, reduced motion falls back to fades | used on Home and in the toolbar |
+| Toolbar-only / hidden window | main window closed to tray (alive=True, mainVisible=False), then Boost invoked from the toolbar via UI Automation | Boost ran: log “Boost (Manual): 66 working sets trimmed … 2 MB temp”, toolbar chip “2 MB freed” |
+| Result chip → Home | hand-off back to the full UI, Home read from the live automation tree: “2 MB of temporary files released.” and “66 working sets trimmed · 2 MB temp removed · …” | pass |
+| Working state capture | 250 ms after the press: rocket up, headline “Releasing temporary files…”, Boost button disabled | screenshot |
+| Real temp file | probe created `%TEMP%\fpm-w5-probe.bin` (2 MB, 3 days old); the run removed it (2 MB reported) | pass |
+| Bug found and fixed | result chip stuck at “0 B freed” because the byte binding arrived after the phase; `OnFreedChanged` now starts the count-up when the phase is already Completed | fixed, re-verified “2 MB freed” |
+| Gates | build 0/0, **200 tests**, lint 367 (baseline ratcheted down), contrast OK | pass |
+
+**U7 status:** the shared host, state machine, count-up and shake exist and are used by two surfaces, but
+U7's reduced-motion capture and an explicit cancel affordance are still outstanding, so U7 is **not**
+marked done. W5 itself is done: same rule, same state machine, works in toolbar-only / hidden-main.
+
+Next card: **T1** (sensor service + battery).
 
 ## Earlier entry
 
