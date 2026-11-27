@@ -120,6 +120,7 @@ Desktop.ini
 # Prompt/spec markdown stays local; the public documents are named explicitly.
 /*.md
 !/README.md
+!/AGENTS.md
 !/CHANGELOG.md
 !/CONTRIBUTING.md
 !/SECURITY.md
