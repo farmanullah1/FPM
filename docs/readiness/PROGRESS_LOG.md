@@ -201,7 +201,26 @@ the “Enable hardware sensors” button are **not implemented**: LHM ships a ke
 needs an administrator opt-in and a Defender check that only the owner can approve, so T2 is
 **partial** — see DECISIONS D-043 and the owner question at the end of the log.
 
-Next: **T3** only after the LHM/helper decision.
+## 2026-11-27 — D1 complete (Windows debloat catalog port)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Reference read | `reference/win11debloat` (MIT, read-only): `Config/Features.json` (106 features, 12 categories), `Config/Apps.json` (162 apps, 2 presets), 252 `.reg` files, `Scripts/Helpers/Get-RegFileOperations.ps1` for parse/detect semantics | mapped |
+| Generator | `tools/debloat_catalog_gen.py` (our code, committed) parses the reference data into typed actions; nothing executes reference PowerShell | reproducible |
+| Catalog | `app/src/Core/Assets/debloat/catalog.json` (embedded, versioned): **90 tweaks**, **161 apps**, 2 app presets, 16 excluded features, 1 protected app dropped | validator + tests |
+| Typed actions/probes | `RegistrySet`, `RegistryDelete`, `RegistryKeyDelete`, `OptionalFeature`, `AppxRemove`; probes `RegistryEquals`, `RegistryAbsent`, `RegistryKeyAbsent`, `OptionalFeature`, `AppxAbsent` (polymorphic JSON) | schema tests |
+| Safety contract | validator rejects unknown hives, paths outside `Software`/`System`/`Control Panel`, `HKU` outside `Default`, missing detect, missing revert without a note, protected packages, duplicate ids | 8 tests |
+| Feature map | `docs/dev/win11debloat-feature-map.md`: 106 rows = **90 ported + 16 intentionally excluded**, each exclusion with a reason | parity verified by script |
+| Exclusions | Edge force-removal (destructive), Start layout replacement (4 features, needs bundled templates), Store-DB mutation, app selection/flow features, `HKEY_CLASSES_ROOT` feature, service-SID HKU feature | reasons in map |
+| Apps | All 161 reference apps with recommendation/removal method; `Microsoft.WindowsStore` dropped because FPM's denylist forbids offering it (reference marks it “unsafe”) | test asserts denylist absent |
+| Gates | build 0/0, **226 tests**, lint 367 (unchanged), contrast OK | pass |
+
+**Not done in D1 (by scope):** no planner/executor/journal (D2), no UI (D3), nothing touched the real
+registry, and no reference tweak was applied. Descriptions are generated from the reference file and
+feature id; curated “why/what changes/what breaks” text belongs to D3. The reference is not version
+pinned, so the generator must be re-run if the folder is updated (R-25).
+
+Next card: **D2** (planner, helper executor, journal/undo).
 
 ## Earlier entry
 

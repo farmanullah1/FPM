@@ -6780,7 +6780,7 @@
         }
       ],
       "revert": [],
-      "revertNote": "",
+      "revertNote": "The reference has no undo file for this key deletion; the D2 journal restores it.",
       "detect": [
         {
           "type": "RegistryKeyAbsent",
@@ -6826,7 +6826,7 @@
         }
       ],
       "revert": [],
-      "revertNote": "",
+      "revertNote": "The reference has no undo file for this key deletion; the D2 journal restores it.",
       "detect": [
         {
           "type": "RegistryKeyAbsent",
@@ -8906,17 +8906,6 @@
       "referenceFile": "Config/Apps.json"
     },
     {
-      "id": "Microsoft.WindowsStore",
-      "packageIds": [
-        "Microsoft.WindowsStore"
-      ],
-      "recommendation": "unsafe",
-      "selectedByDefault": false,
-      "removalMethod": "Appx",
-      "title": "WindowsStore",
-      "referenceFile": "Config/Apps.json"
-    },
-    {
       "id": "Microsoft.WindowsTerminal",
       "packageIds": [
         "Microsoft.WindowsTerminal"
@@ -9661,6 +9650,12 @@
     {
       "featureId": "DisableStoreSearchSuggestions",
       "reason": "Edits the Store SQLite database (not a registry/file action type); intentionally excluded from D1."
+    }
+  ],
+  "excludedApps": [
+    {
+      "id": "Microsoft.WindowsStore",
+      "reason": "Protected by FPM's safety contract (Windows core/Store); never offered."
     }
   ]
 }

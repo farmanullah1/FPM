@@ -6,6 +6,13 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Windows debloat catalog (D1)**: a typed, embedded, versioned port of Win11Debloat's data —
+  90 registry/feature tweaks with OS gates, typed actions, detect probes and undo data, plus 161
+  preinstalled apps and presets. A validator enforces the hive/path allow-list and FPM's protected
+  package denylist at load; `docs/dev/win11debloat-feature-map.md` records all 106 reference
+  features as ported or intentionally excluded with a reason.
+
+### Added
 - **Temperature sensor (T2, unprivileged)**: the shared sampler now also reads an NVIDIA GPU
   temperature through NVML when present and the ACPI thermal zone otherwise, labelled “System
   thermal zone” and never “CPU”. Thresholds (70/85 °C), °C/°F display and every unavailable reason

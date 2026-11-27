@@ -81,6 +81,23 @@ EXCLUDED = {
     "DisableStoreSearchSuggestions": "Edits the Store SQLite database (not a registry/file action type); intentionally excluded from D1.",
 }
 
+# FPM never offers these for removal; Win11Debloat lists the Store as "unsafe" and FPM drops it.
+PROTECTED_PACKAGES = [
+    "Microsoft.WindowsStore",
+    "Microsoft.SecHealthUI",
+    "Microsoft.Windows.ShellExperienceHost",
+    "Microsoft.Windows.StartMenuExperienceHost",
+    "Microsoft.DesktopAppInstaller",
+    "Microsoft.VCLibs.140.00",
+    "Microsoft.UI.Xaml",
+]
+
+
+def is_protected(package_id: str) -> bool:
+    lowered = package_id.lower()
+    return any(lowered == p.lower() or lowered.startswith(p.lower() + ".") for p in PROTECTED_PACKAGES)
+
+
 RISK_OVERRIDES = {
     "DisableBitlockerAutoEncryption": "High",
     "DisableTelemetry": "Medium",
@@ -337,8 +354,15 @@ def main() -> None:
         map_rows.append((fid, f"win11debloat.{fid}", "ported", ref_file))
 
     app_rows = []
+    excluded_apps = []
     for app in apps_doc["Apps"]:
         ids = app["AppId"] if isinstance(app["AppId"], list) else [app["AppId"]]
+        if any(is_protected(package) for package in ids):
+            excluded_apps.append({
+                "id": ids[0],
+                "reason": "Protected by FPM's safety contract (Windows core/Store); never offered.",
+            })
+            continue
         app_rows.append({
             "id": ids[0],
             "packageIds": ids,
@@ -363,6 +387,7 @@ def main() -> None:
         "excludedFeatures": [
             {"featureId": key, "reason": reason} for key, reason in EXCLUDED.items()
         ],
+        "excludedApps": excluded_apps,
     }
 
     OUT_CATALOG.parent.mkdir(parents=True, exist_ok=True)
@@ -376,7 +401,8 @@ def main() -> None:
         "`reference/win11debloat` (MIT). Regenerate after updating the reference.",
         "",
         f"Reference features: **{len(features)}** · ported tweaks: **{len(tweaks)}** ·",
-        f"excluded: **{len(EXCLUDED)}** · apps: **{len(app_rows)}**.",
+        f"excluded features: **{len(EXCLUDED)}** · apps: **{len(app_rows)}** ·",
+        f"protected apps dropped: **{len(excluded_apps)}**.",
         "",
         "| Reference feature | FPM tweak id | Status | Source / reason |",
         "|---|---|---|---|",

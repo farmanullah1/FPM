@@ -35,7 +35,7 @@ working time for one agent session, not calendar time. `☑` = verified, `☐` =
 | 2.3 | Identify prerequisites/blockers per wave | 0.5 h | Wave table has entry conditions | ☑ |
 | 2.4 | Ask the owner the seven open questions | 0.5 h | Answers recorded in `DECISIONS.md` | ☐ |
 | 2.5 | Approve the wave plan | 0.25 h | G-2 recorded | ☐ |
-| 2.6 | Execute wave 1, one card per session | 20–30 h | Each card's DoD + acceptance evidenced | ☐ (R2, R4, W1–W5, T1 done; T2 unprivileged done, LHM/helper pending owner; U7 reduced-motion capture + cancel open) |
+| 2.6 | Execute wave 1, one card per session | 20–30 h | Each card's DoD + acceptance evidenced | ☐ (R2, R4, W1–W5, T1, D1 done; T2 unprivileged done, LHM/helper pending owner; U7 reduced-motion capture + cancel open) |
 
 ## Waves (details in `PHASE2_PLAN.md`)
 
