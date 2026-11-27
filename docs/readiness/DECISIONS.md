@@ -65,3 +65,13 @@ accepted decision marked **owner**.
 | Q-05 | Is pushing to GitHub authorised now, and who signs releases? | Keep local commits; authorise push when R2/R4 are green. |
 | Q-06 | Re-run the REA parity audit or accept the existing `REA_REFERENCE_AUDIT.md`? | Accept the existing audit unless parity claims are challenged. |
 | Q-07 | Confirm the review cadence (per-card report + phase gates) and the approver. | Owner approves; per-card reports in `PROGRESS_LOG.md`. |
+
+## D2 decisions
+
+| ID | Date | Decision | Rationale | Status |
+|---|---|---|---|---|
+| D-048 | 2026-11-27 | The elevated helper gets exactly three typed debloat commands (`ApplyTweak`, `RevertTweak`, `DetectTweak`); the client sends only a catalog tweak id plus, for revert, captured pre-state values. | Keeps the helper's attack surface catalog-scoped; no script, path or command string crosses the pipe. | accepted |
+| D-049 | 2026-11-27 | A restore point is attempted for non-Low-risk plans, but its absence is recorded as `Skipped: reason` and does not block the run; the `.reg` backup and journal are the primary safety net. | Windows often disables restore points; blocking debloat on it would make the feature unusable, while claiming success would be dishonest. | accepted |
+| D-050 | 2026-11-27 | Journal and `.reg` backups live under `%LOCALAPPDATA%\FPM\debloat\{journal,backups}`, not in the repo or Program Files. | Per-user state survives upgrades, needs no elevation to read, and never publishes registry contents. | accepted |
+| D-051 | 2026-11-27 | D2's executor supports registry values and optional features only; key deletion, Appx removal and other-user hives are refused by the planner until they have typed snapshots. | Undo must be exact; a key or package cannot yet be journaled faithfully, so the engine must not pretend it can. | accepted |
+| D-052 | 2026-11-27 | Detect runs for every selected tweak before the first write, and an already-applied tweak is skipped rather than re-applied. | Prevents the journal from recording a post-change “pre-state” and avoids duplicate no-op writes. | accepted |

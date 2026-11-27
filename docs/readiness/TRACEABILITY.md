@@ -75,6 +75,12 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-45 | One chrome base: rounded corners, dark frame, Snap Layouts, Alt+Space (W1) | W1 | `Views/FpmWindow.cs`, `MainWindow.xaml`, `IconGalleryWindow.xaml` | build 0/0; max/restore/minimise verified by UIA; Light+Dark at 560/1280 |
 | TR-46 | Every window control reachable by keyboard/automation (W1) | W1 | `Styles/Controls.xaml` (`NavItemStyle`), title-bar buttons | UIA names: `Home…Settings`, `Minimise`, `Maximize or restore`, `Close` |
 | TR-47 | Frame pacing within the 16 ms budget (W1, U4) | W1 | `Motion/FrameTimingProbe.cs` | **blocked**: 40 Hz panel (25 ms refresh); trace recorded, 16 ms not evidenceable — Q-08 |
+| TR-71 | Typed debloat apply/revert/detect over the existing IPC (D2) | D2 | `Core/Elevation/HelperProtocol.cs`, `Helper/DebloatCommands.cs`, `Services/Elevation/ElevationService.cs` | helper validates catalog ids/pre-state; 232 tests green |
+| TR-72 | Ordered typed plan with OS gate, denylist and reboot/Explorer flags (D2) | D2 | `Core/Debloat/DebloatPlanner.cs` | planner tests (ordering, OS, key-delete/Appx/protected) |
+| TR-73 | `.reg` backup, typed pre-state journal, reverse-order undo (D2) | D2 | `Core/Debloat/DebloatJournal.cs`, `Services/Debloat/DebloatEngine.cs` | apply→undo exact-restore test; backup file test |
+| TR-74 | Restore point attempted, skipped with a reason when unavailable (D2) | D2 | `DebloatEngine.TryRestorePointAsync` | fake restore-point test records `Skipped` |
+| TR-75 | Mid-run failure rolls back the run truthfully (D2) | D2 | `DebloatEngine.ApplyAsync`/`RollbackAsync` | failure test asserts `RolledBack` + restored first tweak |
+| TR-76 | UI surface invokes detect/apply/revert/undo (D2) | D2 | `Views/SettingsView.xaml`, `ViewModels/DebloatEngineViewModel.cs` | UIA probe: card + plan visible; UAC path not exercised (R-28) |
 | TR-44 | Release workflow (tag → installer + checksums) | R4 (release half), R3 | `.github/workflows/release.yml` | deferred: needs the owner's push/signing decision; blocker recorded in `RISKS.md` |
 
 ## Coverage notes

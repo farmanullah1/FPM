@@ -244,3 +244,26 @@ Next card: **D2** (planner, helper executor, journal/undo).
 
 Owner answers Q-01…Q-07; then the Phase 1 gate is marked approved and Wave 1 starts with **U7**
 (boost animation), per the default order in `PHASE2_PLAN.md`.
+
+## 2026-11-27 — D2 complete (typed debloat engine, journal, undo)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Planner | `DebloatPlanner`: ordered by catalog category then id; refuses unknown ids, `RegistryKeyDelete`, `AppxRemove` (Apps flow), protected packages, and OS-gated tweaks; exposes reboot/Explorer flags | 3 tests |
+| Helper surface | `HelperCommand.ApplyTweak/RevertTweak/DetectTweak`, `HelperRequest.TweakId/Restore`, `HelperResponse.RolledBack/Detected/Values`; `DebloatCommands` validates ids against the embedded catalog, captures pre-state, applies typed registry/optional-feature actions via fixed `dism.exe` args, self-rolls-back on failure | key-delete/Appx refused helper-side too |
+| Revert safety | Revert accepts only the journal's pre-state limited to that tweak's own registry targets (≤128 entries) and the hive allow-list; no free-form path reaches the helper | validation in `DebloatCommands` |
+| Engine | `DebloatEngine`: plan → detect-all (skip already applied) → `.reg` backup → apply sequentially → journal after each tweak; on failure reverts applied entries in reverse and records `RolledBack`; undo replays the journal in reverse and refuses stale/rolled-back runs | journal at `%LOCALAPPDATA%\FPM\debloat\journal`, backups at `…\debloat\backups` |
+| Restore point | attempted only for non-Low-risk plans; a decline/failure is recorded as `Skipped: <reason>`, never faked | fake test records `Skipped` |
+| Transport | `ElevationService.RunDebloatAsync` reuses the one-shot pipe transport extracted into `ExchangeAsync`; declined UAC maps to a cancelled outcome | existing elevation tests still green |
+| UI surface | Settings card “Windows debloat (engine preview)” with tweak picker, computed plan line, Detect/Apply/Undo; `DebloatEngineViewModel` is registered in DI | UI probe found the card and `Plan: ready` |
+| Tests | `DebloatPlannerTests` (ordering, OS gate/unknown, key-delete/Appx/protected) and `DebloatEngineTests` (apply→undo exact restore, mid-run failure rollback, journal round-trip, backup file) against an in-memory registry, never the live registry | **232 tests**, 6 new |
+| Gates | build 0/0; tests 232 passed; lint 367 (unchanged); contrast OK | pass |
+| Runtime | launched `FPM.exe`; `tools/ui-probe-debloat.ps1` selected Settings and read the card + plan text | card renders; **UAC not approved**, so live detect/apply/undo was not run |
+
+**Not done in D2 (by scope):** no Apps flow or presets UI (D3), no other-user/sysprep/CLI (D4), no
+key-deletion or Appx executor (still planner-refused), no Explorer restart or reboot prompt, and no
+elevated run against the live registry. Journal/backup files hold user-specific pre-state and stay
+out of the repo. The `.reg` QWord write uses `hex(b)`; it is an auxiliary human-readable backup, not
+the undo source (the journal is).
+
+Next card: **D3** (full Debloat page: categories, presets, apps).

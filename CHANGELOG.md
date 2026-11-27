@@ -6,6 +6,14 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Windows debloat engine (D2)**: catalog tweaks now plan into an ordered, OS-gated list and run
+  only through three typed helper commands (`DetectTweak`, `ApplyTweak`, `RevertTweak`). Every run
+  writes a `.reg` backup and a journal of the exact pre-state, tries a restore point (recording a
+  skip reason when unavailable), and undoes in reverse order; a failure mid-run rolls the applied
+  tweaks back and says so. Settings gained a preview card for picking one tweak and seeing its plan;
+  key deletion and Appx removal stay refused until they can be journaled faithfully.
+
+### Added
 - **Windows debloat catalog (D1)**: a typed, embedded, versioned port of Win11Debloat's data —
   90 registry/feature tweaks with OS gates, typed actions, detect probes and undo data, plus 161
   preinstalled apps and presets. A validator enforces the hive/path allow-list and FPM's protected
