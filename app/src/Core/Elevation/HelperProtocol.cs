@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using PCManager.Core.Debloat;
 
 namespace PCManager.Core.Elevation;
 
@@ -13,7 +14,16 @@ public enum HelperCommand
     CreateRestorePoint,
 
     /// <summary>Replace or remove the FPM section of the hosts file (backup written first).</summary>
-    ManageHostsBlock
+    ManageHostsBlock,
+
+    /// <summary>Apply one catalog tweak (id validated against the embedded catalog).</summary>
+    ApplyTweak,
+
+    /// <summary>Revert one catalog tweak, restoring the journaled pre-state when supplied.</summary>
+    RevertTweak,
+
+    /// <summary>Detect one catalog tweak and return its current registry states.</summary>
+    DetectTweak
 }
 
 /// <summary>One request line on the helper pipe. Maximum 8 KB, enforced by both ends.</summary>
@@ -25,6 +35,12 @@ public sealed class HelperRequest
 
     /// <summary>Validated DNS names for ManageHostsBlock; empty means remove the block.</summary>
     public List<string> Domains { get; set; } = new();
+
+    /// <summary>Catalog id for ApplyTweak/RevertTweak/DetectTweak.</summary>
+    public string TweakId { get; set; } = string.Empty;
+
+    /// <summary>Exact pre-state for RevertTweak; validated against the tweak's own targets.</summary>
+    public List<RegistryValueState> Restore { get; set; } = new();
 }
 
 /// <summary>One response line from the helper.</summary>
@@ -37,6 +53,15 @@ public sealed class HelperResponse
     public int FilesSkipped { get; set; }
     public string Message { get; set; } = string.Empty;
     public string RequestId { get; set; } = string.Empty;
+
+    /// <summary>True when a failed apply restored everything it had already changed.</summary>
+    public bool RolledBack { get; set; }
+
+    /// <summary>DetectTweak result (null for other commands).</summary>
+    public bool? Detected { get; set; }
+
+    /// <summary>Registry states captured by DetectTweak/ApplyTweak.</summary>
+    public List<RegistryValueState> Values { get; set; } = new();
 }
 
 /// <summary>Client-facing result, independent of the pipe transport.</summary>

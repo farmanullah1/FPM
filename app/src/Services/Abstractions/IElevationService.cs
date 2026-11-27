@@ -1,3 +1,4 @@
+using PCManager.Core.Debloat;
 using PCManager.Core.Elevation;
 
 namespace PCManager.Services.Abstractions;
@@ -14,6 +15,13 @@ public interface IElevationService
         HelperCommand command,
         string? ruleId = null,
         IReadOnlyList<string>? domains = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>One typed debloat command; ids and restore values are validated by the helper.</summary>
+    Task<DebloatHelperOutcome> RunDebloatAsync(
+        HelperCommand command,
+        string tweakId,
+        IReadOnlyList<RegistryValueState>? restore = null,
         CancellationToken cancellationToken = default);
 }
 

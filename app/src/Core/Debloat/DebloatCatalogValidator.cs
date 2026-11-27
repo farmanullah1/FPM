@@ -235,6 +235,8 @@ public static class DebloatCatalogValidator
         }
     }
 
+    public static bool IsProtectedPackage(string packageId) => IsProtected(packageId);
+
     private static bool IsProtected(string packageId) =>
         ProtectedPackages.Any(protectedId =>
             string.Equals(packageId, protectedId, StringComparison.OrdinalIgnoreCase) ||

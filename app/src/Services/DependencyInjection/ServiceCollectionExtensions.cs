@@ -65,6 +65,10 @@ public static class ServiceCollectionExtensions
             new ElevationService(sp.GetRequiredService<IAppLogger>()));
         services.AddSingleton<IRestorePointService, RestorePointService>();
 
+        // D2: typed debloat planning, journaling and helper execution.
+        services.AddSingleton<PCManager.Services.Debloat.IDebloatExecutor, PCManager.Services.Debloat.HelperDebloatExecutor>();
+        services.AddSingleton<PCManager.Services.Debloat.DebloatEngine>();
+
         // --- FPM Services (Migration, Memory Diagnostics, Unified Cleanup, Network) ---
         services.AddSingleton<ILegacyIdentityMigrationService, PCManager.Services.Infrastructure.LegacyIdentityMigrationService>();
         services.AddSingleton<MemoryDiagnosticsService>();

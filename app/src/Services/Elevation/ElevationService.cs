@@ -4,6 +4,7 @@ using System.IO.Pipes;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
+using PCManager.Core.Debloat;
 using PCManager.Core.Elevation;
 using PCManager.Services.Abstractions;
 
@@ -42,24 +43,89 @@ public sealed class ElevationService : IElevationService
         IReadOnlyList<string>? domains = null,
         CancellationToken cancellationToken = default)
     {
+        var request = new HelperRequest
+        {
+            Command = command,
+            RuleId = ruleId ?? string.Empty,
+            RequestId = Guid.NewGuid().ToString("N"),
+            Domains = domains?.ToList() ?? new List<string>(),
+        };
+
+        ExchangeResult exchange = await ExchangeAsync(request, cancellationToken).ConfigureAwait(false);
+
+        if (exchange.Response is not { } response)
+        {
+            return exchange.Cancelled
+                ? ElevationOutcome.Declined()
+                : ElevationOutcome.Failed(exchange.Error ?? "The elevated helper failed.");
+        }
+
+        _logger.Info(
+            $"Elevation {command}{(string.IsNullOrWhiteSpace(ruleId) ? string.Empty : $" ({ruleId})")}: " +
+            $"success={response.Success}, bytes={response.BytesFreed}, files={response.FilesDeleted}, " +
+            $"skipped={response.FilesSkipped}.");
+
+        return new ElevationOutcome(
+            response.Success,
+            response.Cancelled,
+            response.BytesFreed,
+            response.FilesDeleted,
+            response.FilesSkipped,
+            response.Message);
+    }
+
+    public async Task<DebloatHelperOutcome> RunDebloatAsync(
+        HelperCommand command,
+        string tweakId,
+        IReadOnlyList<RegistryValueState>? restore = null,
+        CancellationToken cancellationToken = default)
+    {
+        var request = new HelperRequest
+        {
+            Command = command,
+            TweakId = tweakId,
+            RequestId = Guid.NewGuid().ToString("N"),
+            Restore = restore?.ToList() ?? new List<RegistryValueState>(),
+        };
+
+        ExchangeResult exchange = await ExchangeAsync(request, cancellationToken).ConfigureAwait(false);
+
+        if (exchange.Response is not { } response)
+        {
+            return exchange.Cancelled
+                ? new DebloatHelperOutcome { Cancelled = true, Message = "Administrator permission was declined." }
+                : DebloatHelperOutcome.Failed(exchange.Error ?? "The elevated helper failed.");
+        }
+
+        _logger.Info(
+            $"Debloat {command} {tweakId}: success={response.Success}, rolledBack={response.RolledBack}, " +
+            $"detected={response.Detected?.ToString() ?? "n/a"}.");
+
+        return new DebloatHelperOutcome
+        {
+            Success = response.Success,
+            Cancelled = response.Cancelled,
+            RolledBack = response.RolledBack,
+            Detected = response.Detected,
+            Message = response.Message,
+            Values = response.Values,
+        };
+    }
+
+    private async Task<ExchangeResult> ExchangeAsync(
+        HelperRequest request,
+        CancellationToken cancellationToken)
+    {
         if (!IsHelperAvailable)
         {
-            return ElevationOutcome.Failed(
+            return new ExchangeResult(
+                null, false,
                 "The elevated helper is missing from the application folder. Rebuild or reinstall the app.");
         }
 
         // A fresh random pipe name per launch prevents another same-user process from
         // squatting on a predictable name and answering for the elevated helper.
         string pipeName = $"{_pipePrefix}.{Guid.NewGuid():N}";
-
-        var request = new HelperRequest
-        {
-            Command = command,
-            RuleId = ruleId ?? string.Empty,
-            RequestId = Guid.NewGuid().ToString("N"),
-            Domains = domains?.ToList() ?? new List<string>()
-        };
-
         Process? process = null;
 
         try
@@ -69,24 +135,19 @@ public sealed class ElevationService : IElevationService
                 FileName = _helperPath,
                 UseShellExecute = true,
                 Verb = "runas",
-                WorkingDirectory = AppContext.BaseDirectory
+                WorkingDirectory = AppContext.BaseDirectory,
+                Arguments = $"\"{pipeName}\"",
             };
 
-            // The pipe name is derived from the signed-in user's SID, never from user input.
-            // Shell-execute (runas) needs Arguments; the value is validated again by the helper.
-            startInfo.Arguments = $"\"{pipeName}\"";
             process = Process.Start(startInfo);
 
             if (process is null)
             {
-                return ElevationOutcome.Failed("Windows did not start the elevated helper.");
+                return new ExchangeResult(null, false, "Windows did not start the elevated helper.");
             }
 
             using var client = new NamedPipeClientStream(
-                ".",
-                pipeName,
-                PipeDirection.InOut,
-                PipeOptions.Asynchronous);
+                ".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
 
             using var connectTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             connectTimeout.CancelAfter(TimeSpan.FromSeconds(ConnectTimeoutSeconds));
@@ -97,7 +158,8 @@ public sealed class ElevationService : IElevationService
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
-                return ElevationOutcome.Failed(
+                return new ExchangeResult(
+                    null, false,
                     $"The elevated helper did not connect within {ConnectTimeoutSeconds} seconds.");
             }
 
@@ -108,7 +170,7 @@ public sealed class ElevationService : IElevationService
                 leaveOpen: true)
             {
                 AutoFlush = true,
-                NewLine = "\n"
+                NewLine = "\n",
             };
 
             using var reader = new StreamReader(
@@ -128,42 +190,32 @@ public sealed class ElevationService : IElevationService
 
             if (string.IsNullOrWhiteSpace(line))
             {
-                return ElevationOutcome.Failed("The elevated helper closed the connection without a reply.");
+                return new ExchangeResult(
+                    null, false, "The elevated helper closed the connection without a reply.");
             }
 
             HelperResponse? response = JsonSerializer.Deserialize<HelperResponse>(line, JsonOptions);
 
             if (response is null || !string.Equals(response.RequestId, request.RequestId, StringComparison.Ordinal))
             {
-                return ElevationOutcome.Failed("The elevated helper returned an unexpected reply.");
+                return new ExchangeResult(null, false, "The elevated helper returned an unexpected reply.");
             }
 
-            _logger.Info(
-                $"Elevation {command}{(string.IsNullOrWhiteSpace(ruleId) ? string.Empty : $" ({ruleId})")}: " +
-                $"success={response.Success}, bytes={response.BytesFreed}, files={response.FilesDeleted}, " +
-                $"skipped={response.FilesSkipped}.");
-
-            return new ElevationOutcome(
-                response.Success,
-                response.Cancelled,
-                response.BytesFreed,
-                response.FilesDeleted,
-                response.FilesSkipped,
-                response.Message);
+            return new ExchangeResult(response, false, null);
         }
         catch (Win32Exception ex) when (ex.NativeErrorCode == 1223)
         {
-            return ElevationOutcome.Declined();
+            return new ExchangeResult(null, true, "Administrator permission was declined.");
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return ElevationOutcome.Failed(
-                $"The elevated helper did not answer within {ResponseTimeoutSeconds} seconds.");
+            return new ExchangeResult(
+                null, false, $"The elevated helper did not answer within {ResponseTimeoutSeconds} seconds.");
         }
         catch (Exception ex)
         {
             _logger.Error("The elevated helper call failed.", ex);
-            return ElevationOutcome.Failed($"The elevated helper call failed: {ex.Message}");
+            return new ExchangeResult(null, false, $"The elevated helper call failed: {ex.Message}");
         }
         finally
         {
@@ -202,6 +254,8 @@ public sealed class ElevationService : IElevationService
 
         return $"FPM.Helper.{sid}";
     }
+
+    private readonly record struct ExchangeResult(HelperResponse? Response, bool Cancelled, string? Error);
 }
 
 /// <summary>Uses the helper's fixed, non-parameterised Checkpoint-Computer command.</summary>

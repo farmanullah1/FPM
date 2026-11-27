@@ -126,6 +126,8 @@ internal static class Program
             HelperCommand.CleanRule => CleanRule(request),
             HelperCommand.CreateRestorePoint => await CreateRestorePointAsync(request).ConfigureAwait(false),
             HelperCommand.ManageHostsBlock => ManageHostsBlock(request),
+            HelperCommand.ApplyTweak or HelperCommand.RevertTweak or HelperCommand.DetectTweak
+                => DebloatCommands.Handle(request),
             _ => Failure(request, "Unsupported helper command.")
         };
 
