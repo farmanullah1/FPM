@@ -19,7 +19,8 @@ mitigation that is actionable inside the plan.
 | R-12 | **Proprietary Microsoft material** in history or assets (installer, REA screenshots). | M | H | R1 audit; history check; owner approval before any history rewrite; never publish those files. | Owner | open |
 | R-13 | **Verification theatre**: claims without fresh output. | M | M | `verification-before-completion` + `fpm-wpf-verification`; evidence in `PROGRESS_LOG.md`; state what was not checked. | Agent | open |
 | R-14 | **Toolchain drift** (SDK 10 building net8.0 projects; future SDK removal). | L | M | `global.json` pins 8.0.428 with `latestFeature`; CI installs 8.0.x; build/tests re-verified under the pin. Re-check when the SDK is removed. | Agent | mitigated (R4) |
-| R-17 | **The frame budget cannot be evidenced on the available display.** The panel runs at 40 Hz (25 ms per refresh), so the 16 ms criterion is physically unreachable and traces show 32–275 ms worst frames. | H | M | Report intervals against the refresh period; re-measure on 60 Hz hardware before claiming the budget. Owner decision pending (Q-08). | Owner/Agent | open |
+| R-17 | **The frame budget cannot be evidenced on the available display.** The panel runs at 40 Hz (25 ms per refresh), so the 16 ms criterion is physically unreachable and traces show 32–275 ms worst frames. | H | L | Gate accepted as refresh-limited (D-028); re-measure on 60 Hz hardware before claiming 16 ms. | Owner/Agent | mitigated |
+| R-18 | **Desktop following is unproven against a real desktop switch.** The COM activation and decision logic are tested, but creating a desktop on the user's machine was not done; behaviour on Windows 10 and with the lock screen is unverified. | M | M | Try on a scratch desktop: toolbar visible on desktop 2, main window off, no focus theft; recheck on Win10. | Agent | open |
 | R-16 | **Local, untracked evidence contains a JWT.** `investigation.cany/evidence/…` (ignored, never committed) triggers the `jwt` rule on a working-tree scan. | M | M | Not in the repo or its history, so nothing is published. Owner should delete the evidence folder or treat that token as compromised/rotate it if it is live; keep `investigation.cany/` ignored. | Owner | open |
 | R-15 | **UI automation brittleness** (DPI virtualization, PrintWindow on layered windows). | M | L | DPI-aware capture; UIA selectors with fallbacks; accept manual verification when automation fails and say so. | Agent | open |
 
@@ -33,7 +34,7 @@ mitigation that is actionable inside the plan.
 
 ## Open questions for the owner
 
-- **Q-08 (W1):** this machine's display is 40 Hz, so no UI can hit 16 ms here. Accept “no missed refresh beyond one frame on the available hardware” as the W1 frame gate (recommended), or require a 60 Hz machine before W1 is signed off?
+- **Q-08 (W1): answered** — the owner chose “continue”, so the refresh-limited gate (D-028) stands.
 
 
 1. **Q-01 Priority:** finish the UI set (U7–U12) or switch to release foundations (R2/R4) first?

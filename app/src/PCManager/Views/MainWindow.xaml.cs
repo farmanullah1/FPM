@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media.Animation;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -9,6 +10,7 @@ using PCManager.Core;
 using PCManager.Core.Models;
 using PCManager.Motion;
 using PCManager.Services;
+using PCManager.Services.Desktop;
 using MotionKit = PCManager.Motion.Motion;
 using PCManager.Services.Abstractions;
 using PCManager.ViewModels;
@@ -28,6 +30,7 @@ public partial class MainWindow : FpmWindow
     private readonly FrameTimingProbe _frameProbe = new();
     private readonly Dictionary<object, FrameworkElement> _pageViews = new();
     private FrameworkElement? _visiblePage;
+    private DesktopFollowLoop? _desktopFollower;
 
     public MainWindow(MainViewModel viewModel, ISettingsService settings, IAppLogger logger)
     {
@@ -46,6 +49,9 @@ public partial class MainWindow : FpmWindow
         DataContext = viewModel;
 
         RestoreWindowBounds();
+
+        SourceInitialized += (_, _) => StartDesktopFollower();
+        Closed += (_, _) => _desktopFollower?.Dispose();
 
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
@@ -394,6 +400,15 @@ public partial class MainWindow : FpmWindow
         {
             _viewModel.ExecutePaletteCommand.Execute(entry);
         }
+    }
+
+    private void StartDesktopFollower()
+    {
+        IntPtr handle = new WindowInteropHelper(this).Handle;
+        _desktopFollower = DesktopFollowLoop.Start(
+            () => handle,
+            () => _settings.Current.MainWindowFollowDesktops && IsVisible && WindowState != WindowState.Minimized,
+            _logger);
     }
 
     private void RestoreWindowBounds()

@@ -198,6 +198,42 @@ public sealed partial class SettingsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>W2: follow the main window to the active virtual desktop (off by default).</summary>
+    public bool MainWindowFollowDesktops
+    {
+        get => _settings.Current.MainWindowFollowDesktops;
+        set
+        {
+            if (_settings.Current.MainWindowFollowDesktops == value)
+            {
+                return;
+            }
+
+            _settings.Current.MainWindowFollowDesktops = value;
+            _settings.Save();
+            OnPropertyChanged();
+            StatusMessage = value ? "The main window follows you across virtual desktops." : "The main window stays on its desktop.";
+        }
+    }
+
+    /// <summary>W2: keep the floating toolbar on the active virtual desktop (on by default).</summary>
+    public bool ToolbarFollowDesktops
+    {
+        get => _settings.Current.ToolbarFollowDesktops;
+        set
+        {
+            if (_settings.Current.ToolbarFollowDesktops == value)
+            {
+                return;
+            }
+
+            _settings.Current.ToolbarFollowDesktops = value;
+            _settings.Save();
+            OnPropertyChanged();
+            StatusMessage = value ? "The toolbar follows you across virtual desktops." : "The toolbar stays on its desktop.";
+        }
+    }
+
     /// <summary>App setting read by the motion policy: keeps fades, drops slides/scales/springs.</summary>
     public bool ReduceMotion
     {

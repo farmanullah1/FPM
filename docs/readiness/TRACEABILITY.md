@@ -49,6 +49,8 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-41 | CI: build, tests, lint, contrast, icons (R4) | R4 | `.github/workflows/ci.yml` | actionlint exit 0; every `run:` executed locally green (`PROGRESS_LOG.md`) |
 | TR-42 | Secret scan over working tree **and history** (R1, R4) | R4 | `tools/secret-scan.ps1`, CI `secret-scan` job | gitleaks 8.30.1: 77 commits, no leaks; checksum-verified install branch tested |
 | TR-43 | Reproducible SDK for local and CI builds | R4 | `global.json` | `dotnet --version` = 8.0.428; Release build `-warnaserror` + 166 tests green |
+| TR-48 | Follow the active virtual desktop without pinning or stealing focus (W2) | W2 | `Services/Desktop/VirtualDesktopManagerApi.cs`, `VirtualDesktopFollower.cs`, `PCManager/Services/DesktopFollowLoop.cs` | 7 unit tests; COM activation logged at runtime |
+| TR-49 | “Show FPM on all desktops” defaults: toolbar on, main window off; persists (W2) | W2 | `ToolboxModels.cs`, `SettingsViewModel.cs`, `SettingsView.xaml` | toggle wrote `ToolbarFollowDesktops: false`; card renders at 560 px |
 | TR-45 | One chrome base: rounded corners, dark frame, Snap Layouts, Alt+Space (W1) | W1 | `Views/FpmWindow.cs`, `MainWindow.xaml`, `IconGalleryWindow.xaml` | build 0/0; max/restore/minimise verified by UIA; Light+Dark at 560/1280 |
 | TR-46 | Every window control reachable by keyboard/automation (W1) | W1 | `Styles/Controls.xaml` (`NavItemStyle`), title-bar buttons | UIA names: `Home…Settings`, `Minimise`, `Maximize or restore`, `Close` |
 | TR-47 | Frame pacing within the 16 ms budget (W1, U4) | W1 | `Motion/FrameTimingProbe.cs` | **blocked**: 40 Hz panel (25 ms refresh); trace recorded, 16 ms not evidenceable — Q-08 |

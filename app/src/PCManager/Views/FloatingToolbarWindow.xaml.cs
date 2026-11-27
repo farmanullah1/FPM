@@ -1,7 +1,9 @@
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using PCManager.Services;
 using PCManager.Services.Abstractions;
+using PCManager.Services.Desktop;
 using PCManager.ViewModels;
 
 namespace PCManager.Views;
@@ -13,12 +15,15 @@ namespace PCManager.Views;
 public partial class FloatingToolbarWindow : Window
 {
     private readonly ISettingsService _settings;
+    private readonly IAppLogger _logger;
+    private DesktopFollowLoop? _desktopFollower;
 
-    public FloatingToolbarWindow(FloatingToolbarViewModel viewModel, ISettingsService settings)
+    public FloatingToolbarWindow(FloatingToolbarViewModel viewModel, ISettingsService settings, IAppLogger logger)
     {
         InitializeComponent();
 
         _settings = settings;
+        _logger = logger;
         DataContext = viewModel;
         AppIdentity.ApplyWindowIcon(this);
 
@@ -37,6 +42,9 @@ public partial class FloatingToolbarWindow : Window
             Top = defaultTop;
         }
 
+        SourceInitialized += (_, _) => StartDesktopFollower();
+        Closed += (_, _) => _desktopFollower?.Dispose();
+
         LocationChanged += (_, _) =>
         {
             if (WindowState == WindowState.Normal)
@@ -46,6 +54,15 @@ public partial class FloatingToolbarWindow : Window
                 _settings.Save();
             }
         };
+    }
+
+    private void StartDesktopFollower()
+    {
+        IntPtr handle = new WindowInteropHelper(this).Handle;
+        _desktopFollower = DesktopFollowLoop.Start(
+            () => handle,
+            () => _settings.Current.ToolbarFollowDesktops && IsVisible,
+            _logger);
     }
 
     private void Root_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

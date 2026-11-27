@@ -56,6 +56,12 @@ public sealed class AppSettings
     /// <summary>Whether the main window was maximized when last closed.</summary>
     public bool MainWindowMaximized { get; set; }
 
+    /// <summary>Follow the main window to whichever virtual desktop is active (W2, off by default).</summary>
+    public bool MainWindowFollowDesktops { get; set; }
+
+    /// <summary>Keep the floating toolbar on the active virtual desktop (W2, on by default).</summary>
+    public bool ToolbarFollowDesktops { get; set; } = true;
+
     /// <summary>Days a file may stay in the quarantine before the retention pass removes it.</summary>
     public int QuarantineRetentionDays { get; set; } = 7;
 

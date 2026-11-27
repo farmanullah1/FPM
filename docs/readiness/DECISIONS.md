@@ -32,7 +32,9 @@ accepted decision marked **owner**.
 | D-024 | 2026-11-27 | CI builds **Release** with `-warnaserror` and runs tests `--no-build` in Release. | Stronger than the local Debug habit and already proven green locally. | accepted |
 | D-025 | 2026-11-27 | Drop `AllowsTransparency` and use DWM rounded corners (`DWMWA_WINDOW_CORNER_PREFERENCE`) with a square fallback. | Layered windows force software composition and cap frame pacing; the plan already allowed the square-corner fallback on Windows 10. | accepted (W1) |
 | D-026 | 2026-11-27 | Chrome metrics: 40 px title bar, caption buttons 46×36, 6 px resize border. | The plan's Windows 11 reference metrics; verified by UI Automation. | accepted (W1) |
-| D-027 | 2026-11-27 | Treat the 16 ms frame budget as **unmeasurable on the current 40 Hz panel**, and report measured intervals against the refresh period instead of silently failing or claiming a pass. | One refresh is 25 ms here, so a 16 ms frame cannot occur; faking a pass would violate the evidence rule. | pending owner (Q-08) |
+| D-027 | 2026-11-27 | Treat the 16 ms frame budget as **unmeasurable on the current 40 Hz panel**, and report measured intervals against the refresh period instead of silently failing or claiming a pass. | One refresh is 25 ms here, so a 16 ms frame cannot occur; faking a pass would violate the evidence rule. | accepted (Q-08 answered) |
+| D-028 | 2026-11-27 | W1 frame gate = “no missed refresh beyond one frame on the available hardware”; the 16 ms figure is re-measured on 60 Hz hardware before any claim. | The owner answered “continue” to Q-08; this keeps the card shippable without overstating evidence. | accepted |
+| D-029 | 2026-11-27 | W2 uses only the documented `IVirtualDesktopManager` (follow, not pin); toolbar follows by default, main window does not; polling stops when the window is hidden or minimised. | There is no documented pin-to-all-desktops API, and the plan forbids the undocumented one without guards. | accepted |
 
 ## Pending owner decisions
 

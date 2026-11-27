@@ -5,6 +5,13 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 
 ## [Unreleased]
 
+### Added
+- **Virtual-desktop following (W2)**: the floating toolbar and (opt-in) the main window move to the
+  desktop you switch to, using the documented `IVirtualDesktopManager` COM API. Following is a 500 ms
+  poll that stops when the window is hidden or minimised, never activates the window, and never
+  guesses when the foreground desktop id is unavailable. Windows has no documented “pin to all
+  desktops” API, so Settings says so; toolbar follows by default, the main window does not.
+
 ### Changed
 - **Window chrome (W1)**: every captioned window now derives from `Views/FpmWindow.cs`, which draws real
   DWM rounded corners instead of a layered window, follows the app theme for the system frame, restores

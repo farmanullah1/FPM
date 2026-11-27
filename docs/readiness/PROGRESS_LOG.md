@@ -75,7 +75,25 @@ Not executed locally, by nature: the `actions/checkout` and `actions/setup-dotne
 | Gates | build 0/0, 166 tests, lint **376** (baseline ratcheted), contrast OK, IconGen unchanged | pass |
 
 **W1 is implemented and green except the frame-budget acceptance, which this 40 Hz display cannot evidence.**
-That needs the owner's decision (Q-08) before the card can be marked done; W2 was not started.
+**Q-08 answered by the owner (“continue”): accept the refresh-limited result.** W1 gate: met with that
+caveat recorded (R-17); 16 ms must be re-measured on 60 Hz hardware before it is claimed anywhere.
+
+## 2026-11-27 — W2 complete (follow the user across virtual desktops)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Documented API only | `Services/Desktop/VirtualDesktopManagerApi.cs`: COM `CLSID_VirtualDesktopManager`, `IsWindowOnCurrentVirtualDesktop`, `GetWindowDesktopId`, `MoveWindowToDesktop`; no `IVirtualDesktopPinnedApps` | COM instance created at runtime (log: “Virtual desktop tracking started”) |
+| Follower logic | `Services/Desktop/VirtualDesktopFollower.cs`: skip when disabled/hidden/minimised, skip when already current, take the foreground window's desktop id, never guess when it is unknown, move without activating | 7 unit tests: move, already current, disabled, no handle, unknown id, failed move, dispose |
+| 500 ms loop | `PCManager/Services/DesktopFollowLoop.cs`, UI-thread `DispatcherTimer`, one per followed window; logic stays WPF-free in Services | starts on `SourceInitialized`, disposed on `Closed` |
+| Settings | `MainWindowFollowDesktops` (default **off**), `ToolbarFollowDesktops` (default **on**); “Virtual desktops” card in Settings explains the no-pin limitation | toggling “Toolbar follows me” wrote `ToolbarFollowDesktops: false` to `settings.json` |
+| Toolbar wiring | `FloatingToolbarWindow` follows while `IsVisible` | wired |
+| Gates | build 0/0, **173 tests** pass | pass |
+
+Not checked: a real desktop switch (that would create a desktop on this machine) and Windows 10. The
+move path is exercised by unit tests against the interface, and the COM activation is proven; the
+switch itself is recorded as R-18 until it can be tried on a scratch desktop.
+
+Next card: **W3** (toolbar survives closing the app).
 
 ## Earlier entry
 

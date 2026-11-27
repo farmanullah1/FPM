@@ -175,6 +175,21 @@
                 </StackPanel>
             </Border>
 
+            <!-- Virtual desktops (W2) -->
+            <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.5}">
+                <StackPanel>
+                    <TextBlock Text="Virtual desktops" FontSize="17" FontWeight="SemiBold" />
+                    <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                               Text="Windows has no documented way to pin a window to every desktop, so FPM follows the desktop you switch to. Pop-ups stay on their owner's desktop." />
+                    <CheckBox Style="{StaticResource ToggleSwitch}" Content="Toolbar follows me"
+                              Margin="{StaticResource Thickness.3}"
+                              IsChecked="{Binding ToolbarFollowDesktops, Mode=TwoWay}" />
+                    <CheckBox Style="{StaticResource ToggleSwitch}" Content="Main window follows me"
+                              Margin="{StaticResource Thickness.2}"
+                              IsChecked="{Binding MainWindowFollowDesktops, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+
             <!-- About -->
             <Border Style="{StaticResource Card}" Padding="20">
                                     <StackPanel>
