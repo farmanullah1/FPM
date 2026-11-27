@@ -5,6 +5,19 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 
 ## [Unreleased]
 
+### Changed
+- **Window chrome (W1)**: every captioned window now derives from `Views/FpmWindow.cs`, which draws real
+  DWM rounded corners instead of a layered window, follows the app theme for the system frame, restores
+  Alt+Space, and answers `HTMAXBUTTON` so Windows 11 shows Snap Layouts over the custom maximize button.
+  The title bar is 40 px with 46×36 caption buttons and automation names; the main window no longer sets
+  `AllowsTransparency`, so WPF can compose on the GPU.
+- **Settings at narrow widths**: the “Start with Windows” and “Smart Boost” cards use two columns, so
+  their toggles no longer overlap the text at 560 px.
+
+### Fixed
+- Navigation rail items exposed their CLR type name to screen readers and UI automation; they now
+  announce `Home`, `Memory`, `Protection`, `Storage`, `Apps`, `Toolbox` and `Settings`.
+
 ### Added
 - **CI, secret scanning and a pinned SDK (R4)**: `.github/workflows/ci.yml` builds Release with
   warnings-as-errors, runs the full test suite, the XAML token lint, the contrast check, the icon

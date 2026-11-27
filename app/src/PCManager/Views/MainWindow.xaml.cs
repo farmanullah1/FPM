@@ -20,7 +20,7 @@ namespace PCManager.Views;
 /// Provides responsive breakpoints (360px - 1440+ px), custom WindowChrome,
 /// snap layout support, and window position persistence.
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow : FpmWindow
 {
     private readonly MainViewModel _viewModel;
     private readonly ISettingsService _settings;
@@ -32,6 +32,13 @@ public partial class MainWindow : Window
     public MainWindow(MainViewModel viewModel, ISettingsService settings, IAppLogger logger)
     {
         InitializeComponent();
+
+        // Lets Windows show Snap Layouts when the pointer rests on our custom maximize button.
+        MaximizeHitTarget = MaximizeButton;
+
+        logger.Info(
+            $"Render tier {RenderCapability.Tier >> 16}; DWM composition " +
+            $"{(FpmWindow.IsCompositionEnabled() ? "on" : "off")}.");
 
         _viewModel = viewModel;
         _settings = settings;

@@ -10,7 +10,7 @@ namespace PCManager.Views;
 /// normal shell is untouched. Sizes run from 20 to 96 px, the three detail levels and every tint
 /// are visible side by side.
 /// </summary>
-public partial class IconGalleryWindow : Window
+public partial class IconGalleryWindow : FpmWindow
 {
     private readonly IThemeService _theme;
 

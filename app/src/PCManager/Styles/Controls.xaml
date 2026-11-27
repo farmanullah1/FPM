@@ -370,6 +370,8 @@
     <!-- ============================ Navigation rail ============================ -->
 
     <Style x:Key="NavItemStyle" TargetType="ListBoxItem">
+        <!-- Without this, screen readers and UI tests announce the item's CLR type name. -->
+        <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
         <Setter Property="Padding" Value="3,5" />
         <Setter Property="Margin" Value="0,1" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource GoldFocusVisual}" />

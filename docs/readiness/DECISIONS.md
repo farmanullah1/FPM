@@ -30,6 +30,9 @@ accepted decision marked **owner**.
 | D-022 | 2026-11-27 | **Pin the SDK** with `global.json` → `8.0.428`, `rollForward: latestFeature`. | The product targets net8.0; the pin removes the SDK-10-vs-8 ambiguity. Re-verified: `dotnet --version` = 8.0.428, Release build with `-warnaserror` green (0/0) and all 166 tests pass under the pin. | accepted |
 | D-023 | 2026-11-27 | CI secret scanning runs the committed `tools/secret-scan.ps1` (gitleaks 8.30.1, checksum-verified) instead of a marketplace action, on `windows-latest`. | Every CI command must be executable and verifiable locally; the script is identical in both places and pins the scanner version. | accepted |
 | D-024 | 2026-11-27 | CI builds **Release** with `-warnaserror` and runs tests `--no-build` in Release. | Stronger than the local Debug habit and already proven green locally. | accepted |
+| D-025 | 2026-11-27 | Drop `AllowsTransparency` and use DWM rounded corners (`DWMWA_WINDOW_CORNER_PREFERENCE`) with a square fallback. | Layered windows force software composition and cap frame pacing; the plan already allowed the square-corner fallback on Windows 10. | accepted (W1) |
+| D-026 | 2026-11-27 | Chrome metrics: 40 px title bar, caption buttons 46×36, 6 px resize border. | The plan's Windows 11 reference metrics; verified by UI Automation. | accepted (W1) |
+| D-027 | 2026-11-27 | Treat the 16 ms frame budget as **unmeasurable on the current 40 Hz panel**, and report measured intervals against the refresh period instead of silently failing or claiming a pass. | One refresh is 25 ms here, so a 16 ms frame cannot occur; faking a pass would violate the evidence rule. | pending owner (Q-08) |
 
 ## Pending owner decisions
 

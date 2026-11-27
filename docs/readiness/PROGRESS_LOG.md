@@ -58,6 +58,25 @@ Not executed locally, by nature: the `actions/checkout` and `actions/setup-dotne
 
 **R4 gate: met.** Next card: **W1** (window chrome + frame budget), per the approved order.
 
+## 2026-11-27 — W1 implementation (frame gate blocked by the display)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Shared base | new `Views/FpmWindow.cs`: DWM rounded corners (Win11) with square fallback, dark system frame that follows the app theme, Alt+Space system menu, WM_NCHITTEST → `HTMAXBUTTON` for Snap Layouts | builds 0/0 |
+| Layered window removed | `MainWindow` no longer sets `AllowsTransparency`; background is the solid `App.Background`; the clipped shell drop shadow is gone | composition no longer software-forced |
+| Chrome metrics | title bar 40 px, caption buttons 46×36 with automation names `Minimise` / `Maximize or restore` / `Close` | verified by UI Automation |
+| Windows on the base | `MainWindow` and `IconGalleryWindow`; splash and floating toolbar stay borderless by design | — |
+| Window controls | UIA invoke: maximize → `IsZoomed=True` (700→1936 px), restore → `False`, minimise → `IsIconic=True` | pass |
+| Nav automation names | were the CLR type name (`PCManager.ViewModels.NavigationItem`); now `Home … Settings` via the container style | defect found and fixed |
+| 560 px overlap | “Start with Windows” and “Smart Boost” toggles overlapped their text at 560 px; cards now use two columns | defect found and fixed |
+| Visual regression | Light/Dark at 560 and 1280; both themes render correctly, no clipping after the fix | reviewed |
+| Frame trace | `PCMANAGER_FRAME_TRACE=1`, page switches: 9–14 frames per ~280 ms, worst frame 32.0 / 32.1 / 42.9 / 91.6 / 275.3 ms | **over the 16 ms budget** |
+| Why | `Render tier 2; DWM composition on.` but `Win32_VideoController.CurrentRefreshRate = 40` (AMD Radeon, 1920×1080) | 25 ms per refresh: 16 ms is unreachable on this panel |
+| Gates | build 0/0, 166 tests, lint **376** (baseline ratcheted), contrast OK, IconGen unchanged | pass |
+
+**W1 is implemented and green except the frame-budget acceptance, which this 40 Hz display cannot evidence.**
+That needs the owner's decision (Q-08) before the card can be marked done; W2 was not started.
+
 ## Earlier entry
 
 ## Carried state from the last code cards

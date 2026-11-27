@@ -21,18 +21,22 @@
             <!-- Start with Windows -->
             <Border Style="{StaticResource Card}" Padding="20">
                 <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <controls:Icon3D Key="Startup" Size="24" Margin="{StaticResource Thickness.1}" />
                             <TextBlock Text="Start with Windows" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
                         </StackPanel>
-                        <TextBlock Style="{StaticResource CaptionText}"
+                        <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap"
                                    Text="Registers this app under its own Run value so it never touches Microsoft PC Manager's entry." />
                         <TextBlock Text="{Binding RunValueText}" Style="{StaticResource CaptionText}"
-                                   FontFamily="Consolas" Margin="0,6,0,0" />
+                                   FontFamily="Consolas" Margin="0,6,0,0" TextWrapping="Wrap" />
                     </StackPanel>
-                    <CheckBox Style="{StaticResource ToggleSwitch}" Content="Start with Windows"
-                              HorizontalAlignment="Right" VerticalAlignment="Center"
+                    <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" Content="Start with Windows"
+                              VerticalAlignment="Center"
                               IsChecked="{Binding StartWithWindows, Mode=TwoWay}" />
                 </Grid>
             </Border>
@@ -41,15 +45,19 @@
             <Border Style="{StaticResource Card}" Padding="20">
                 <StackPanel>
                     <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <controls:Icon3D Key="SmartBoost" Size="24" Margin="{StaticResource Thickness.1}" />
                                 <TextBlock Text="Smart Boost" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
                             </StackPanel>
-                            <TextBlock Text="{Binding SmartBoostThresholdText}" Style="{StaticResource CaptionText}" />
+                            <TextBlock Text="{Binding SmartBoostThresholdText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
                         </StackPanel>
-                        <CheckBox Style="{StaticResource ToggleSwitch}" Content="Enabled"
-                                  HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,120,0"
+                        <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}" Content="Enabled"
+                                  VerticalAlignment="Center"
                                   IsChecked="{Binding SmartBoostEnabled, Mode=TwoWay}" />
                     </Grid>
 

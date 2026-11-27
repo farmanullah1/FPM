@@ -13,6 +13,9 @@ namespace PCManager.Services;
 /// </summary>
 public sealed class ThemeService : IThemeService
 {
+    /// <summary>Raised after a theme swap; true when the dark dictionary is active.</summary>
+    public static event Action<bool>? ThemeApplied;
+
     private static readonly Uri LightTheme = new("Styles/Themes/Light.xaml", UriKind.Relative);
     private static readonly Uri DarkTheme = new("Styles/Themes/Dark.xaml", UriKind.Relative);
 
@@ -43,6 +46,9 @@ public sealed class ThemeService : IThemeService
 
         // Icon3D bakes the palette into its frozen drawings, so it has to rebuild.
         Icon3D.NotifyThemeChanged();
+
+        // Windows drawing the frame (rounded corners, dark system menu) must follow the app theme.
+        ThemeApplied?.Invoke(dark);
     }
 
     /// <summary>Windows stores the app theme under Personalize\AppsUseLightTheme (0 = dark).</summary>

@@ -49,6 +49,9 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-41 | CI: build, tests, lint, contrast, icons (R4) | R4 | `.github/workflows/ci.yml` | actionlint exit 0; every `run:` executed locally green (`PROGRESS_LOG.md`) |
 | TR-42 | Secret scan over working tree **and history** (R1, R4) | R4 | `tools/secret-scan.ps1`, CI `secret-scan` job | gitleaks 8.30.1: 77 commits, no leaks; checksum-verified install branch tested |
 | TR-43 | Reproducible SDK for local and CI builds | R4 | `global.json` | `dotnet --version` = 8.0.428; Release build `-warnaserror` + 166 tests green |
+| TR-45 | One chrome base: rounded corners, dark frame, Snap Layouts, Alt+Space (W1) | W1 | `Views/FpmWindow.cs`, `MainWindow.xaml`, `IconGalleryWindow.xaml` | build 0/0; max/restore/minimise verified by UIA; Light+Dark at 560/1280 |
+| TR-46 | Every window control reachable by keyboard/automation (W1) | W1 | `Styles/Controls.xaml` (`NavItemStyle`), title-bar buttons | UIA names: `Home…Settings`, `Minimise`, `Maximize or restore`, `Close` |
+| TR-47 | Frame pacing within the 16 ms budget (W1, U4) | W1 | `Motion/FrameTimingProbe.cs` | **blocked**: 40 Hz panel (25 ms refresh); trace recorded, 16 ms not evidenceable — Q-08 |
 | TR-44 | Release workflow (tag → installer + checksums) | R4 (release half), R3 | `.github/workflows/release.yml` | deferred: needs the owner's push/signing decision; blocker recorded in `RISKS.md` |
 
 ## Coverage notes

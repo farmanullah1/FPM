@@ -5,8 +5,8 @@
     "Views/HomeView.xaml":  55,
     "Views/AppsView.xaml":  39,
     "Views/MemoryView.xaml":  25,
-    "Views/MainWindow.xaml":  26,
-    "Views/SettingsView.xaml":  32,
+    "Views/MainWindow.xaml":  23,
+    "Views/SettingsView.xaml":  31,
     "Views/FloatingToolbarWindow.xaml":  19,
     "Views/ProtectionView.xaml":  52
 }
