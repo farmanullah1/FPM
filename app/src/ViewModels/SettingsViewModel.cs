@@ -32,6 +32,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         IToolLauncher launcher,
         IWhitelistService whitelist,
         IAppLogger logger,
+        BatteryStatusViewModel battery,
         IMaintenanceReadinessService? readinessService = null)
     {
         _appStartup = appStartup;
@@ -40,6 +41,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         _launcher = launcher;
         _whitelist = whitelist;
         _logger = logger;
+        Battery = battery;
         _readinessService = readinessService;
 
         OpenDataFolderCommand = new RelayCommand(() => OpenFolder(AppInfo.DataFolder));
@@ -66,6 +68,9 @@ public sealed partial class SettingsViewModel : ViewModelBase
     public RelayCommand<string> SetQuarantineRetentionCommand { get; }
     public RelayCommand<string> SetQuarantineMaxSizeCommand { get; }
     public AsyncRelayCommand RunReadinessCheckCommand { get; }
+
+    /// <summary>T1: the same shared battery reading, including its honest unavailable state.</summary>
+    public BatteryStatusViewModel Battery { get; }
 
     public ObservableCollection<string> WhitelistEntries { get; } = new();
     public ObservableCollection<ReadinessCheckItem> ReadinessChecks { get; } = new();

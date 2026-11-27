@@ -62,6 +62,7 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         IStorageService storage,
         IToolboxService toolbox,
         IToolLauncher launcher,
+        BatteryStatusViewModel battery,
         IAppLogger logger)
     {
         _boost = boost;
@@ -73,6 +74,7 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         _storage = storage;
         _toolbox = toolbox;
         _launcher = launcher;
+        Battery = battery;
         _logger = logger;
 
         BoostCommand = new AsyncRelayCommand(BoostAsync, () => !IsBusy);
@@ -105,6 +107,9 @@ public sealed partial class HomeViewModel : ViewModelBase, IDisposable
         _timer.Tick += (_, _) => OnTick();
         _timer.Start();
     }
+
+    /// <summary>Shared battery reading (T1); the tile hides itself when there is no battery.</summary>
+    public BatteryStatusViewModel Battery { get; }
 
     public AsyncRelayCommand BoostCommand { get; }
     public AsyncRelayCommand CaptureCommand { get; }

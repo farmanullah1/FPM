@@ -177,6 +177,21 @@
                 </StackPanel>
             </Border>
 
+            <!-- Battery (T1): always shown, including the honest "No battery detected" state. -->
+            <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.5}">
+                <StackPanel>
+                    <TextBlock Text="Battery" FontSize="17" FontWeight="SemiBold" />
+                    <controls:BatteryTile DataContext="{Binding Battery}"
+                                          Margin="{StaticResource Thickness.3}" />
+                    <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap">
+                        <Run Text="Time: " /><Run Text="{Binding Battery.TimeText, Mode=OneWay}" />
+                        <Run Text=" · Health: " /><Run Text="{Binding Battery.HealthText, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock Text="{Binding Battery.SampledText}" Style="{StaticResource CaptionText}"
+                               Margin="{StaticResource Thickness.1}" />
+                </StackPanel>
+            </Border>
+
             <!-- Virtual desktops (W2) -->
             <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.5}">
                 <StackPanel>

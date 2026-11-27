@@ -158,7 +158,27 @@ and were not implied as passed.
 U7's reduced-motion capture and an explicit cancel affordance are still outstanding, so U7 is **not**
 marked done. W5 itself is done: same rule, same state machine, works in toolbar-only / hidden-main.
 
-Next card: **T1** (sensor service + battery).
+## 2026-11-27 — T1 complete (sensor service + battery)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Typed reading | `Core/Models/SensorModels.cs`: `SensorStatus` (Ok/Unavailable/NeedsPermission/Error), `BatteryReading` with nullable percent/time/health, `Reason`, `Source`, `SampledAt`; no default numbers | model in place |
+| One sampler | `Services/Sensors/BatterySensorService` + `ISensorService`: single `Timer`, 5 s while a surface is registered visible, 30 s otherwise, `SetDemand` from the main window and the toolbar | sample A `16:25:09` → sample B `16:25:19` (5 s cadence), then 5 s steps in the log |
+| Probe | `WindowsBatteryProbe`: `GetSystemPowerStatus` (percent, AC, charging flag, lifetime; 0xFFFFFFFF = unknown) plus `root\WMI` `BatteryStatus`/`BatteryStaticData`/`BatteryFullChargedCapacity`; capacities cached once | live: 100 %, AC, health 100 % |
+| Honest absence | No battery → `Unavailable` + “No battery detected”; unknown state → `Unavailable` + “Windows did not report a battery state”; unknown time → “Calculating…”; rate-based time labelled “(estimated)” | unit tests |
+| Shared presentation | `ViewModels/BatteryStatusViewModel` (one subscription) + `Controls/BatteryTile`; Home adds the tile inside the Boost card, toolbar adds it at compact scale, Settings always shows it with the sample time | screenshots |
+| Runtime: Home | 100 %, “On AC power”, “Fully charged”, “Health 100 %” in the Boost card | screenshot |
+| Runtime: toolbar + hidden main | toolbar pill shows “100% On AC power”; after closing the main window to tray the same tile still reads 100 % | screenshot |
+| Runtime: toolbar-only | `--toolbar-only` process shows the battery tile at 100 % | screenshot |
+| Runtime: Settings | “Battery” card with 100 %, Fully charged, Health 100 %, `Sampled 16:26:17` (updates on the shared cadence) | screenshot |
+| Bug found and fixed | `Run Text="{Binding Battery.TimeText}"` defaulted to TwoWay on a read-only property → unhandled UI exception, main window never appeared; fixed with `Mode=OneWay` | fixed, re-verified |
+| Gates | build 0/0, **208 tests**, lint 367 (unchanged, none added), contrast OK | pass |
+
+**Not exercised (recorded in RISKS R-23):** this laptop has a battery on AC at 100 %, so the live
+no-battery desktop path, live discharge “time remaining”, charging “time to full”, and the
+`NeedsPermission`/`Error` visuals were only covered by fixtures, not by a real capture.
+
+Next card: **T2** (CPU/GPU/laptop temperatures).
 
 ## Earlier entry
 

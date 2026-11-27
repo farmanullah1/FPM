@@ -6,6 +6,12 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Battery sensor (T1)**: one shared sampler feeds Home, the floating toolbar and Settings —
+  battery percent, AC/charging state, time remaining (OS value, or a rate-based “(estimated)” value),
+  and design-vs-full battery health, with 5 s sampling while visible and 30 s otherwise. Machines
+  without a battery report “No battery detected” instead of a fake percentage.
+
+### Added
 - **Boost inside the toolbar (W5)**: Home and the floating toolbar now share one Boost run — the same
   Idle/Measuring/Working/Completed/Failed state machine, the same rule that only an explicit Boost may
   delete temporary files, and the same rocket/flame animation with a count-up result chip (0.6× in the

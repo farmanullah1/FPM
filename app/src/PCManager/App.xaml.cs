@@ -70,6 +70,9 @@ public partial class App : Application
         // One Boost run shared by Home and the floating toolbar (U7/W5).
         collection.AddSingleton<PCManager.Services.Boost.BoostCoordinator>();
 
+        // One battery presenter shared by Home, the toolbar and Settings (T1).
+        collection.AddSingleton<BatteryStatusViewModel>();
+
         // Navigation is a broker so pages never reference the shell.
         collection.AddSingleton<NavigationService>();
         collection.AddSingleton<INavigationService>(sp => sp.GetRequiredService<NavigationService>());

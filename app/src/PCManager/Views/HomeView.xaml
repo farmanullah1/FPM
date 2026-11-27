@@ -147,6 +147,10 @@
                                                  FreedBytes="{Binding BoostFreedBytes}"
                                                  AutomationProperties.Name="Boost progress" />
 
+                    <!-- T1: the same shared battery reading as the toolbar and Settings. -->
+                    <controls:BatteryTile DataContext="{Binding Battery}"
+                                          Margin="{StaticResource Thickness.2}" />
+
                     <Grid Margin="0,10,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />

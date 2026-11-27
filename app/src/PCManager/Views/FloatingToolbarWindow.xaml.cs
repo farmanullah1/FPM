@@ -36,7 +36,11 @@ public partial class FloatingToolbarWindow : Window
     private bool _autoHidden;
     private bool _dockedThisDrag;
 
-    public FloatingToolbarWindow(FloatingToolbarViewModel viewModel, ISettingsService settings, IAppLogger logger)
+    public FloatingToolbarWindow(
+        FloatingToolbarViewModel viewModel,
+        ISettingsService settings,
+        IAppLogger logger,
+        BatteryStatusViewModel battery)
     {
         InitializeComponent();
 
@@ -55,6 +59,9 @@ public partial class FloatingToolbarWindow : Window
         TopmostMenuItem.IsChecked = Topmost;
         OpacitySlider.Value = Opacity;
         UpdatePinVisual();
+
+        // T1: the toolbar owns a battery demand slot, so toolbar-only mode samples while visible.
+        IsVisibleChanged += (_, _) => battery.SetVisible("toolbar", IsVisible);
 
         _collapseTimer = new DispatcherTimer { Interval = CollapseDelay };
         _collapseTimer.Tick += (_, _) => Collapse();

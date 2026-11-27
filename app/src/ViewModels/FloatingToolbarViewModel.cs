@@ -25,12 +25,14 @@ public sealed partial class FloatingToolbarViewModel : ObservableObject, IDispos
         IPcBoostService boost,
         BoostCoordinator boostCoordinator,
         IToolboxService toolbox,
-        INetworkThroughputService network)
+        INetworkThroughputService network,
+        BatteryStatusViewModel battery)
     {
         _boost = boost;
         _boostCoordinator = boostCoordinator;
         _toolbox = toolbox;
         _network = network;
+        Battery = battery;
 
         BoostCommand = new AsyncRelayCommand(() => _boostCoordinator.RunAsync(BoostTrigger.Manual));
         ScreenshotCommand = new AsyncRelayCommand(() => RunToolAsync("screenshot"));
@@ -47,6 +49,9 @@ public sealed partial class FloatingToolbarViewModel : ObservableObject, IDispos
         _timer.Tick += (_, _) => Refresh();
         _timer.Start();
     }
+
+    /// <summary>Shared battery reading (T1), rendered by BatteryTile in the toolbar row.</summary>
+    public BatteryStatusViewModel Battery { get; }
 
     public AsyncRelayCommand BoostCommand { get; }
     public AsyncRelayCommand ScreenshotCommand { get; }

@@ -32,7 +32,11 @@ public partial class MainWindow : FpmWindow
     private FrameworkElement? _visiblePage;
     private DesktopFollowLoop? _desktopFollower;
 
-    public MainWindow(MainViewModel viewModel, ISettingsService settings, IAppLogger logger)
+    public MainWindow(
+        MainViewModel viewModel,
+        ISettingsService settings,
+        IAppLogger logger,
+        BatteryStatusViewModel battery)
     {
         InitializeComponent();
 
@@ -54,6 +58,9 @@ public partial class MainWindow : FpmWindow
         Closed += (_, _) => _desktopFollower?.Dispose();
 
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+
+        // T1: the shared sampler runs at 5 s only while at least one surface is visible.
+        IsVisibleChanged += (_, _) => battery.SetVisible("main", IsVisible);
 
         Loaded += OnLoaded;
         SizeChanged += OnWindowSizeChanged;

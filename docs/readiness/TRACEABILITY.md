@@ -49,6 +49,10 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-41 | CI: build, tests, lint, contrast, icons (R4) | R4 | `.github/workflows/ci.yml` | actionlint exit 0; every `run:` executed locally green (`PROGRESS_LOG.md`) |
 | TR-42 | Secret scan over working tree **and history** (R1, R4) | R4 | `tools/secret-scan.ps1`, CI `secret-scan` job | gitleaks 8.30.1: 77 commits, no leaks; checksum-verified install branch tested |
 | TR-43 | Reproducible SDK for local and CI builds | R4 | `global.json` | `dotnet --version` = 8.0.428; Release build `-warnaserror` + 166 tests green |
+| TR-60 | Typed battery readings, never fabricated (T1) | T1 | `Core/Models/SensorModels.cs`, `Core/Formatting/BatteryText.cs` | 8 service tests incl. no-battery and unknown-state paths |
+| TR-61 | Shared 5 s / 30 s sampler, paused demand (T1) | T1 | `Services/Sensors/BatterySensorService.cs`, `ISensorService` | Settings sample time advanced 16:25:09 → 16:25:19; log 5 s steps |
+| TR-62 | Battery on Home, toolbar (docked, hidden main, toolbar-only) and Settings (T1) | T1 | `BatteryStatusViewModel`, `Controls/BatteryTile.xaml`, `HomeView.xaml`, `FloatingToolbarWindow.xaml`, `SettingsView.xaml` | screenshots at 100 % / AC in all four surfaces |
+| TR-63 | Honest unavailable state hides the desktop tile but explains itself in Settings (T1) | T1 | `BatteryTile` visibility, Settings card | fixture tests; not rendered (R-23) |
 | TR-57 | One Boost state machine and confirmation rule app-wide (W5/U7) | W5 | `Core/Models/BoostPhase.cs`, `Services/Boost/BoostCoordinator.cs` | 6 tests; toolbar run logged “Boost (Manual)…” |
 | TR-58 | Compact Boost animation in the toolbar, working hidden/toolbar-only (W5) | W5 | `Controls/BoostAnimationHost.xaml(.cs)`, `FloatingToolbarWindow.xaml` | toolbar chip “2 MB freed” with main window hidden; working-state screenshot |
 | TR-59 | Boost result updates Home (W5) | W5 | `HomeViewModel` subscription to the coordinator | Home automation text “2 MB of temporary files released.” |
