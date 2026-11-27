@@ -25,8 +25,8 @@ public sealed class FloatingToolbarHost : IFloatingToolbarHost
             _window.Closed += (_, _) => _window = null;
         }
 
+        // W4: the toolbar must never steal focus from the app the user is working in.
         _window.Show();
-        _window.Activate();
     }
 
     public void Hide()

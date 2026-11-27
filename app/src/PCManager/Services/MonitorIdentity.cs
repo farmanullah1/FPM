@@ -23,6 +23,44 @@ public static class MonitorIdentity
         return Describe(monitor);
     }
 
+    /// <summary>Work area of the monitor under a window, converted to device-independent units.</summary>
+    public static (System.Windows.Rect Work, string Device, uint Dpi) WorkAreaForWindow(IntPtr window)
+    {
+        IntPtr monitor = MonitorFromWindow(window, MonitorDefaultToNearest);
+        var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
+
+        if (monitor == IntPtr.Zero || !GetMonitorInfo(monitor, ref info))
+        {
+            System.Windows.Rect fallback = System.Windows.SystemParameters.WorkArea;
+            return (fallback, "primary", 96);
+        }
+
+        uint dpi = 96;
+
+        try
+        {
+            uint windowDpi = GetDpiForWindow(window);
+
+            if (windowDpi > 0)
+            {
+                dpi = windowDpi;
+            }
+        }
+        catch (EntryPointNotFoundException)
+        {
+            // Older builds: keep 96 and treat the work area as physical pixels.
+        }
+
+        double scale = dpi / 96.0;
+        var work = new System.Windows.Rect(
+            info.Work.Left / scale,
+            info.Work.Top / scale,
+            (info.Work.Right - info.Work.Left) / scale,
+            (info.Work.Bottom - info.Work.Top) / scale);
+
+        return (work, info.Device, dpi);
+    }
+
     private static (string Device, uint Dpi) Describe(IntPtr monitor)
     {
         var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
@@ -88,4 +126,7 @@ public static class MonitorIdentity
 
     [DllImport("shcore.dll")]
     private static extern int GetDpiForMonitor(IntPtr monitor, int dpiType, out uint dpiX, out uint dpiY);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetDpiForWindow(IntPtr window);
 }

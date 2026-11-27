@@ -6,6 +6,13 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Toolbar edge docking (W4)**: drag the toolbar to a screen edge and it snaps into a 32 px tab
+  showing the RAM metric; hovering or clicking expands it (150 ms) into the full tool drawer, which
+  collapses 1.5 s after the pointer leaves unless pinned. Right-click offers docking, an opacity
+  slider, always-on-top, reset and hide. It hides itself while a fullscreen app or presentation is
+  running, never takes focus, and stores its dock edge, pin, opacity and position per monitor/DPI.
+
+### Added
 - **Toolbar survives closing the app (W3)**: closing the main window hides it to the tray while the
   floating toolbar keeps running; the tray asks “Exit everything / exit but keep the toolbar / cancel”
   (with a remember option); `--toolbar-only` runs tray + toolbar without the shell; and a second

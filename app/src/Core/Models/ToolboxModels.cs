@@ -62,6 +62,21 @@ public sealed class AppSettings
     /// </summary>
     public Dictionary<string, WindowBounds> WindowBoundsByMonitor { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>W4: edge the floating toolbar is docked to.</summary>
+    public DockEdge ToolbarDock { get; set; }
+
+    /// <summary>W4: keep the docked drawer expanded after the pointer leaves.</summary>
+    public bool ToolbarPinned { get; set; }
+
+    /// <summary>W4: toolbar opacity, 0.6–1.0.</summary>
+    public double ToolbarOpacity { get; set; } = 1.0;
+
+    /// <summary>W4: always-on-top toggle.</summary>
+    public bool ToolbarTopmost { get; set; } = true;
+
+    /// <summary>W4: floating toolbar position per monitor and DPI.</summary>
+    public Dictionary<string, WindowBounds> ToolbarBoundsByMonitor { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>W3: closing the main window hides it to the tray while the toolbar runs (default on).</summary>
     public bool CloseToTray { get; set; } = true;
 

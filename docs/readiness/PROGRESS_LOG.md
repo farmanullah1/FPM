@@ -125,6 +125,23 @@ visible area on restore”, and the first pass only remembered one set of values
 Followed by a build 0/0 and **188 tests** passing. Remaining gaps are listed in `RISKS.md` (R-19, R-20)
 and were not implied as passed.
 
+## 2026-11-27 — W4 complete (toolbar edge docking)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Geometry rules | `Core/Models/ToolbarDock.cs`: 24 px snap threshold, 32 px strip, centred tab, expanded drawer clamped to the work area | 6 unit tests |
+| Docked tab | restored with `ToolbarDock=Right`: window rect **40×210 px** at x=1880 on a 1920-wide screen (32×168 DIP at 120 DPI), flush right; log “Toolbar restored docked to the right edge.” | pass |
+| Hover expansion | pointer over the tab: **442×105 px** at x=1438 with the full tool drawer (Shot / Note / Calc / Task / Open) | pass |
+| Auto-collapse | pointer away for 3 s: back to **40×210 px** at x=1880 | pass |
+| Pin / opacity / topmost / reset / hide | pin persists in settings and blocks auto-collapse; context menu with opacity slider (60–100 %) and presets, always-on-top toggle, reset, hide | menu items not clicked headlessly |
+| Drag away | dragging the expanded toolbar away from the edge calls `Undock()` and keeps the new floating position (code path) | gesture not simulated |
+| Never steals focus | `FloatingToolbarHost` no longer calls `Activate()`; window has `ShowActivated=False` | pass by inspection |
+| Fullscreen hiding | 1 s poll of `SHQueryUserNotificationState`; hides on busy / D3D fullscreen / presentation mode and restores afterwards | not exercised |
+| Persistence | dock edge, pin, opacity, topmost and floating position stored per monitor + DPI (`ToolbarBoundsByMonitor`) | save path wired |
+| Gates | build 0/0, **194 tests**, lint 376, contrast OK | pass |
+
+Next card: **W5** (Boost inside the toolbar).
+
 ## Earlier entry
 
 ## Carried state from the last code cards

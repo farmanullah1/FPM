@@ -49,6 +49,9 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-41 | CI: build, tests, lint, contrast, icons (R4) | R4 | `.github/workflows/ci.yml` | actionlint exit 0; every `run:` executed locally green (`PROGRESS_LOG.md`) |
 | TR-42 | Secret scan over working tree **and history** (R1, R4) | R4 | `tools/secret-scan.ps1`, CI `secret-scan` job | gitleaks 8.30.1: 77 commits, no leaks; checksum-verified install branch tested |
 | TR-43 | Reproducible SDK for local and CI builds | R4 | `global.json` | `dotnet --version` = 8.0.428; Release build `-warnaserror` + 166 tests green |
+| TR-54 | Dock the toolbar to any edge with a slim tab and hover expansion (W4) | W4 | `Core/Models/ToolbarDock.cs`, `FloatingToolbarWindow.xaml(.cs)` | docked 40×210 px, expanded 442×105 px with drawer, collapsed back; 6 tests |
+| TR-55 | Toolbar opacity, always-on-top, pin, reset and hide, persisted (W4) | W4 | `ToolboxModels.cs`, context menu, `FloatingToolbarWindow.xaml.cs` | slider + presets wired; persistence saved; menu items not clicked |
+| TR-56 | Hide the toolbar under fullscreen apps, never steal focus (W4) | W4 | `SHQueryUserNotificationState` poll, `ShowActivated=False`, host without `Activate` | inspection only; fullscreen not exercised (R-21) |
 | TR-50 | Remember window size/position per monitor and DPI; clamp on restore (W1) | W1 | `Core/Models/WindowBounds.cs`, `AppSettings.WindowBoundsByMonitor`, `MonitorIdentity.cs`, `MainWindow.xaml.cs` | 7 tests; runtime key `\\.\DISPLAY1@120` persisted and restored |
 | TR-51 | Closing the main window keeps FPM and the toolbar alive (W3) | W3 | `AppLifetimePolicy`, `App.OnMainWindowClosing`, `App.Startup.cs` | alive=True, main hidden, `FPM Toolbar` visible; 8 policy tests |
 | TR-52 | `--toolbar-only` runs tray + toolbar without the shell (W3) | W3 | `App.StartToolbarOnly`, `StartToolbarOnlyProcess` | no main handle, toolbar visible, memory recorded in `BUILD_STATUS.md` |
