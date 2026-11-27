@@ -14,4 +14,10 @@ public interface IAppStartupService
     bool IsEnabled();
 
     OperationResult SetEnabled(bool enabled);
+
+    /// <summary>
+    /// W3: when the toolbar is left running, sign-in should start toolbar-only rather than the full
+    /// shell. Implementations that do not care can keep the plain overload.
+    /// </summary>
+    OperationResult SetEnabled(bool enabled, bool toolbarOnly) => SetEnabled(enabled);
 }

@@ -115,7 +115,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
                 return;
             }
 
-            OperationResult result = _appStartup.SetEnabled(value);
+            OperationResult result = _appStartup.SetEnabled(value, _settings.Current.ShowFloatingToolbar);
             _settings.Current.StartWithWindows = value;
             _settings.Save();
 
@@ -195,6 +195,26 @@ public sealed partial class SettingsViewModel : ViewModelBase
             _settings.Save();
             OnPropertyChanged();
             StatusMessage = value ? "Splash screen enabled." : "Splash screen disabled.";
+        }
+    }
+
+    /// <summary>W3: closing the main window hides it while the toolbar keeps running.</summary>
+    public bool CloseToTray
+    {
+        get => _settings.Current.CloseToTray;
+        set
+        {
+            if (_settings.Current.CloseToTray == value)
+            {
+                return;
+            }
+
+            _settings.Current.CloseToTray = value;
+            _settings.Save();
+            OnPropertyChanged();
+            StatusMessage = value
+                ? "Closing the window keeps FPM in the tray while the toolbar runs."
+                : "Closing the window exits FPM.";
         }
     }
 

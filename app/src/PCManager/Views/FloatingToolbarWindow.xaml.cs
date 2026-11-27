@@ -73,5 +73,13 @@ public partial class FloatingToolbarWindow : Window
         }
     }
 
-    private void Close_Click(object sender, RoutedEventArgs e) => Hide();
+    private void Close_Click(object sender, RoutedEventArgs e)
+    {
+        // W3: the toolbar's own × is the one place that turns the setting off, so it does not
+        // silently come back on the next launch.
+        _settings.Current.ShowFloatingToolbar = false;
+        _settings.Save();
+        _logger.Info("Toolbar closed by the user; floating toolbar disabled.");
+        Hide();
+    }
 }

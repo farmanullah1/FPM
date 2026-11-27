@@ -56,6 +56,21 @@ public sealed class AppSettings
     /// <summary>Whether the main window was maximized when last closed.</summary>
     public bool MainWindowMaximized { get; set; }
 
+    /// <summary>
+    /// W1: placement per monitor device and DPI, keyed by <see cref="WindowBoundsTable.Key"/>.
+    /// The legacy MainWindow* fields above remain for files written by earlier builds.
+    /// </summary>
+    public Dictionary<string, WindowBounds> WindowBoundsByMonitor { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>W3: closing the main window hides it to the tray while the toolbar runs (default on).</summary>
+    public bool CloseToTray { get; set; } = true;
+
+    /// <summary>W3: remembered answer to the tray Exit question.</summary>
+    public ExitPreference ExitPreference { get; set; } = ExitPreference.Ask;
+
+    /// <summary>W3: start at sign-in in toolbar-only mode when the toolbar was left running.</summary>
+    public bool RestoreToolbarAtSignIn { get; set; } = true;
+
     /// <summary>Follow the main window to whichever virtual desktop is active (W2, off by default).</summary>
     public bool MainWindowFollowDesktops { get; set; }
 

@@ -415,29 +415,54 @@ public partial class MainWindow : FpmWindow
     {
         Rect work = SystemParameters.WorkArea;
         AppSettings cfg = _settings.Current;
+        (string device, uint dpi) = MonitorIdentity.Primary();
 
-        double w = cfg.MainWindowWidth > 0 ? cfg.MainWindowWidth : 560;
-        double h = cfg.MainWindowHeight > 0 ? cfg.MainWindowHeight : 780;
+        // W1: exact monitor+DPI placement, else the same monitor at another DPI.
+        WindowBounds? saved = WindowBoundsTable.Resolve(cfg.WindowBoundsByMonitor, device, dpi);
 
-        Width = Math.Clamp(w, MinWidth, work.Width);
-        Height = Math.Clamp(h, MinHeight, work.Height);
-
-        if (cfg.MainWindowLeft.HasValue && cfg.MainWindowTop.HasValue)
+        WindowBounds desired = saved ?? new WindowBounds
         {
-            Left = Math.Clamp(cfg.MainWindowLeft.Value, work.Left, Math.Max(work.Left, work.Right - Width));
-            Top = Math.Clamp(cfg.MainWindowTop.Value, work.Top, Math.Max(work.Top, work.Bottom - Height));
-        }
-        else
-        {
-            // Default placement: bottom right corner near tray
-            Left = Math.Max(work.Left, work.Right - Width - 16);
-            Top = Math.Max(work.Top, work.Bottom - Height - 16);
-        }
+            Width = cfg.MainWindowWidth > 0 ? cfg.MainWindowWidth : 560,
+            Height = cfg.MainWindowHeight > 0 ? cfg.MainWindowHeight : 780,
+            Left = cfg.MainWindowLeft ?? Math.Max(work.Left, work.Right - 576),
+            Top = cfg.MainWindowTop ?? Math.Max(work.Top, work.Bottom - 796),
+            Maximized = saved is null && cfg.MainWindowMaximized,
+        };
 
-        if (cfg.MainWindowMaximized)
+        WindowBounds clamped = WindowBoundsTable.Clamp(
+            desired, work.Left, work.Top, work.Width, work.Height, MinWidth, MinHeight);
+
+        Width = clamped.Width;
+        Height = clamped.Height;
+        Left = clamped.Left;
+        Top = clamped.Top;
+
+        if (clamped.Maximized)
         {
             WindowState = WindowState.Maximized;
         }
+    }
+
+    private void SaveWindowBounds()
+    {
+        IntPtr handle = new WindowInteropHelper(this).Handle;
+
+        if (handle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        Rect placement = WindowState == WindowState.Normal ? new Rect(Left, Top, Width, Height) : RestoreBounds;
+        (string device, uint dpi) = MonitorIdentity.ForWindow(handle);
+
+        _settings.Current.WindowBoundsByMonitor[WindowBoundsTable.Key(device, dpi)] = new WindowBounds
+        {
+            Left = placement.Left,
+            Top = placement.Top,
+            Width = placement.Width,
+            Height = placement.Height,
+            Maximized = WindowState == WindowState.Maximized,
+        };
     }
 
     private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
@@ -471,19 +496,7 @@ public partial class MainWindow : FpmWindow
 
     private void OnWindowClosing(object? sender, CancelEventArgs e)
     {
-        if (WindowState == WindowState.Normal)
-        {
-            _settings.Current.MainWindowWidth = Width;
-            _settings.Current.MainWindowHeight = Height;
-            _settings.Current.MainWindowLeft = Left;
-            _settings.Current.MainWindowTop = Top;
-            _settings.Current.MainWindowMaximized = false;
-        }
-        else if (WindowState == WindowState.Maximized)
-        {
-            _settings.Current.MainWindowMaximized = true;
-        }
-
+        SaveWindowBounds();
         _settings.Save();
     }
 

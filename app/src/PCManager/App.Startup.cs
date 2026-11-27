@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
@@ -66,9 +67,18 @@ public partial class App
             _splash?.SetStage("Ready", 100);
             await Dispatcher.Yield(DispatcherPriority.Background);
 
+            window.Closing += OnMainWindowClosing;
             window.Show();
             _shellShown = true;
             ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+            // W3: the toolbar is part of the running app, not a page extra; restore it before the
+            // main window can be closed to the tray.
+            if (settings.Current.ShowFloatingToolbar)
+            {
+                services.GetRequiredService<IFloatingToolbarHost>().Show();
+                logger.Info("Floating toolbar restored from settings.");
+            }
 
             // Build the remaining page visuals at idle so later transitions are warm.
             window.PrewarmPages();
@@ -117,6 +127,38 @@ public partial class App
                     Shutdown();
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// W3 lightweight mode: tray + floating toolbar only. No splash, no main window, no shell
+    /// services; used by <c>--toolbar-only</c> and by "exit but keep the toolbar".
+    /// </summary>
+    private void StartToolbarOnly(string reason)
+    {
+        _toolbarOnly = true;
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+        Microsoft.Extensions.DependencyInjection.ServiceProvider services = _services!;
+        IAppLogger logger = services.GetRequiredService<IAppLogger>();
+
+        try
+        {
+            ISettingsService settings = services.GetRequiredService<ISettingsService>();
+            services.GetRequiredService<IThemeService>().Apply(settings.Current.Theme);
+            settings.Current.ShowFloatingToolbar = true;
+            settings.Save();
+
+            CreateTrayIcon(toolbarOnly: true);
+            services.GetRequiredService<IFloatingToolbarHost>().Show();
+
+            logger.Info($"Toolbar-only mode started ({reason}); pid {Environment.ProcessId}.");
+        }
+        catch (Exception ex)
+        {
+            logger.Error("Toolbar-only mode failed.", ex);
+            _isExiting = true;
+            Shutdown();
         }
     }
 

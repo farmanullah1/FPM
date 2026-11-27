@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -5,6 +6,7 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using PCManager.Cli;
 using PCManager.Core;
+using PCManager.Core.Models;
 using PCManager.Motion;
 using PCManager.Services;
 using MotionKit = PCManager.Motion.Motion;
@@ -29,7 +31,10 @@ public partial class App : Application
 {
     private ServiceProvider? _services;
     private Mutex? _singleInstance;
+    private SingleInstanceChannel? _channel;
     private System.Windows.Forms.NotifyIcon? _tray;
+    private bool _toolbarOnly;
+    private bool _isExiting;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -40,8 +45,11 @@ public partial class App : Application
 
         if (!TryAcquireSingleInstance())
         {
-            // Another copy is already running; do not start a second one.
-            Shutdown();
+            // Another FPM owns the mutex (full UI or toolbar-only). Ask it to show itself, then leave;
+            // never start a competing shell or a second toolbar.
+            bool forwarded = SingleInstanceChannel.TrySendShow(
+                SingleInstanceChannel.BuildPipeName(), TimeSpan.FromSeconds(3));
+            Shutdown(forwarded ? 0 : 1);
             return;
         }
 
@@ -81,6 +89,11 @@ public partial class App : Application
 
         _services = collection.BuildServiceProvider();
 
+        // Hand-off channel: a second launch asks this process to show its window.
+        _channel = new SingleInstanceChannel();
+        _channel.ShowRequested += OnShowRequested;
+        _channel.Start();
+
         // One motion policy for the whole shell: system settings, app settings, power and RDP.
         MotionKit.UsePolicy(_services.GetRequiredService<IMotionPolicy>());
 
@@ -110,6 +123,14 @@ public partial class App : Application
             }
 
             Environment.Exit(exitCode);
+            return;
+        }
+
+        // W3: lightweight mode — toolbar + tray only, no main window, no splash.
+        if (e.Args.Any(argument =>
+                string.Equals(argument, "--toolbar-only", StringComparison.OrdinalIgnoreCase)))
+        {
+            StartToolbarOnly("requested on the command line");
             return;
         }
 
@@ -153,7 +174,7 @@ public partial class App : Application
         }
     }
 
-    private void CreateTrayIcon()
+    private void CreateTrayIcon(bool toolbarOnly = false)
     {
         try
         {
@@ -165,17 +186,206 @@ public partial class App : Application
             };
 
             var menu = new System.Windows.Forms.ContextMenuStrip();
-            menu.Items.Add("Open FPM", IconRasterizer.ToBitmap("Logo", 16), (_, _) => ShowMainWindow());
-            menu.Items.Add("Boost now", IconRasterizer.ToBitmap("Memory", 16), async (_, _) => await TrayBoostAsync());
+            menu.Items.Add("Open FPM", IconRasterizer.ToBitmap("Logo", 16), (_, _) => RequestShow());
+
+            if (toolbarOnly)
+            {
+                menu.Items.Add("Hide toolbar", IconRasterizer.ToBitmap("Toolbox", 16), (_, _) => HideToolbarFromTray());
+            }
+            else
+            {
+                menu.Items.Add("Boost now", IconRasterizer.ToBitmap("Memory", 16), async (_, _) => await TrayBoostAsync());
+            }
+
             menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-            menu.Items.Add("Exit", null, (_, _) => Shutdown());
+            menu.Items.Add("Exit", null, (_, _) => RequestExit());
             _tray.ContextMenuStrip = menu;
-            _tray.DoubleClick += (_, _) => ShowMainWindow();
+            _tray.DoubleClick += (_, _) => RequestShow();
         }
         catch (Exception ex)
         {
             _services?.GetService<IAppLogger>()?.Error("Tray icon creation failed.", ex);
         }
+    }
+
+    private void RequestShow()
+    {
+        if (_toolbarOnly)
+        {
+            HandOffToFullUi();
+            return;
+        }
+
+        ShowMainWindow();
+    }
+
+    /// <summary>Tray Exit (W3): ask or remember, then exit all, or exit and leave the toolbar running.</summary>
+    private void RequestExit()
+    {
+        IAppLogger? logger = _services?.GetService<IAppLogger>();
+        ISettingsService? settings = _services?.GetService<ISettingsService>();
+
+        if (settings is null)
+        {
+            ExitNow();
+            return;
+        }
+
+        bool toolbarEnabled = settings.Current.ShowFloatingToolbar;
+        ExitAction action = AppLifetimePolicy.DecideExit(
+            settings.Current.ExitPreference, toolbarEnabled, _toolbarOnly);
+
+        if (action == ExitAction.Prompt)
+        {
+            var dialog = new ExitDialog();
+            dialog.ShowDialog();
+
+            if (dialog.Choice is null)
+            {
+                return;
+            }
+
+            action = dialog.Choice.Value;
+
+            if (dialog.Remember)
+            {
+                settings.Current.ExitPreference = action == ExitAction.ExitAll
+                    ? ExitPreference.ExitAll
+                    : ExitPreference.ExitKeepToolbar;
+                settings.Save();
+            }
+        }
+
+        if (action == ExitAction.ExitKeepToolbar && !_toolbarOnly)
+        {
+            settings.Current.ShowFloatingToolbar = true;
+            settings.Save();
+            logger?.Info("Exit requested: keeping the toolbar in a separate toolbar-only process.");
+            ReleaseInstanceResources();
+            StartToolbarOnlyProcess();
+            _isExiting = true;
+            Shutdown();
+            return;
+        }
+
+        if (_toolbarOnly)
+        {
+            // Exiting toolbar-only mode turns the toolbar setting off so it does not reappear silently.
+            settings.Current.ShowFloatingToolbar = false;
+            settings.Save();
+        }
+
+        ExitNow();
+    }
+
+    private void ExitNow()
+    {
+        _isExiting = true;
+        Shutdown();
+    }
+
+    private static void StartToolbarOnlyProcess()
+    {
+        string? executable = Environment.ProcessPath;
+
+        if (string.IsNullOrWhiteSpace(executable))
+        {
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo(executable, "--toolbar-only")
+        {
+            UseShellExecute = true,
+        });
+    }
+
+    /// <summary>Toolbar-only (or a hidden window) asked to open the full UI: hand over and leave.</summary>
+    private void HandOffToFullUi()
+    {
+        _services?.GetService<IAppLogger>()?.Info("Hand-off: starting the full UI and ending toolbar-only mode.");
+        ReleaseInstanceResources();
+
+        string? executable = Environment.ProcessPath;
+
+        if (!string.IsNullOrWhiteSpace(executable))
+        {
+            Process.Start(new ProcessStartInfo(executable, "--no-splash")
+            {
+                UseShellExecute = true,
+            });
+        }
+
+        _isExiting = true;
+        Shutdown();
+    }
+
+    private void HideToolbarFromTray()
+    {
+        if (_services?.GetService<ISettingsService>() is { } settings)
+        {
+            settings.Current.ShowFloatingToolbar = false;
+            settings.Save();
+        }
+
+        _services?.GetService<IFloatingToolbarHost>()?.Hide();
+        _services?.GetService<IAppLogger>()?.Info("Toolbar hidden from the tray; the icon stays for Open FPM and Exit.");
+    }
+
+    private void ReleaseInstanceResources()
+    {
+        _channel?.Dispose();
+        _channel = null;
+
+        if (_singleInstance is not null)
+        {
+            try { _singleInstance.ReleaseMutex(); } catch { /* not owned */ }
+            _singleInstance.Dispose();
+            _singleInstance = null;
+        }
+    }
+
+    private void OnShowRequested()
+    {
+        _services?.GetService<IAppLogger>()?.Info(
+            "Single-instance hand-off received; showing FPM instead of starting a second process.");
+
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (_toolbarOnly)
+            {
+                HandOffToFullUi();
+                return;
+            }
+
+            ShowMainWindow();
+        }));
+    }
+
+    /// <summary>Main window close (W3): hide to tray while the toolbar runs, otherwise exit.</summary>
+    private void OnMainWindowClosing(object? sender, CancelEventArgs e)
+    {
+        if (_isExiting || sender is not Window window)
+        {
+            return;
+        }
+
+        ISettingsService? settings = _services?.GetService<ISettingsService>();
+
+        CloseAction action = settings is null
+            ? CloseAction.Exit
+            : AppLifetimePolicy.DecideClose(
+                settings.Current.CloseToTray, settings.Current.ShowFloatingToolbar, _isExiting);
+
+        if (action == CloseAction.HideToTray)
+        {
+            e.Cancel = true;
+            window.Hide();
+            _services?.GetService<IAppLogger>()?.Info(
+                "Main window closed to the tray; the toolbar keeps FPM running.");
+            return;
+        }
+
+        _isExiting = true;
     }
 
     private static System.Drawing.Icon? LoadTrayIcon()
@@ -282,12 +492,7 @@ public partial class App : Application
         _services?.Dispose();
         _services = null;
 
-        if (_singleInstance is not null)
-        {
-            try { _singleInstance.ReleaseMutex(); } catch { /* not owned */ }
-            _singleInstance.Dispose();
-            _singleInstance = null;
-        }
+        ReleaseInstanceResources();
 
         base.OnExit(e);
     }

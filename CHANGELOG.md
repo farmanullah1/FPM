@@ -6,6 +6,17 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Toolbar survives closing the app (W3)**: closing the main window hides it to the tray while the
+  floating toolbar keeps running; the tray asks “Exit everything / exit but keep the toolbar / cancel”
+  (with a remember option); `--toolbar-only` runs tray + toolbar without the shell; and a second
+  launch hands off over the per-user `FPM.Instance.<SID>` pipe instead of starting a competitor. The
+  toolbar’s own × turns the setting off, and sign-in registers `--toolbar-only` when the toolbar was
+  left running.
+- **Per-monitor, per-DPI window placement (W1)**: size and position are stored per monitor device
+  and effective DPI, with a clamp to the visible work area on restore and the legacy values as
+  fallback.
+
+### Added
 - **Virtual-desktop following (W2)**: the floating toolbar and (opt-in) the main window move to the
   desktop you switch to, using the documented `IVirtualDesktopManager` COM API. Following is a 500 ms
   poll that stops when the window is hidden or minimised, never activates the window, and never

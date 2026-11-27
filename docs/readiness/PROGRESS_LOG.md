@@ -93,7 +93,37 @@ Not checked: a real desktop switch (that would create a desktop on this machine)
 move path is exercised by unit tests against the interface, and the COM activation is proven; the
 switch itself is recorded as R-18 until it can be tried on a scratch desktop.
 
-Next card: **W3** (toolbar survives closing the app).
+### W1 addendum — per-monitor/per-DPI placement (2026-11-27)
+
+The card (02 §W1) does require “remember size/position per window type, per monitor/DPI; clamp to
+visible area on restore”, and the first pass only remembered one set of values. Now implemented:
+
+- `Core/Models/WindowBounds.cs`: `WindowBoundsTable.Key(device, dpi)`, `Resolve` (exact monitor+DPI,
+  then the same monitor at another DPI, else nothing) and `Clamp` (work area, minimum size).
+- `AppSettings.WindowBoundsByMonitor` persists a placement per monitor device and DPI; the legacy
+  `MainWindow*` fields remain as the fallback for older settings files.
+- `PCManager/Services/MonitorIdentity.cs` supplies the monitor device and effective DPI;
+  `MainWindow` saves on close and restores before showing.
+- 7 unit tests (`WindowBoundsTableTests`).
+- Runtime: moved the window to 60,50 700×975 px, closed it; `settings.json` gained
+  `\\.\DISPLAY1@120` → `left=48 top=40 w=560 h=780`; relaunch restored 60,45 700×975 px
+  (same placement at 120 DPI).
+
+## 2026-11-27 — W3 complete (toolbar survives closing the app)
+
+| Behaviour | Evidence from a real launch | Result |
+|---|---|---|
+| Close to tray | main window closed with `WM_CLOSE`: `alive=True mainVisible=False`, visible windows `FPM Toolbar`; log “Main window closed to the tray; the toolbar keeps FPM running.” | pass |
+| Restore toolbar | startup now shows the toolbar when the setting is on (a gap found by the first probe, fixed) | pass |
+| Single-instance hand-off | second `FPM.exe`: `exited=True exitCode=0`; first instance `mainVisible=True`; log “Single-instance hand-off received; showing FPM instead of starting a second process.” | pass |
+| `--toolbar-only` | `alive=True mainHandle=0`, visible window `FPM Toolbar`; log “Toolbar-only mode started (requested on the command line)”; working set 124.6 MB, private 50.2 MB | pass |
+| Hand-off from toolbar-only | normal launch while toolbar-only ran: launcher exited, toolbar-only exited, a new process appeared with a main window; log “Hand-off: starting the full UI and ending toolbar-only mode.” | pass |
+| Toolbar × | sets `ShowFloatingToolbar=false` and hides (code path, not clicked in this probe) | not exercised |
+| Exit dialog / tray menu | `ExitDialog` with three choices and “Remember my choice”; `AppLifetimePolicy` unit-tested (8 tests) | dialog not clicked headlessly |
+| Sign-in mode | `AppStartupService.SetEnabled(enabled, toolbarOnly)` writes `"exe" --toolbar-only` when the toolbar is on | registry write not exercised |
+
+Followed by a build 0/0 and **188 tests** passing. Remaining gaps are listed in `RISKS.md` (R-19, R-20)
+and were not implied as passed.
 
 ## Earlier entry
 

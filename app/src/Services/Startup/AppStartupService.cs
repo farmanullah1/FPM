@@ -27,7 +27,9 @@ public sealed class AppStartupService : IAppStartupService
         }
     }
 
-    public OperationResult SetEnabled(bool enabled)
+    public OperationResult SetEnabled(bool enabled) => SetEnabled(enabled, toolbarOnly: false);
+
+    public OperationResult SetEnabled(bool enabled, bool toolbarOnly)
     {
         try
         {
@@ -50,8 +52,10 @@ public sealed class AppStartupService : IAppStartupService
                 return OperationResult.Fail("The executable path could not be resolved.");
             }
 
-            // Quoted so paths containing spaces start correctly at logon.
-            key.SetValue(AppInfo.RunValueName, $"\"{executable}\"", RegistryValueKind.String);
+            // Quoted so paths containing spaces start correctly at logon; the toolbar-only switch
+            // keeps the sign-in footprint to tray + toolbar when the toolbar was left running.
+            string command = toolbarOnly ? $"\"{executable}\" --toolbar-only" : $"\"{executable}\"";
+            key.SetValue(AppInfo.RunValueName, command, RegistryValueKind.String);
 
             return OperationResult.Ok($"{AppInfo.ProductName} will now start with Windows.");
         }
