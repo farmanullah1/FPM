@@ -27,7 +27,8 @@ assume a tool exists. Baseline versions are in `BASELINE.md`.
 | A1–A7 | Android platform-tools `adb` (user-consented download, Google-signed) | never bundled |
 | T2 | `LibreHardwareMonitorLib` NuGet (MPL-2.0) | licence review required before adding |
 | W2 | COM `IVirtualDesktopManager` | documented API only |
-| R1/R4 | `gitleaks` or `trufflehog` | **not installed**; install before R4 |
+| R4 | `gitleaks` **8.30.1** via `tools/secret-scan.ps1` | Installed and checksum-verified; CI downloads the same pinned release |
+| R4 | `actionlint` **1.7.12** | Installed for local workflow validation |
 
 ## 3. NuGet and runtime dependencies already in use
 

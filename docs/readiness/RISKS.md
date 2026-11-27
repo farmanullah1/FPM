@@ -11,15 +11,23 @@ mitigation that is actionable inside the plan.
 | R-04 | **Responsive defects** at 360/560 (overlap, clipped labels) remain while later cards add layout. | H | M | U10 immediately after U9; capture 360/560/1280 in each UI card report. | Agent | open |
 | R-05 | **Scope explosion**: v7 has ~200 requirements, FreeBuff adds ~40 cards; context and time are finite. | H | H | One card per session; phase gates; single source of truth; stop and hand off at 70 % context with `AGENT_STATE.md`. | Both | open |
 | R-06 | **Skill library full (50/50)** blocks installing the two FPM skills. | H | L | Repo copies exist (D-013); owner frees slots (Q-02). | Owner | blocked |
-| R-07 | **Secret or proprietary file leaks** into the public repo (no gitleaks installed). | M | H | Install gitleaks before R4; keep R1 audit current; never commit tokens; CI secret scan. | Agent/Owner | open |
+| R-07 | **Secret or proprietary file leaks** into the public repo. | L | H | Closed for the current content: gitleaks 8.30.1 scanned all 77 commits (no leaks) and CI runs the same pinned script on every push/PR. Keep R1 audit current. | Agent/Owner | **closed (R4)** |
 | R-08 | **Installer/upgrade breakage** or data loss from Inno Setup changes. | M | H | R3 test matrix (clean 10/11, upgrade, silent, uninstall, coexistence); never delete user data by default. | Agent | open |
 | R-09 | **Android/ADB misuse** (wrong package, bootloop) or bundling platform-tools. | M | H | Denylist + Expert typed confirmation; snapshot before apply; consent + signature check for adb. | Agent | open |
 | R-10 | **Third-party licence incompatibility** (UAD GPL, LHM MPL, Syncfusion-like assets). | M | H | R2 notices; licence review before adding a package; no vendor icon packs. | Owner | open |
 | R-11 | **WMI/registry/sensor reads fail or block** on the owner's machine, producing slow or missing data. | H | M | Typed status `Unavailable` + reason; timeouts; no fabrication; tests with recorded fixtures. | Agent | open |
 | R-12 | **Proprietary Microsoft material** in history or assets (installer, REA screenshots). | M | H | R1 audit; history check; owner approval before any history rewrite; never publish those files. | Owner | open |
 | R-13 | **Verification theatre**: claims without fresh output. | M | M | `verification-before-completion` + `fpm-wpf-verification`; evidence in `PROGRESS_LOG.md`; state what was not checked. | Agent | open |
-| R-14 | **Toolchain drift** (SDK 10 building net8.0 projects; future SDK removal). | L | M | Pin SDK via `global.json` if builds break; CI uses a known SDK; record versions in `BASELINE.md`. | Agent | open |
+| R-14 | **Toolchain drift** (SDK 10 building net8.0 projects; future SDK removal). | L | M | `global.json` pins 8.0.428 with `latestFeature`; CI installs 8.0.x; build/tests re-verified under the pin. Re-check when the SDK is removed. | Agent | mitigated (R4) |
 | R-15 | **UI automation brittleness** (DPI virtualization, PrintWindow on layered windows). | M | L | DPI-aware capture; UIA selectors with fallbacks; accept manual verification when automation fails and say so. | Agent | open |
+
+## Resolved in R4
+
+- “Secret scanning not evidenced” — **closed**: tool installed, full-history scan run, result recorded,
+  CI runs the identical pinned command.
+- SDK pin ambiguity — **decided and verified** (D-022).
+- CI runnability without a push — **closed**: actionlint validates the YAML and every `run:` command
+  was executed locally with a passing result (see `PROGRESS_LOG.md`).
 
 ## Open questions for the owner
 

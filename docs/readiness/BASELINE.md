@@ -31,8 +31,10 @@ All values below were read from this machine during Phase 1; commands are reprod
 | Bun | **1.4.2** | not used by this repo |
 | OS | Windows (win32), display at **125 %** DPI | Windows 10/11 support is a product requirement |
 | Inno Setup (`iscc`) | not verified in this baseline | required later by R3 |
-| `gitleaks` / `trufflehog` | **not installed** | R1 secret scan was a grep-based scan only |
-| `gh` CLI | not verified | R4/R6 need the owner's authenticated account |
+| `gitleaks` | **8.30.1** | `%LOCALAPPDATA%\FPM\tools\gitleaks\gitleaks.exe`; checksum-verified release; used by `tools/secret-scan.ps1` and CI |
+| `actionlint` | **1.7.12** | `%LOCALAPPDATA%\FPM\tools\actionlint\actionlint.exe`; workflow validation |
+| SDK pin | `global.json` → 8.0.428 (`latestFeature`) | `dotnet --version` inside the repo reports 8.0.428 |
+| `gh` CLI | present (`C:\Program Files\GitHub CLI`) but not authenticated in this session | R4/R6 publishing needs the owner's account |
 
 ## 3. Verified gates at this commit
 
@@ -40,6 +42,9 @@ All values below were read from this machine during Phase 1; commands are reprod
 |---|---|---|
 | Build | `dotnet build app/PCManager.sln -nodeReuse:false -m:1 --no-restore` | **0 warnings, 0 errors** |
 | Tests | `cd app && dotnet test tests/PCManager.Tests/PCManager.Tests.csproj --no-build -nodeReuse:false` | **166 passed**, 0 failed, 0 skipped |
+| CI-equivalent build (R4) | `dotnet build app/PCManager.sln -c Release --no-restore -nodeReuse:false -m:1 -warnaserror` | **0 warnings, 0 errors** under the pinned SDK |
+| Secret scan (R4) | `powershell -File tools/secret-scan.ps1` (gitleaks 8.30.1) | **77 commits scanned, no leaks** |
+| Workflow lint (R4) | `actionlint -no-color -oneline .github/workflows/ci.yml` | exit 0 |
 | XAML lint | `powershell -File tools/lint-xaml.ps1` | **380 literals across 10 files**, none above baseline |
 | Contrast | `powershell -File tools/contrast-check.ps1` | every documented pair passes in both themes |
 | Icons | IconGen `--check` | generated dictionaries are up to date (run before claiming U2/U3 changes) |
@@ -61,9 +66,11 @@ Added by R2: `LICENSE` (GPL-3.0), `THIRD_PARTY_NOTICES.md`, `CONTRIBUTING.md`, `
 `CODE_OF_CONDUCT.md`, `.github/` templates, dependabot and CODEOWNERS. Added by Phase 1:
 `AGENTS.md` and `docs/readiness/`.
 
-**Still missing and required by the plan:** `.github/workflows/ci.yml`,
-`.github/workflows/release.yml`, `docs/images/` (README screenshots, R5), and the
-`gitleaks`/`trufflehog` secret-scan tool.
+Added by R4: `.github/workflows/ci.yml` (build/test, UI gates, secret scan), `tools/secret-scan.ps1`,
+`global.json`.
+
+**Still missing and required by the plan:** `.github/workflows/release.yml` (R4 release half, needs
+the owner's push/signing decision) and `docs/images/` (README screenshots, R5).
 
 ## 5. Known gaps carried into the plan
 

@@ -6,6 +6,14 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **CI, secret scanning and a pinned SDK (R4)**: `.github/workflows/ci.yml` builds Release with
+  warnings-as-errors, runs the full test suite, the XAML token lint, the contrast check, the icon
+  generator check and a full-history secret scan on GitHub-hosted Windows runners.
+  `tools/secret-scan.ps1` pins gitleaks 8.30.1, verifies the release checksum before installing it
+  into `%LOCALAPPDATA%\FPM\tools`, prints findings redacted and preserves the exit code, so CI and
+  a local run execute the identical command. `global.json` pins SDK 8.0.428 (`latestFeature`);
+  build, tests, lint, contrast, icon check and a 77-commit gitleaks scan were all re-run locally
+  and pass under the pin.
 - **Licence and community files (R2)**: FPM now ships the full GPL-3.0 text in `LICENSE`,
   `THIRD_PARTY_NOTICES.md` (Win11Debloat MIT notice verbatim, the Universal Android Debloater
   GPL reference, the Android platform-tools consent note, and every resolved NuGet dependency with

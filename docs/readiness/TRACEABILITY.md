@@ -46,6 +46,11 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-39 | Coexistence with Microsoft PC Manager (v7 §5.2) | existing + W/D | protected lists | 10-minute side-by-side test |
 | TR-40 | Migration from legacy identity (v7 §5.3) | done | `ILegacyIdentityMigrationService` | migration tests green |
 
+| TR-41 | CI: build, tests, lint, contrast, icons (R4) | R4 | `.github/workflows/ci.yml` | actionlint exit 0; every `run:` executed locally green (`PROGRESS_LOG.md`) |
+| TR-42 | Secret scan over working tree **and history** (R1, R4) | R4 | `tools/secret-scan.ps1`, CI `secret-scan` job | gitleaks 8.30.1: 77 commits, no leaks; checksum-verified install branch tested |
+| TR-43 | Reproducible SDK for local and CI builds | R4 | `global.json` | `dotnet --version` = 8.0.428; Release build `-warnaserror` + 166 tests green |
+| TR-44 | Release workflow (tag → installer + checksums) | R4 (release half), R3 | `.github/workflows/release.yml` | deferred: needs the owner's push/signing decision; blocker recorded in `RISKS.md` |
+
 ## Coverage notes
 
 - TR-35 has **no implementation yet** and no card in the FreeBuff plan except “new strings go

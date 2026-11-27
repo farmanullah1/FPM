@@ -27,6 +27,9 @@ accepted decision marked **owner**.
 | D-019 | 2026-11-27 | W1 may replace `AllowsTransparency` with DWM rounded corners after visual regression captures. | Needed for the 16 ms frame budget; keeps the chrome appearance checked. | accepted (owner) |
 | D-020 | 2026-11-27 | Commits stay local; push and signing are decided at R4. | No CI or notices were in place before R2. | accepted (owner) |
 | D-021 | 2026-11-27 | Accept `REA_REFERENCE_AUDIT.md` as the parity gate; per-card reports + phase-gate reviews. | Existing audit is sufficient; no re-run requested. | accepted by default (Q-07 unanswered) |
+| D-022 | 2026-11-27 | **Pin the SDK** with `global.json` → `8.0.428`, `rollForward: latestFeature`. | The product targets net8.0; the pin removes the SDK-10-vs-8 ambiguity. Re-verified: `dotnet --version` = 8.0.428, Release build with `-warnaserror` green (0/0) and all 166 tests pass under the pin. | accepted |
+| D-023 | 2026-11-27 | CI secret scanning runs the committed `tools/secret-scan.ps1` (gitleaks 8.30.1, checksum-verified) instead of a marketplace action, on `windows-latest`. | Every CI command must be executable and verifiable locally; the script is identical in both places and pins the scanner version. | accepted |
+| D-024 | 2026-11-27 | CI builds **Release** with `-warnaserror` and runs tests `--no-build` in Release. | Stronger than the local Debug habit and already proven green locally. | accepted |
 
 ## Pending owner decisions
 

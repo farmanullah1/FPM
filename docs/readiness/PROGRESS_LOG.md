@@ -34,6 +34,31 @@ Only verified work is recorded here. Each entry: date, item, command/evidence, r
 
 **Next card: R4** (CI workflow, secret scan tool, SDK pin).
 
+## 2026-11-27 — R4 complete (CI + secret scanning + SDK pin)
+
+| Step | Command / evidence | Result |
+|---|---|---|
+| Installed gitleaks 8.30.1 | release zip from `github.com/gitleaks/gitleaks` + `checksums.txt`; `sha256sum -c` reported **OK**; binary at `%LOCALAPPDATA%\FPM\tools\gitleaks\gitleaks.exe` | `gitleaks version` → **8.30.1** |
+| Secret scan, full history | `gitleaks git . --redact --no-banner --verbose --log-opts=--all --report-format json` | **77 commits scanned, ~1.96 MB, no leaks found**, exit 0 |
+| Committed scanner wrapper | `tools/secret-scan.ps1` (pinned 8.30.1, checksum-verified download, redacted output, exit code preserved) | CI and local run the identical command |
+| Scanner fresh-install branch | temp `-ToolsRoot`, empty tools folder | downloaded, checksum verified, **installed under temp root: True**, scan clean |
+| Installed actionlint 1.7.12 | release zip from `github.com/rhysd/actionlint` | `actionlint --version` → 1.7.12 |
+| Workflow validation | `actionlint -no-color -oneline .github/workflows/ci.yml` | **exit 0**, no findings |
+| CI job 1: restore | `dotnet restore app/PCManager.sln` | exit 0 |
+| CI job 1: build | `dotnet build app/PCManager.sln -c Release --no-restore -nodeReuse:false -m:1 -warnaserror` | **Build succeeded, 0 warnings, 0 errors**, exit 0 |
+| CI job 1: tests | `dotnet test app/tests/PCManager.Tests/PCManager.Tests.csproj -c Release --no-build -nodeReuse:false` | **166 passed**, 0 failed, 0 skipped, exit 0 |
+| CI job 2: lint | `powershell … tools/lint-xaml.ps1` | OK: 380 literals / 10 files, none above baseline, exit 0 |
+| CI job 2: contrast | `powershell … tools/contrast-check.ps1` | OK: every pair meets its ratio in both themes, exit 0 |
+| CI job 2: icons | `dotnet run --project tools/IconGen -- --check` | “113 icons, 213 geometries, up to date”, exit 0 |
+| CI job 3: secret scan | `powershell … tools/secret-scan.ps1` | gitleaks 8.30.1, 77 commits, **no leaks**, exit 0 |
+| SDK pin | `global.json` → 8.0.428, `rollForward: latestFeature`; `dotnet --version` in repo | **8.0.428**; restore, Release build (`-warnaserror`) and 166 tests re-run green under the pin |
+
+Not executed locally, by nature: the `actions/checkout` and `actions/setup-dotnet` steps (GitHub-hosted actions). Every `run:` command of every job was executed here with the results above, and the workflow passes actionlint.
+
+**R4 gate: met.** Next card: **W1** (window chrome + frame budget), per the approved order.
+
+## Earlier entry
+
 ## Carried state from the last code cards
 
 - U5 splash committed; U6 page caching/transitions committed as `ccdbff4`.

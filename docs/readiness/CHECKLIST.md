@@ -35,13 +35,13 @@ working time for one agent session, not calendar time. `☑` = verified, `☐` =
 | 2.3 | Identify prerequisites/blockers per wave | 0.5 h | Wave table has entry conditions | ☑ |
 | 2.4 | Ask the owner the seven open questions | 0.5 h | Answers recorded in `DECISIONS.md` | ☐ |
 | 2.5 | Approve the wave plan | 0.25 h | G-2 recorded | ☐ |
-| 2.6 | Execute wave 1, one card per session | 20–30 h | Each card's DoD + acceptance evidenced | ☐ |
+| 2.6 | Execute wave 1, one card per session | 20–30 h | Each card's DoD + acceptance evidenced | ☐ (R2, R4 done; W1 next) |
 
 ## Waves (details in `PHASE2_PLAN.md`)
 
 | Wave | Cards | Estimate | Gate |
 |---|---|---|---|
-| W0 Foundations | R2 licence/notices, R4 CI, gitleaks, SDK pin | 8–10 h | CI runs build/tests/lint/contrast/secret scan |
+| W0 Foundations | R2 licence/notices, R4 CI, gitleaks, SDK pin | 8–10 h | **done**: workflow validated, every job command run locally green, history scan clean, SDK pinned |
 | W1 UI finish | U7, U8, U9, U10, U11, U12 (+ localization foundation in U10) | 30–40 h | All screens at 3 widths, reduced motion, 16 ms budget |
 | W2 Windows | W1, W2, W3, W4, W5 | 20–28 h | Window lifecycle + toolbar survive close; tests |
 | W3 Sensors/toolbox | T1, T2, T3, T4 | 16–20 h | Real readings or `Unavailable`; no fabricated values |
