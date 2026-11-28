@@ -123,7 +123,26 @@ try {
         "Refresh ADB",
         "Download platform-tools",
         "Android devices",
-        "Connected devices")) {
+        "Connected devices",
+        "I understand Android package risk",
+        "Android user profile",
+        "Refresh Android packages",
+        "Search Android packages",
+        "Android package list filter",
+        "Android removal tier filter",
+        "Android package state filter",
+        "Show selected Android packages only",
+        "Select all visible Android packages",
+        "Clear Android package selection",
+        "Invert visible Android package selection",
+        "Android packages",
+        "Disable Android packages instead of uninstall",
+        "Android Expert mode",
+        "Exact protected package confirmation",
+        "Review Android package batch",
+        "Apply Android package batch",
+        "Undo Android package batch",
+        "Android package batch result")) {
         if (-not (Find-Named $window $name)) { "missing Android control: $name"; exit 7 }
         "control present: $name"
     }

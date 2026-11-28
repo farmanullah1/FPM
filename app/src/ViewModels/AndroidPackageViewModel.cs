@@ -389,3 +389,4 @@ public sealed partial class AndroidPackageViewModel : ObservableObject
         ApplyCommand.NotifyCanExecuteChanged();
         UndoCommand.NotifyCanExecuteChanged();
     }
+}
