@@ -358,3 +358,29 @@ A1 implementation commit: `5eca8a7e19c49779809dbf4b539c0294c8cadcef`.
 **Not checked / gaps:** no physical Android device, so no live USB authorization prompt, live `getprop`, live work-profile list, or live unauthorized/offline/no-permissions rendering (R-38). The real download path was not run in the app; consent/checksum/signature use a fake package source (R-39). The new tab was not captured at 360/560/1280 or in both themes (R-40). Poll stop-on-leave is not runtime-measured (R-41). Authenticode revocation is not checked online (R-42). Settings were restored after the probe.
 
 Next card: **A2** (package lists). No user-only blocker for A2. D-043 (LHM) and Q-05 (push/signing) remain owner decisions that do not block it.
+
+## 2026-11-28 — A2 complete (package lists)
+
+**Card acceptance quoted before implementation:** “Typed model + schema + validator for `uad_lists.json`; user-initiated update with diff/hash.” **Acceptance:** “Schema tests; embedded fallback.”
+
+A2 implementation commit: pending local commit.
+
+| Step | Evidence | Result |
+|---|---|---|
+| Embedded data | Copied `reference/universal-android-debloater/resources/assets/uad_lists.json` (commit `11f27c6…`) to `Core/Assets/android/uad_lists.json`; verified **845,509 bytes**, SHA-256 `e25a5087ea1730575e48aefa0d1f65990c0eaffc179c9950867aaf4ffbd85383`; embedded as `PCManager.Core.Assets.android.uad_lists.json` | 2,400 source rows, 2,394 unique package ids, 6 duplicate ids; no reference scripts run |
+| Schema/validator | `UadListParser` requires an array of objects with string id/list/description/removal and string arrays for dependencies/neededBy/labels; unknown list/removal, wrong types and malformed roots are rejected; 4,000,000-character bound; `android` plus dotted ids accepted (D-076) | valid reference accepted; invalid fixtures rejected with row-specific errors |
+| Duplicate handling | Dictionary normalization last-wins, `SourceRowCount` and `DuplicateIdCount` retained in `UadListCatalog`; six reference duplicates are reported, not hidden | embedded count 2,394; duplicate count 6 |
+| Cache/provider | `UadListProvider.LoadAsync` selects a valid cached file, otherwise embedded; `UpdateAsync(false)` makes no request; invalid remote leaves current/cache untouched; identical SHA is `AlreadyCurrent`; successful update writes `%LOCALAPPDATA%\FPM\android\lists\uad_lists.json` through a temporary file and a `.sha256` sidecar | fake-source tests cover cache, fallback, gate, invalid, same, updated, network failure |
+| Difference summary | `UadListDiff` compares ids and typed fields; reports added/removed/changed counts, capped sample ids, and duplicate normalization; UI prints the summary | updated fixture reports 1 added / 0 removed / 1 changed |
+| UI surface | `PackageListViewModel` loads without network on Android-tab visibility; `Check for list updates` is the only call to `UpdateAsync(true)`; card shows source, 2,394 ids, 2,400 source rows, duplicate count, SHA prefix and the Chinese-OEM warning | A2 card visible on the existing Android tab; no package rows/actions added |
+| Build | `dotnet build app/PCManager.sln -nodeReuse:false -m:1 --no-restore` | **0 warnings / 0 errors** |
+| Tests | `cd app && dotnet test tests/PCManager.Tests/PCManager.Tests.csproj --no-build -nodeReuse:false` | **302 passed**, 0 failed; **15 A2 tests** (8 parser/embedded, 7 provider) |
+| Static gates | `tools/lint-xaml.ps1`, `tools/contrast-check.ps1`, `dotnet run --project tools/IconGen -- --check` | lint **367** (baseline unchanged); contrast **OK both themes**; **113 icons / 213 geometries** |
+| Runtime probe | `tools/ui-probe-android.ps1` (same settings backup/restore and recorded-PID cleanup as A1) | **exit 0**; `UAD package list: 2,394 package ids ready`; `Embedded UAD list · 2,400 source rows · 6 duplicate id(s) normalized · SHA-256 e25a5087ea17`; `UAD package list` and `Check for list updates` present; ADB NoDevice path still visible |
+| Reference map | `docs/dev/uad-feature-map.md` records the pinned commit, schema, feature → component rows and deliberate differences; `Core/Assets/android/README.md` records provenance/license/hash | A7 can automate parity later; no upstream screenshots/code copied |
+
+**A2 acceptance:** typed model/schema/validator = covered by 8 parser/embedded tests; user-initiated update with diff/hash = covered by 7 provider tests and the UI command; embedded fallback = `LoadAsync` uses it on missing/invalid cache and the probe shows `Embedded UAD list`. The update request is gated by `UpdateAsync(userInitiated: true)` and is not triggered by startup, tab visibility or polling.
+
+**Not checked / gaps:** no live upstream GitHub fetch was performed; the real URL, proxy/timeout behaviour and current upstream compatibility are fake-source evidence only (R-44). No package rows, filters or actions were added (A3/A4). The A2 card was not visually captured at 360/560/1280 or in both themes (R-45). The remote list is HTTPS/schema-validated but not signed (R-46), and six upstream duplicate ids are last-wins (R-43). Settings were restored after the probe.
+
+Next card: **A3** (package engine). No user-only blocker for A3. D-043 (LHM) and Q-05 (push/signing) remain owner decisions that do not block it.

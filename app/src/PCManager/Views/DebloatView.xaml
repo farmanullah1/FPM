@@ -414,6 +414,30 @@
                                 </StackPanel>
                             </Border>
 
+                            <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.3}"
+                                    Margin="{StaticResource Thickness.2}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <controls:Icon3D Key="Apps" Size="24" Margin="{StaticResource Thickness.1}" />
+                                        <TextBlock Text="UAD package list" FontWeight="SemiBold"
+                                                   AutomationProperties.Name="UAD package list" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Android.PackageList.StatusText}" FontWeight="SemiBold"
+                                               TextWrapping="Wrap" Margin="{StaticResource Thickness.2}" />
+                                    <TextBlock Text="{Binding Android.PackageList.InfoText}" Style="{StaticResource CaptionText}"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Android.PackageList.DiffText}" Style="{StaticResource CaptionText}"
+                                               TextWrapping="Wrap" Margin="{StaticResource Thickness.1}" />
+                                    <Button Content="Check for list updates" Style="{StaticResource PillButton}"
+                                            Command="{Binding Android.PackageList.CheckForUpdatesCommand}"
+                                            Margin="{StaticResource Thickness.2}" HorizontalAlignment="Left"
+                                            AutomationProperties.Name="Check for list updates" />
+                                    <TextBlock Text="{Binding Android.PackageList.ChineseOemNote}"
+                                               Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource App.Warning.Text}" />
+                                </StackPanel>
+                            </Border>
+
                             <TextBlock Text="Connected devices" Style="{StaticResource SectionTitle}"
                                        Margin="{StaticResource Thickness.2}" />
                             <ComboBox ItemsSource="{Binding Android.Devices}"

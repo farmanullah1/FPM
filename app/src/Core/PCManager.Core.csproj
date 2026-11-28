@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\debloat\catalog.json" />
+    <EmbeddedResource Include="Assets\android\uad_lists.json" />
   </ItemGroup>
 
 </Project>

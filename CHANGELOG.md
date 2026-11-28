@@ -6,6 +6,9 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Android package lists (A2)**: the Debloat → Android tab now loads a typed, validated UAD catalog from the embedded GPL package data (2,400 source rows, 2,394 unique ids, 6 reported duplicates) and shows its source, counts and SHA-256. A user-pressed **Check for list updates** fetches the official upstream JSON over HTTPS, validates it with the same schema, shows an added/removed/changed diff, and writes a cached copy plus SHA-256 sidecar under `%LOCALAPPDATA%\FPM\android\lists`; an absent, invalid or failed update falls back to the embedded list. No package operations are exposed yet.
+
+### Added
 - **Android ADB onboarding (A1)**: a new Debloat → Android tab locates a signed `adb` (configured path, FPM tools, Android SDK locations, then PATH), refuses unsigned copies, explains every device state (no device, unauthorized, offline, no USB permission), and reads device identity and Android profiles through a closed typed command set. Google platform-tools **35.0.2** is offered only after an explicit Android SDK license acceptance; the pinned archive is SHA-256 checked before extraction and the staged `adb.exe` must carry a valid Google Authenticode signature. The ADB server starts lazily, is stopped only when FPM started it, and the device list polls every 2 s only while the tab is visible. No platform-tools are bundled.
 
 ### Added

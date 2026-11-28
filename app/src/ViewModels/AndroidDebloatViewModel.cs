@@ -22,10 +22,14 @@ public sealed partial class AndroidDebloatViewModel : ObservableObject, IDisposa
     private bool _visible;
     private bool _applying;
 
-    public AndroidDebloatViewModel(IAdbService adb, ISettingsService settings)
+    public AndroidDebloatViewModel(
+        IAdbService adb,
+        ISettingsService settings,
+        PackageListViewModel packageList)
     {
         _adb = adb;
         _settings = settings;
+        PackageList = packageList;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _timer.Tick += OnTick;
 
@@ -37,6 +41,7 @@ public sealed partial class AndroidDebloatViewModel : ObservableObject, IDisposa
 
     public ObservableCollection<AdbDevice> Devices { get; } = new();
     public ObservableCollection<string> UserRows { get; } = new();
+    public PackageListViewModel PackageList { get; }
 
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand UsePathCommand { get; }
@@ -112,6 +117,7 @@ public sealed partial class AndroidDebloatViewModel : ObservableObject, IDisposa
         {
             _timer.Start();
             _ = RefreshAsync();
+            _ = PackageList.LoadAsync();
         }
         else
         {

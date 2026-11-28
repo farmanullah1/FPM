@@ -128,6 +128,33 @@ try {
         "control present: $name"
     }
 
+    # A2: the embedded list must be visible and validated counts must be read, not inferred.
+    if (-not (Find-Named $window "UAD package list")) { "UAD package list heading missing"; exit 8 }
+    if (-not (Find-Named $window "Check for list updates")) { "UAD update command missing"; exit 8 }
+
+    $uadStatus = $null
+    $uadInfo = $null
+    $allTexts = $window.FindAll(
+        [System.Windows.Automation.TreeScope]::Descendants,
+        (New-Object System.Windows.Automation.PropertyCondition(
+            [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+            [System.Windows.Automation.ControlType]::Text)))
+    foreach ($item in $allTexts) {
+        $name = $item.Current.Name
+        if ($name -like "UAD package list:*") { $uadStatus = $name }
+        if ($name -like "*source rows*" -and $name -like "*duplicate*") { $uadInfo = $name }
+    }
+
+    if (-not $uadStatus -or $uadStatus -notlike "*2,394 package ids ready*") {
+        "unexpected UAD list status: $uadStatus"; exit 8
+    }
+    "UAD status: $uadStatus"
+    if (-not $uadInfo -or $uadInfo -notlike "*2,400 source rows*") {
+        "unexpected UAD list info: $uadInfo"; exit 8
+    }
+    "UAD info: $uadInfo"
+    "A2 package-list controls and embedded fallback visible"
+
     "UI probe passed"
     exit 0
 }
