@@ -82,13 +82,23 @@ public static class ServiceCollectionExtensions
             new PCManager.Services.Android.AdbProvisioner(
                 sp.GetRequiredService<PCManager.Services.Android.IAdbPackageSource>(),
                 sp.GetRequiredService<PCManager.Services.Android.IAdbSignatureVerifier>()));
-        services.AddSingleton<PCManager.Services.Android.IAdbService, PCManager.Services.Android.AdbService>();
+        services.AddSingleton<PCManager.Services.Android.AdbService>();
+        services.AddSingleton<PCManager.Services.Android.IAdbService>(sp =>
+            sp.GetRequiredService<PCManager.Services.Android.AdbService>());
+        services.AddSingleton<PCManager.Services.Android.IAdbCommandExecutor>(sp =>
+            sp.GetRequiredService<PCManager.Services.Android.AdbService>());
 
         // A2: embedded/cached UAD list, validated; HTTPS only on an explicit update command.
         services.AddSingleton<PCManager.Services.Android.IUadListSource,
             PCManager.Services.Android.HttpUadListSource>();
         services.AddSingleton<PCManager.Services.Android.IPackageListProvider,
             PCManager.Services.Android.UadListProvider>();
+
+        // A3: read-only package state, typed actions, sequential batches and verification.
+        services.AddSingleton<PCManager.Services.Android.IPackageEngine,
+            PCManager.Services.Android.PackageEngine>();
+        services.AddSingleton<PCManager.Services.Android.IPackageEngine,
+            PCManager.Services.Android.PackageEngine>();
 
         // --- FPM Services (Migration, Memory Diagnostics, Unified Cleanup, Network) ---
         services.AddSingleton<ILegacyIdentityMigrationService, PCManager.Services.Infrastructure.LegacyIdentityMigrationService>();

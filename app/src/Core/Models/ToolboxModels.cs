@@ -121,6 +121,9 @@ public sealed class AppSettings
 
     /// <summary>A1: optional user-configured adb.exe (or its folder). Empty means search FPM/SDK/PATH.</summary>
     public string AdbPath { get; set; } = string.Empty;
+
+    /// <summary>A3: devices that refuse uninstall use disable-user instead; reviewed by the user first.</summary>
+    public bool AndroidDisableInsteadOfUninstall { get; set; }
 }
 
 public enum ThemeOption

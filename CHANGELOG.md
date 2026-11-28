@@ -6,6 +6,15 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Android package engine (A3)**: typed package enumeration now joins UAD metadata with
+  enabled/disabled/system state for a device and Android user. The engine exposes uninstall,
+  disable, restore and enable actions over the closed ADB argument builder; unsafe/protected
+  packages require Expert mode plus the exact package id; disable-instead-of-uninstall is a
+  reviewable option. Batches continue after ordinary failures, stop on device disconnect, and
+  re-query state after apply. Dependency and needed-by metadata are emitted as review warnings.
+  No real phone or package mutation is used by tests.
+
+### Added
 - **Android package lists (A2)**: the Debloat → Android tab now loads a typed, validated UAD catalog from the embedded GPL package data (2,400 source rows, 2,394 unique ids, 6 reported duplicates) and shows its source, counts and SHA-256. A user-pressed **Check for list updates** fetches the official upstream JSON over HTTPS, validates it with the same schema, shows an added/removed/changed diff, and writes a cached copy plus SHA-256 sidecar under `%LOCALAPPDATA%\FPM\android\lists`; an absent, invalid or failed update falls back to the embedded list. No package operations are exposed yet.
 
 ### Added

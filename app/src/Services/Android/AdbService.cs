@@ -3,6 +3,15 @@ using PCManager.Services.Abstractions;
 
 namespace PCManager.Services.Android;
 
+/// <summary>Runs a typed command on an already-discovered, usable device.</summary>
+public interface IAdbCommandExecutor
+{
+    Task<AdbProcessResult> ExecuteAsync(
+        AdbDevice device,
+        AdbCommand command,
+        CancellationToken cancellationToken = default);
+}
+
 public interface IAdbService
 {
     string? ExecutablePath { get; }
@@ -31,7 +40,7 @@ public interface IAdbService
 /// Locates and verifies adb, lazily starts the server, parses read-only device state and owns
 /// the server only when this process actually started it. No package action is possible here.
 /// </summary>
-public sealed class AdbService : IAdbService, IDisposable
+public sealed class AdbService : IAdbService, IAdbCommandExecutor, IDisposable
 {
     private readonly ISettingsService _settings;
     private readonly IAdbRunner _runner;
@@ -229,6 +238,24 @@ public sealed class AdbService : IAdbService, IDisposable
         return result.Success
             ? AdbParsers.ParseUsers(result.StandardOutput)
             : Array.Empty<AdbUser>();
+    }
+
+    public async Task<AdbProcessResult> ExecuteAsync(
+        AdbDevice device,
+        AdbCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        if (!device.IsUsable)
+        {
+            return new AdbProcessResult(-1, string.Empty, "The Android device is not authorized.");
+        }
+
+        if (_adbPath is null || !await EnsureServerAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return new AdbProcessResult(-1, string.Empty, "ADB is not ready.");
+        }
+
+        return await _runner.RunAsync(_adbPath, command, cancellationToken).ConfigureAwait(false);
     }
 
     public void Shutdown()

@@ -103,3 +103,24 @@ public sealed class ProcessAdbRunner(TimeSpan? timeout = null) : IAdbRunner
         }
     }
 }
+
+public static class AdbFailures
+{
+    private static readonly string[] DisconnectMarkers =
+    {
+        "device offline",
+        "no devices/emulators found",
+        "device unauthorized",
+        "device not found",
+        "device still connecting",
+        "failed to connect",
+        "connection reset",
+        "error: closed",
+        "protocol fault",
+        "no devices found",
+    };
+
+    public static bool IsDeviceDisconnect(AdbProcessResult result) =>
+        result.Cancelled || (!result.Success && DisconnectMarkers.Any(marker =>
+            result.Combined.Contains(marker, StringComparison.OrdinalIgnoreCase)));
+}

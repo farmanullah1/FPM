@@ -384,3 +384,22 @@ A2 implementation commit: `e33b5cb62a1aab340087261df0a4d24e2129dd3c` (25 files; 
 **Not checked / gaps:** no live upstream GitHub fetch was performed; the real URL, proxy/timeout behaviour and current upstream compatibility are fake-source evidence only (R-44). No package rows, filters or actions were added (A3/A4). The A2 card was not visually captured at 360/560/1280 or in both themes (R-45). The remote list is HTTPS/schema-validated but not signed (R-46), and six upstream duplicate ids are last-wins (R-43). Settings were restored after the probe.
 
 Next card: **A3** (package engine). No user-only blocker for A3. D-043 (LHM) and Q-05 (push/signing) remain owner decisions that do not block it.
+
+## 2026-11-28 — A3 complete (Android package engine)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Typed command surface | `AdbCommandKind` now includes package list, uninstall, disable, enable and restore; `AdbCommandLine.Build` validates serial and dotted package ids and supplies argument lists only | no shell/free-form package command |
+| Package state model | `AndroidPackage`, `PackageScan`, `PackageActionRequest`, batch/result/warning records; system, enabled, disabled and uninstalled states | metadata joined by package id |
+| Engine | `IPackageEngine`/`PackageEngine` scans all/disabled/system lists, applies sequentially, supports disable-instead-of-uninstall, warns on dependencies, re-scans and verifies final state | continue-on-failure; disconnect stop |
+| Denylist | `PackageDenylist` protects critical launcher, shell, telephony, settings, installer and system packages; unsafe UAD rows are also denied | exact typed package confirmation required in Expert mode |
+| Wiring | `IAdbCommandExecutor` added to `AdbService`; `IPackageEngine` registered in the service collection | no package mutation occurs in ADB discovery/onboarding |
+| Tests | `PackageEngineTests` covers state join, denylist block/confirm, already state, continue failure, disconnect stop and dependency warnings | 321 tests total, 0 failed |
+| Build | `dotnet build app/PCManager.sln -nodeReuse:false -m:1 --no-restore` | 0 warnings / 0 errors |
+| Static gates | `lint-xaml.ps1`, `contrast-check.ps1`, `IconGen --check` | lint 367; contrast OK Light/Dark; 113 icons/213 geometries |
+
+**A3 acceptance:** typed state and command builder, batch application with per-package result and disconnect stop, final re-query, dependency warnings and Expert/denylist protection are implemented. No real device or package was mutated.
+
+**Not checked:** no physical Android device, USB authorization or live package mutation was exercised (R-38/R-39); A4 package UI remains not started.
+
+Next card: **A4** (Android package UI). No owner-only blocker.

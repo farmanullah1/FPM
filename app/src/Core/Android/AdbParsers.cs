@@ -178,6 +178,29 @@ public static class AdbParsers
         return users;
     }
 
+    /// <summary>Parses only <c>package:&lt;id&gt;</c> lines; header text and blanks are ignored.</summary>
+    public static IReadOnlyList<string> ParsePackageList(string output)
+    {
+        var packages = new List<string>();
+
+        foreach (string rawLine in output.Split('\n'))
+        {
+            string line = rawLine.Trim();
+            if (!line.StartsWith("package:", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string packageId = line["package:".Length..].Trim();
+            if (packageId.Length > 0)
+            {
+                packages.Add(packageId);
+            }
+        }
+
+        return packages.Distinct(StringComparer.Ordinal).ToArray();
+    }
+
     private static string Value(IReadOnlyDictionary<string, string> properties, params string[] keys)
     {
         foreach (string key in keys)
