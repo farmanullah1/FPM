@@ -154,7 +154,7 @@ internal static class DebloatCommands
 
         if (request.Restore.Count > 0)
         {
-            string? refusal = ValidateRestore(tweak, request.Restore);
+            string? refusal = DebloatRestoreGuard.Validate(tweak, request.Restore);
             if (refusal is not null)
             {
                 return Failure(request, refusal);
@@ -195,38 +195,6 @@ internal static class DebloatCommands
         {
             return Failure(request, $"Revert failed: {ex.Message}");
         }
-    }
-
-    private static string? ValidateRestore(DebloatTweak tweak, IReadOnlyList<RegistryValueState> restore)
-    {
-        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (DebloatAction action in tweak.Actions)
-        {
-            if (action is RegistrySetAction set)
-            {
-                allowed.Add($"{set.Hive}\\{set.Path}\\{set.RegistryName}");
-            }
-            else if (action is RegistryDeleteAction delete)
-            {
-                allowed.Add($"{delete.Hive}\\{delete.Path}\\{delete.RegistryName}");
-            }
-        }
-
-        foreach (RegistryValueState state in restore)
-        {
-            if (!allowed.Contains($"{state.Hive}\\{state.Path}\\{state.Name}"))
-            {
-                return $"Restore value '{state.Name}' is not a target of '{tweak.Id}'.";
-            }
-
-            if (!DebloatCatalogValidator.AllowedHives.Contains(state.Hive) ||
-                (state.Hive == "HKU" && !state.Path.StartsWith("Default", StringComparison.OrdinalIgnoreCase)))
-            {
-                return "Restore state uses a hive outside the allow-list.";
-            }
-        }
-
-        return null;
     }
 
     private static bool Evaluate(DebloatProbe probe, IReadOnlyList<RegistryValueState> values) => probe switch

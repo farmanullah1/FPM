@@ -6,6 +6,7 @@ public enum DebloatPlanStatus
     SkippedOs,
     SkippedUnsupported,
     SkippedProtected,
+    SkippedConflict,
 }
 
 public sealed class DebloatPlanItem
@@ -74,6 +75,7 @@ public static class DebloatPlanner
                 : string.CompareOrdinal(left.Tweak.Id, right.Tweak.Id);
         });
 
+        RefuseConflicts(plan);
         return plan;
     }
 
@@ -119,6 +121,43 @@ public static class DebloatPlanner
         }
 
         return new DebloatPlanItem { Tweak = tweak, Status = DebloatPlanStatus.Ready };
+    }
+
+    private static void RefuseConflicts(DebloatPlan plan)
+    {
+        List<DebloatConflict> conflicts = DebloatConflictDetector
+            .Find(plan.Items.Where(item => item.IsRunnable).Select(item => item.Tweak))
+            .ToList();
+
+        if (conflicts.Count == 0)
+        {
+            return;
+        }
+
+        var byTweak = conflicts
+            .SelectMany(conflict => conflict.TweakIds.Select(id => (Id: id, Conflict: conflict)))
+            .GroupBy(pair => pair.Id, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.ToList(), StringComparer.Ordinal);
+
+        for (int index = 0; index < plan.Items.Count; index++)
+        {
+            DebloatPlanItem item = plan.Items[index];
+            if (!byTweak.TryGetValue(item.Tweak.Id, out var found))
+            {
+                continue;
+            }
+
+            string targets = string.Join("; ", found.Select(pair =>
+            {
+                string others = string.Join(", ", pair.Conflict.TweakIds.Where(id => id != item.Tweak.Id));
+                return $"{pair.Conflict.Target} (with {others})";
+            }));
+
+            plan.Items[index] = Skip(
+                item.Tweak,
+                DebloatPlanStatus.SkippedConflict,
+                "Conflicts with another selected tweak: " + targets + ". Choose one alternative.");
+        }
     }
 
     private static DebloatPlanItem Skip(DebloatTweak tweak, DebloatPlanStatus status, string reason) =>

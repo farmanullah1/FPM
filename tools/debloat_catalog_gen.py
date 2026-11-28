@@ -267,6 +267,9 @@ def main() -> None:
 
     tweaks = []
     map_rows = []
+    excluded_features = [
+        {"featureId": key, "reason": reason} for key, reason in EXCLUDED.items()
+    ]
 
     for feature in features:
         fid = feature["FeatureId"]
@@ -285,17 +288,21 @@ def main() -> None:
         else:
             reg_name = feature.get("RegistryKey")
             if not reg_name:
-                map_rows.append((fid, "-", "intentionally-excluded", "No declarative action mapped for D1."))
+                reason = "No declarative action mapped for D1."
+                map_rows.append((fid, "-", "intentionally-excluded", reason))
+                excluded_features.append({"featureId": fid, "reason": reason})
                 continue
             reg_path = REF / "Regfiles" / reg_name
             if "HKEY_CLASSES_ROOT" in read_text(reg_path):
                 reason = "Uses HKEY_CLASSES_ROOT, outside D1's hive allow-list (HKCU/HKLM/HKU\\Default)."
                 map_rows.append((fid, "-", "intentionally-excluded", reason))
+                excluded_features.append({"featureId": fid, "reason": reason})
                 continue
             actions = parse_reg(reg_path)
             if any(a.get("hive") == "HKU" and not a["path"].startswith("Default") for a in actions):
                 reason = "Writes under a service SID hive; D1 only allows HKU\\Default."
                 map_rows.append((fid, "-", "intentionally-excluded", reason))
+                excluded_features.append({"featureId": fid, "reason": reason})
                 continue
             undo_name = feature.get("RegistryUndoKey")
             if undo_name:
@@ -384,9 +391,7 @@ def main() -> None:
             {"name": preset["Name"], "appIds": preset["AppIds"]}
             for preset in apps_doc.get("Presets", [])
         ],
-        "excludedFeatures": [
-            {"featureId": key, "reason": reason} for key, reason in EXCLUDED.items()
-        ],
+        "excludedFeatures": excluded_features,
         "excludedApps": excluded_apps,
     }
 

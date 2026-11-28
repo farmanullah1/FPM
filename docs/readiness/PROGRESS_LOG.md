@@ -304,3 +304,31 @@ Next card: **D4** (other-user/Default hive, CLI, preset import/export, drift che
 **Not checked / gaps:** no UAC prompt was approved, so no live other-user hive load/unload, no Default/SYSPREP write, and no live detect/apply/drift run (R-28/R-33). The hive API and unload path are fake-API tests only. `--apps` is parsed but deliberately refused because Appx removal still cannot be journaled (D-051/D-063); the CLI cannot remove apps. The drift check is manual, not scheduled, and each detect can raise its own UAC prompt (R-35). The probe read the default target and the presence of the commands; it did not select another profile or open a file dialog. Settings were restored after the probe.
 
 Next card: **D5** (parity/schema tests).
+
+## 2026-11-28 — ignore policy reconciled (mission deliverable audit)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Read the source protocol | `docs/freebuff/FPM_FreeBuff_00_START_HERE.md` says the six plan copies are **git-ignored by design**; `docs/dev/REPO_AUDIT.md` records the same policy | local-only plan inputs are intentional, not a missing deliverable |
+| Replaced the ignore list | `.gitignore` is now a lean deny-list: build/IDE output, packages, installer output, secrets, local app data, reference trees, agent files, local planning/prompt/handoff files, OS noise | no broad root-document rule; public docs are tracked by default |
+| Verified tracked files are not ignored | `git ls-files -ci --exclude-standard` | **empty** |
+| Verified the source of truth is visible | `git check-ignore -q --no-index` on `docs/readiness/README.md`, `CHECKLIST.md`, `DECISIONS.md`, `RISKS.md`, `TRACEABILITY.md`, `PROGRESS_LOG.md`, `README.md`, `CHANGELOG.md`, `docs/dev/REPO_AUDIT.md` | all **visible**; `docs/freebuff/…` and `AGENT_STATE.md` remain ignored on purpose |
+| Recorded the decision | D-066 added to `DECISIONS.md`; `README.md` §1 and `REPO_AUDIT.md` state that `docs/readiness/` is the tracked single source of truth | no mission deliverable is hidden by accident |
+
+## 2026-11-28 — D5 complete (Windows debloat safety/parity tests)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Conflict refusal | `DebloatConflicts.Find` compares final registry data and optional-feature state; `DebloatPlanner` marks every side `SkippedConflict` with the target and the other tweak ids before elevation | synthetic opposite/identical-value tests; real Spotlight pair test |
+| Restore guard | `DebloatRestoreGuard` is shared Core validation for journal pre-state: only the tweak's own targets and the catalog hive allow-list pass | own target accepted; foreign path and `HKCR` rejected; helper delegates to the same guard |
+| Reference parity | `DebloatReferenceParityTests` parses `docs/dev/win11debloat-feature-map.md`: 106 unique rows, 90 ported ids exactly equal the catalog ids, 16 excluded ids exactly equal `catalog.excludedFeatures`, every exclusion has a reason | parity is now a test, not a one-time script read |
+| Catalog data fix | `tools/debloat_catalog_gen.py` now records dynamic exclusions too; regenerated `catalog.json` (90 tweaks, 161 apps, **16** excluded features) | D1's map already said 16; the embedded catalog had 11. Fixed (D-068) |
+| Detection/action invariant | `DebloatCatalogDetectionTests` checks every detect probe against the typed action that satisfies it: `RegistryEquals` matches the set's type/value, `RegistryAbsent` matches a delete, `RegistryKeyAbsent` matches a key delete, optional-feature state matches, Appx absence matches; every action is also detected in reverse | all 90 catalog tweaks pass |
+| Existing D5 coverage retained | schema/validator, every tweak has detect + revert, OS gating, key-delete/Appx/protected refusals, fake-registry apply/undo/rollback, journal round-trip, hive cleanup, protected apps, preset round-trip | all green |
+| Dry-run no-write | `FPM.exe --debloat --preset minimal --dry-run` → exit **0**, `Plan: 14 selected, 7 ready, 7 skipped`; journal+backup file count **0 → 0** | no elevation, journal or backup file |
+| UI probe | launched `FPM.exe`; `tools/ui-probe-debloat.ps1` → exit **0**: `debloat page visible`, `Plan: 53 selected · 21 ready · 32 skipped · risk 21 Low · reboot required · Explorer restart`, target status, target picker, warning, preset-file line, refreshed profiles, all three D4 commands, `apps tab visible` | page computes conflict refusals and still shows the D4 surface |
+| Gates | build **0 warnings / 0 errors**; **267 tests passed**, 0 failed; lint **367** (baseline unchanged); contrast OK both themes | pass |
+
+**Not checked / gaps:** no UAC prompt was approved, so no live detect/apply/undo, other-user hive load/unload or Default/SYSPREP run was executed (R-28/R-33). The conflict refusal is unit-tested against synthetic targets and the real Spotlight pair; the page shows all 32 skipped rows but does not yet group alternatives or choose a default (R-37). The dry-run evidence is the built app plus file counts, not an automated CLI process test. Settings were restored after the probe.
+
+Next card: **A1** (ADB service: locate/consent/download/verify adb, device parsing). No user-only blocker for A1; D-043 (LHM) and Q-05 (push/signing) remain owner decisions that do not block it.

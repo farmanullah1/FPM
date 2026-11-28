@@ -6,9 +6,11 @@ everything they do not cover. No card is started before its dependencies and ent
 
 ## 1. Current position
 
-Done and committed: **G0, R1, U1, U2, U3, U4, U5, U6** (HEAD `ccdbff4`).
-Next by default: **R2 → R4 → W1 → U7 …** (Q-01/Q-04 pending).
-Not started: U7–U12, W1–W5, T1–T4, D1–D5, A1–A7, R2–R6, and the v7-only backlog in §6.
+Done and committed: **G0, R1, R2, R4, U1–U6, W1–W5, T1, D1–D5** (D5 is the current HEAD; see
+`PROGRESS_LOG.md`). T2 is partial: the unprivileged path ships, LHM/helper awaits D-043. U7's
+reduced-motion capture and cancel are still open.
+Next by the approved order: **A1** (ADB service). Owner-gated: D-043 (LHM), Q-05 (push/signing).
+Not started: U7–U12, T2 helper/LHM, T3–T4, A1–A7, R3, R5–R6, and the v7-only backlog in §9.
 
 ## 2. Wave 0 — release foundations (est. 8–12 h)
 
@@ -67,7 +69,7 @@ memory overhead recorded in `BUILD_STATUS.md`.
 | **D2** Engine | D1, helper | Planner (dependencies/conflicts/OS), executor via helper, journal/undo, restore point, `.reg` backup, idempotency, report codes. | Fake-registry tests; failure isolation; dry-run writes nothing. |
 | **D3** UI (Debloat → Windows) | D2, U10 | Presets, categories, search, risk/applied badges, apps tab, diff preview, apply, report, undo, history. | Keyboard accessible; typed plan == UI selection; no free-form commands. |
 | **D4** Advanced | D3 | Other user / Default hive, CLI (`--debloat`), preset export/import, drift check (report-only). **Done 2026-11-28** — see `PROGRESS_LOG.md`; live UAC target run remains R-33. | Hive always unloaded; CLI exit codes documented. |
-| **D5** Tests | D4 | Schema, revert/detect presence, gating, conflicts, journal, denylist, parity. | All green; no real registry touched. |
+| **D5** Tests | D4 | Schema, revert/detect presence, gating, conflicts, journal, denylist, parity. **Done 2026-11-28** — planner conflict refusal, shared restore guard, 16/16 exclusion parity, dry-run 0 files; see `PROGRESS_LOG.md`. | All green (266 tests); no real registry touched. |
 
 **Wave gate:** safety checklist per card; catalogue parity report; no untyped actions possible.
 

@@ -19,12 +19,12 @@ working time for one agent session, not calendar time. `☑` = verified, `☐` =
 | 1.10 | Decision log and risk register | 0.75 h | `DECISIONS.md`, `RISKS.md` complete | ☑ |
 | 1.11 | Definition of done (task + gate) | 0.25 h | `README.md` §4–§5 | ☑ |
 | 1.12 | Version control, backup, rollback | 0.25 h | `README.md` + `BASELINE.md` procedure; baseline tag made | ☑ |
-| 1.13 | Review checkpoints and approvers | 0.25 h | `README.md` §4 approved (Q-07) | ☑ (pending owner confirm) |
+| 1.13 | Review checkpoints and approvers | 0.25 h | `README.md` §4 approved (Q-07) | ☑ (D-021 default cadence) |
 | 1.14 | Traceability matrix | 1 h | `TRACEABILITY.md` maps every plan area to cards/files/criteria | ☑ |
 | 1.15 | Stakeholders and communication cadence | 0.25 h | `README.md` §4; owner + agent roles explicit | ☑ |
 | 1.16 | Effort estimates for every checklist item | 0.5 h | this table has an estimate per row | ☑ |
 | 1.17 | Phase-gate acceptance criteria | 0.5 h | `README.md` §4 + `PHASE2_PLAN.md` wave gates | ☑ |
-| **1.G** | **Phase 1 gate** | — | All rows ☑ or owner-accepted ⛔; owner approval recorded in `DECISIONS.md` | ☐ |
+| **1.G** | **Phase 1 gate** | — | All rows ☑ or owner-accepted ⛔; owner approval recorded in `DECISIONS.md` | ☑ 2026-11-27 — D-015; 1.6 owner-accepted repo-only (D-017) |
 
 ## Phase 2 — document review and execution setup
 
@@ -33,10 +33,11 @@ working time for one agent session, not calendar time. `☑` = verified, `☐` =
 | 2.1 | Read v7 and all six FreeBuff documents in full | 2 h | Section map + card dependencies recorded | ☑ |
 | 2.2 | Reconcile plan v7 cards with FreeBuff cards | 1 h | One ordered backlog in `PHASE2_PLAN.md`, no duplicates | ☑ |
 | 2.3 | Identify prerequisites/blockers per wave | 0.5 h | Wave table has entry conditions | ☑ |
-| 2.4 | Ask the owner the seven open questions | 0.5 h | Answers recorded in `DECISIONS.md` | ☐ |
-| 2.5 | Approve the wave plan | 0.25 h | G-2 recorded | ☐ |
-| 2.6 | Execute wave 1, one card per session | 20–30 h | Each card's DoD + acceptance evidenced | ☐ (R2, R4, W1–W5, T1, D1–D4 done; T2 unprivileged done, LHM/helper pending owner; U7 reduced-motion capture + cancel open; D5 next) |
+| 2.4 | Ask the owner the seven open questions | 0.5 h | Answers recorded in `DECISIONS.md` | ☑ — D-016…D-021; Q-07 answered by default |
+| 2.5 | Approve the wave plan | 0.25 h | G-2 recorded | ☑ — D-016 execution order |
+| 2.6 | Execute wave 1, one card per session | 20–30 h | Each card's DoD + acceptance evidenced | ☐ (R2, R4, W1–W5, T1, D1–D5 done; T2 unprivileged done, LHM/helper pending owner; U7 reduced-motion capture + cancel open; next A1) |
 | 2.7 | D4 advanced debloat | 6–8 h | Typed target, hive unload, presets, drift, CLI, tests, probe, docs | ☑ 2026-11-28 — 260 tests, probe exit 0, build 0/0, lint 367, contrast OK; live UAC run not approved (R-33) |
+| 2.8 | D5 Windows debloat tests | 4–6 h | Schema, revert/detect, gating, conflicts, journal, denylist and parity all covered; no live registry touched | ☑ 2026-11-28 — 267 tests, build 0/0, lint 367, contrast OK; dry-run 0 files; 16/16 exclusions; live UAC gaps remain (R-28/R-33) |
 
 ## Waves (details in `PHASE2_PLAN.md`)
 

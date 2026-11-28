@@ -1,52 +1,48 @@
-# ---------------------------------------------------------------------------
-# FPM - ignore policy (R1)
-# Builds on GitHub's VisualStudio template, then applies FPM's rules.
-# Keep tracked: source, *.sln, *.csproj, Directory.Build.props, .editorconfig,
-# .gitattributes, installer/FPM.iss + images, Assets/, docs/images/, README.md,
-# LICENSE, THIRD_PARTY_NOTICES.md, CHANGELOG.md, community files, .github/,
-# tools/, tests and small fixtures.
-# ---------------------------------------------------------------------------
+# FPM .gitignore
+# Keep source, project files, docs, assets, installer scripts and small fixtures tracked.
 
-# --- Build and IDE output --------------------------------------------------
+# Build and test output
 [Bb]in/
 [Oo]bj/
 [Oo]ut/
 publish/
 dist/
 artifacts/
-.vs/
-.idea/
 TestResults/
 coverage/
-*.user
-*.suo
-*.userprefs
 *.trx
 *.binlog
 *.msbuild.log
-*.cache
-*.tmp
-*.pid
-*.pdb
-*.dll
 
-# --- Packages --------------------------------------------------------------
+# IDE and editor files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+*.swp
+*.swo
+*~
+
+# Packages
+packages/
 *.nupkg
 *.snupkg
 
-# --- Installer and release artifacts (CI uploads these) --------------------
+# Installer and release output
 installer/Output/
-*.msixbundle
-*.msix
-*.appxbundle
-*.appx
 *.msi
-*.exe
-Setup*.exe
+*.msix
+*.msixbundle
+*.appx
+*.appxbundle
 FPM-Setup-*.exe
 *.zip
+Microsoft PC Manager Installer.exe
+microsoft-pc-manager-3-23-3-0.msixbundle
 
-# --- Secrets and signing material -----------------------------------------
+# Secrets and signing material
 .env
 .env.*
 !.env.example
@@ -61,7 +57,7 @@ appsettings.*.local.json
 *.publishsettings
 local.properties
 
-# --- Local app data produced while testing --------------------------------
+# Local app data and logs
 /settings.json
 cleanup_log.txt
 debloat_log.txt
@@ -71,15 +67,16 @@ android_actions.log
 /quarantine/
 /Data/
 *.wsb
+*.log
+*.tmp
+*.pid
 
-# --- Third-party reference material (read-only, never redistributed) ------
-# Win11Debloat (MIT) and Universal Android Debloater (GPL-3.0) sources, and
-# Google platform-tools if they are ever downloaded next to the repo.
+# Third-party reference material (read-only, never redistributed)
 reference/
 refs/
 platform-tools/
 
-# --- Investigation / craft workspace artifacts ----------------------------
+# Local investigation and agent-tool files
 .craft/
 craft.json
 feed.json
@@ -90,12 +87,6 @@ installer_types.txt
 capture/
 inbox/
 investigation.cany/
-
-# --- AI-agent working files -----------------------------------------------
-AGENT_STATE.md
-docs/freebuff/
-FPM_Master_*.md
-*_Master_Prompt*.md
 .antigravity/
 .freebuff/
 .omnirush/
@@ -106,25 +97,21 @@ FPM_Master_*.md
 .gemini/
 *.agent.log
 
-# --- OS and editor noise ---------------------------------------------------
+# Local planning, prompt and handoff documents (not public)
+/AGENT_STATE.md
+/BUILD_STATUS.md
+/FPM_Master_*.md
+/FPM_FreeBuff_*.md
+/*_MASTER_PROMPT*.md
+/*_Master_Prompt*.md
+/PROJECT_SPEC.md
+/REA_REFERENCE_AUDIT.md
+docs/freebuff/
+
+# OS noise
 .DS_Store
 Thumbs.db
 Desktop.ini
-.vscode/
 *.orig
 *.rej
 *.bak
-*.log
-
-# --- Root documentation ----------------------------------------------------
-# Prompt/spec markdown stays local; the public documents are named explicitly.
-/*.md
-!/README.md
-!/AGENTS.md
-!/CHANGELOG.md
-!/CONTRIBUTING.md
-!/SECURITY.md
-!/CODE_OF_CONDUCT.md
-!/THIRD_PARTY_NOTICES.md
-!/docs/**
-docs/freebuff/

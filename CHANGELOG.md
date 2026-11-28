@@ -6,6 +6,15 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Windows debloat safety tests (D5)**: the planner now refuses contradictory selections
+  (`SkippedConflict`) before elevation — the same registry value with different final data, or one
+  optional feature both on and off — so presets cannot silently apply both sides of Spotlight,
+  search-box, taskbar, Start-layout or drive-letter choices. Restore-state validation moved into a
+  shared Core guard with unknown-path/hive tests, the parity test compares all 106 reference
+  features (90 ported + 16 exclusions) with the embedded catalog, and the catalog now records the
+  five exclusions the generator previously omitted.
+
+### Added
 - **Windows debloat advanced (D4)**: typed user targets for another local profile (live hive or an
   offline `NTUSER.DAT` loaded as `HKU\FPM_*` and always unloaded) and the Default user hive with a
   SYSPREP warning and Windows 10 gate; a target picker plus profile refresh; `fpm-debloat-preset.json`
