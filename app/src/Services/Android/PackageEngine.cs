@@ -3,21 +3,6 @@ using PCManager.Services.Abstractions;
 
 namespace PCManager.Services.Android;
 
-public interface IPackageEngine
-{
-    Task<PackageScanResult> ScanAsync(
-        AdbDevice device,
-        int userId,
-        CancellationToken cancellationToken = default);
-
-    Task<PackageBatchResult> ApplyAsync(
-        AdbDevice device,
-        int userId,
-        IReadOnlyCollection<PackageActionRequest> requests,
-        PackageApplyOptions? options = null,
-        CancellationToken cancellationToken = default);
-}
-
 /// <summary>
 /// Read-only package state from the typed ADB surface, then a sequential batch. A failed package
 /// does not abort the batch; a disconnected device does. Every successful batch re-scans to verify
@@ -98,7 +83,7 @@ public sealed class PackageEngine : IPackageEngine
 
             if (!result.Success)
             {
-                return Failure(result, "Package scan failed");
+                return PackageEngineRules.Failure(result, "Package scan failed");
             }
 
             outputs[filter] = result.StandardOutput;
@@ -177,7 +162,7 @@ public sealed class PackageEngine : IPackageEngine
 
             if (!scan.ById.TryGetValue(request.PackageId, out AndroidPackage? package))
             {
-                results.Add(Result(request, request.Action, PackageState.Uninstalled, null,
+                results.Add(PackageEngineRules.Result(request, request.Action, PackageState.Uninstalled, null,
                     PackageResultStatus.Failed,
                     "The package was not present in the scan."));
                 continue;
@@ -185,7 +170,7 @@ public sealed class PackageEngine : IPackageEngine
 
             if (!AdbCommandLine.IsValidPackageId(request.PackageId))
             {
-                results.Add(Result(request, request.Action, package.State, null,
+                results.Add(PackageEngineRules.Result(request, request.Action, package.State, null,
                     PackageResultStatus.Failed,
                     "The package id is malformed."));
                 continue;
@@ -195,7 +180,7 @@ public sealed class PackageEngine : IPackageEngine
                 !(options.ExpertMode &&
                   string.Equals(options.ExpertConfirmation, package.Id, StringComparison.Ordinal)))
             {
-                results.Add(Result(request, request.Action, package.State, null,
+                results.Add(PackageEngineRules.Result(request, request.Action, package.State, null,
                     PackageResultStatus.BlockedDenylist,
                     PackageDenylist.Message));
                 continue;
@@ -208,14 +193,14 @@ public sealed class PackageEngine : IPackageEngine
 
             if (AlreadyInState(package, action, out string alreadyMessage))
             {
-                results.Add(Result(request, action, package.State, package.State,
+                results.Add(PackageEngineRules.Result(request, action, package.State, package.State,
                     PackageResultStatus.Already, alreadyMessage));
                 continue;
             }
 
-            if (!CanApply(package, action, out string invalidMessage))
+            if (!PackageEngineRules.CanApply(package, action, out string invalidMessage))
             {
-                results.Add(Result(request, action, package.State, null,
+                results.Add(PackageEngineRules.Result(request, action, package.State, null,
                     PackageResultStatus.Failed, invalidMessage));
                 continue;
             }
@@ -224,11 +209,11 @@ public sealed class PackageEngine : IPackageEngine
 
             try
             {
-                command = CommandFor(device, package.Id, action, userId);
+                command = PackageEngineRules.CommandFor(device, package.Id, action, userId);
             }
             catch (ArgumentException ex)
             {
-                results.Add(Result(request, action, package.State, null,
+                results.Add(PackageEngineRules.Result(request, action, package.State, null,
                     PackageResultStatus.Failed, ex.Message));
                 continue;
             }
@@ -245,8 +230,8 @@ public sealed class PackageEngine : IPackageEngine
                 continue;
             }
 
-            string failure = Message(commandResult);
-            results.Add(Result(request, action, package.State, null,
+            string failure = PackageEngineRules.Message(commandResult);
+            results.Add(PackageEngineRules.Result(request, action, package.State, null,
                 PackageResultStatus.Failed, failure));
 
             if (AdbFailures.IsDeviceDisconnect(commandResult))
@@ -273,7 +258,7 @@ public sealed class PackageEngine : IPackageEngine
             {
                 verified = true;
                 verifiedScan = verify.Scan;
-                ApplyVerifiedStates(results, verify.Scan);
+                PackageEngineRules.ApplyVerifiedStates(results, verify.Scan);
             }
             else
             {
@@ -294,7 +279,7 @@ public sealed class PackageEngine : IPackageEngine
         {
             PackageBatchStatus.StoppedDisconnected => message,
             PackageBatchStatus.Cancelled => message,
-            _ => BuildSummary(results),
+            _ => PackageEngineRules.BuildSummary(results),
         };
 
         if (verificationMessage is not null)
