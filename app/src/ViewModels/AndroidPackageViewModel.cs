@@ -279,8 +279,17 @@ public sealed partial class AndroidPackageViewModel : ObservableObject
         ResultText = "Applying package actions…";
         try
         {
+            AdbDevice device = _device;
+            if (_scan is not null)
+            {
+                await _backup.CreateSnapshotAsync(
+                    device,
+                    SelectedUser,
+                    _scan);
+            }
+
             PackageBatchResult result = await _engine.ApplyAsync(
-                _device,
+                device,
                 SelectedUser.Id,
                 requests,
                 new PackageApplyOptions(
@@ -288,6 +297,10 @@ public sealed partial class AndroidPackageViewModel : ObservableObject
                     ExpertMode,
                     ExpertConfirmation));
             _lastApplied = result.Results;
+            await _backup.AppendLogAsync(
+                device,
+                SelectedUser,
+                result.Results);
             ResultText =
                 $"{result.Message}\n{result.OkCount} applied · " +
                 $"{result.AlreadyCount} already · {result.FailedCount} failed · " +

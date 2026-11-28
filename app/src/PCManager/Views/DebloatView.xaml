@@ -595,6 +595,50 @@
                                                 AutomationProperties.Name="Undo Android package batch"
                                                 Margin="{StaticResource Thickness.1}" />
                                     </StackPanel>
+                                    <WrapPanel Margin="{StaticResource Thickness.1}">
+                                        <Button Content="Recommended preset" Style="{StaticResource PillButton}"
+                                                Command="{Binding Android.PackageManagement.RecommendedPresetCommand}"
+                                                AutomationProperties.Name="Apply Android recommended preset"
+                                                Margin="{StaticResource Thickness.1}" />
+                                        <Button Content="Export .txt" Style="{StaticResource SecondaryButton}"
+                                                Command="{Binding Android.PackageManagement.ExportTextCommand}"
+                                                AutomationProperties.Name="Export Android selection text"
+                                                Margin="{StaticResource Thickness.1}" />
+                                        <Button Content="Export FPM JSON" Style="{StaticResource SecondaryButton}"
+                                                Command="{Binding Android.PackageManagement.ExportJsonCommand}"
+                                                AutomationProperties.Name="Export Android selection JSON"
+                                                Margin="{StaticResource Thickness.1}" />
+                                        <Button Content="Import selection" Style="{StaticResource SecondaryButton}"
+                                                Command="{Binding Android.PackageManagement.ImportSelectionCommand}"
+                                                AutomationProperties.Name="Import Android package selection"
+                                                Margin="{StaticResource Thickness.1}" />
+                                        <Button Content="Open action log" Style="{StaticResource SecondaryButton}"
+                                                Command="{Binding Android.PackageManagement.OpenLogCommand}"
+                                                AutomationProperties.Name="Open Android action log"
+                                                Margin="{StaticResource Thickness.1}" />
+                                    </WrapPanel>
+                                    <Grid Margin="{StaticResource Thickness.1}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox ItemsSource="{Binding Android.PackageManagement.Snapshots}"
+                                                  SelectedItem="{Binding Android.PackageManagement.SelectedSnapshot, Mode=TwoWay}"
+                                                  DisplayMemberPath="Id"
+                                                  AutomationProperties.Name="Android package snapshots"
+                                                  Margin="{StaticResource Thickness.1}" />
+                                        <Button Grid.Column="1" Content="Create snapshot"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Command="{Binding Android.PackageManagement.CreateSnapshotCommand}"
+                                                AutomationProperties.Name="Create Android package snapshot"
+                                                Margin="{StaticResource Thickness.1}" />
+                                        <Button Grid.Column="2" Content="Restore snapshot"
+                                                Style="{StaticResource PrimaryButton}"
+                                                Command="{Binding Android.PackageManagement.RestoreSnapshotCommand}"
+                                                AutomationProperties.Name="Restore Android package snapshot"
+                                                Margin="{StaticResource Thickness.1}" />
+                                    </Grid>
                                 </StackPanel>
                             </Border>
                             <TextBlock Text="{Binding Android.PackageManagement.ResultText}"
