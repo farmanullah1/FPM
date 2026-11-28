@@ -86,3 +86,15 @@ accepted decision marked **owner**.
 | D-056 | 2026-11-28 | History shows the latest 10 journal runs, while Undo remains the engine's latest-run reverse replay. | The journal is per-run; undoing an arbitrary older run safely needs an engine API and dependency-aware replay. | accepted |
 | D-057 | 2026-11-28 | Detect and Apply stay on the existing one-id-per-call helper contract; the page explains the administrator prompt but does not hide how many may appear. | No batched helper protocol exists yet; changing it would be a protocol extension, not a page change. | accepted |
 | D-058 | 2026-11-28 | The review's “Create restore point first” toggle is passed to the engine and recorded as `Skipped: turned off for this run` when off. | The user's choice must be visible in the journal/report rather than silently ignored. | accepted |
+
+## D4 decisions
+
+| ID | Date | Decision | Rationale | Status |
+|---|---|---|---|---|
+| D-059 | 2026-11-28 | The only user-target value crossing the helper pipe is a typed token (`current`, `default`, `sid:<sid>`, `user:<name>`); the helper resolves it against its own ProfileList. Paths and hive files never cross the pipe. | Keeps the elevated surface catalog-scoped and prevents arbitrary hive loading. | accepted |
+| D-060 | 2026-11-28 | A signed-in other profile is addressed through its live `HKU\<sid>` hive; only a profile whose hive is not loaded gets `HKU\FPM_<id>` and an offline `NTUSER.DAT` mount. | Avoids loading an in-use hive and follows D4's “live hive unless logged in” rule. | accepted |
+| D-061 | 2026-11-28 | The Default-user target is `HKU\FPM_Default`, requires Windows 10 build 10240+, and always shows a SYSPREP warning. | The Default hive changes every future account; it must be deliberate and version-gated. | accepted |
+| D-062 | 2026-11-28 | `fpm-debloat-preset.json` v1 contains only tweak ids and app ids; unknown ids are ignored with a warning and the file is never interpreted as commands or paths. | Makes presets shareable across catalog versions without widening the execution surface. | accepted |
+| D-063 | 2026-11-28 | `--apps` is accepted by the parser but the CLI refuses app execution until Appx package state can be journaled; app ids are still valid in preset files. | Consistent with D-051: no irreversible package removal without an exact undo record. | accepted |
+| D-064 | 2026-11-28 | Drift checking is a manual, report-only page action using the journal target; it never reapplies a tweak. | The D4 scheduled check is optional; reapplying silently would violate the safety contract. | accepted |
+| D-065 | 2026-11-28 | A target is resolved and its hive loaded/unloaded per helper command, so an other-user run may prompt once per tweak and target resolution happens again helper-side. | Reuses the existing one-shot helper protocol; batching is a later protocol change, not a D4 fork. | accepted |

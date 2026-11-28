@@ -68,6 +68,9 @@ public static class ServiceCollectionExtensions
         // D2: typed debloat planning, journaling and helper execution.
         services.AddSingleton<PCManager.Services.Debloat.IDebloatExecutor, PCManager.Services.Debloat.HelperDebloatExecutor>();
         services.AddSingleton<PCManager.Services.Debloat.DebloatEngine>();
+        services.AddSingleton<PCManager.Services.Debloat.IDebloatProfileService>(
+            sp => new PCManager.Services.Debloat.DebloatProfileService(
+                sp.GetRequiredService<IAppLogger>()));
 
         // --- FPM Services (Migration, Memory Diagnostics, Unified Cleanup, Network) ---
         services.AddSingleton<ILegacyIdentityMigrationService, PCManager.Services.Infrastructure.LegacyIdentityMigrationService>();

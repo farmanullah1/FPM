@@ -30,6 +30,46 @@
 
                 <!-- Windows tab -->
                 <StackPanel Visibility="{Binding IsWindowsTab, Converter={StaticResource BoolToVisibility}}">
+                    <!-- D4: typed user target, preset files and report-only drift. -->
+                    <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.4}">
+                        <StackPanel>
+                            <TextBlock Text="User target" FontSize="17" FontWeight="SemiBold"
+                                       AutomationProperties.Name="User target" />
+                            <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                                       Text="Apply to this account, an offline profile hive, or the Default user hive. The helper loads only a typed profile target and always unloads it." />
+                            <Grid Margin="{StaticResource Thickness.2}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ComboBox ItemsSource="{Binding Targets}"
+                                          SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
+                                          DisplayMemberPath="DisplayName"
+                                          AutomationProperties.Name="Debloat user target" />
+                                <Button Grid.Column="1" Content="Refresh profiles" Style="{StaticResource PillButton}"
+                                        Margin="{StaticResource Thickness.2}"
+                                        Command="{Binding RefreshTargetsCommand}" />
+                            </Grid>
+                            <TextBlock Text="{Binding TargetWarning}" Style="{StaticResource CaptionText}"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource App.Warning.Text}" />
+
+                            <StackPanel Orientation="Horizontal" Margin="{StaticResource Thickness.2}">
+                                <Button Content="Export preset" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding ExportPresetCommand}" Margin="{StaticResource Thickness.1}"
+                                        AutomationProperties.Name="Export debloat preset" />
+                                <Button Content="Import preset" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding ImportPresetCommand}" Margin="{StaticResource Thickness.1}"
+                                        AutomationProperties.Name="Import debloat preset" />
+                                <Button Content="Check drift" Style="{StaticResource PillButton}"
+                                        Command="{Binding DriftCheckCommand}" Margin="{StaticResource Thickness.1}"
+                                        AutomationProperties.Name="Check debloat drift" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding PresetFileText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding DriftText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                                       AutomationProperties.Name="Debloat drift result" />
+                        </StackPanel>
+                    </Border>
+
                     <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.4}">
                         <StackPanel>
                             <Grid>
@@ -260,7 +300,7 @@
                             </StackPanel>
                             <TextBlock Text="{Binding AppsSummary}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
                             <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="{StaticResource Thickness.1}"
-                                       Text="Removal is not enabled on this tab: the engine refuses Appx changes until it can capture and journal each package's state. Browse or search the catalog here; nothing is queued for removal." />
+                                       Text="Removal is not enabled on this tab: the engine refuses Appx changes until it can capture and journal each package's state. Selected apps are saved in preset files only; nothing is queued for removal." />
 
                             <Grid Margin="{StaticResource Thickness.2}">
                                 <Grid.ColumnDefinitions>
@@ -286,10 +326,15 @@
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
-                                                    <TextBlock Text="{Binding PackagesText}" Style="{StaticResource CaptionText}"
-                                                               TextTrimming="CharacterEllipsis" />
+                                                <StackPanel Orientation="Horizontal">
+                                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                              VerticalAlignment="Center" Margin="{StaticResource Thickness.2}"
+                                                              AutomationProperties.Name="{Binding Title}" />
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                                        <TextBlock Text="{Binding PackagesText}" Style="{StaticResource CaptionText}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1" Margin="{StaticResource Thickness.2}" HorizontalAlignment="Right">
                                                     <TextBlock Text="{Binding Recommendation}" Style="{StaticResource CaptionText}"

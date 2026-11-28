@@ -66,7 +66,7 @@ memory overhead recorded in `BUILD_STATUS.md`.
 | **D1** Catalog port | W1, R2, reference | Read `reference/win11debloat`, write `docs/dev/win11debloat-feature-map.md`, `Assets/debloat/catalog.json` with typed actions and OS gating. | Every reference tweak mapped or intentionally excluded with reason. |
 | **D2** Engine | D1, helper | Planner (dependencies/conflicts/OS), executor via helper, journal/undo, restore point, `.reg` backup, idempotency, report codes. | Fake-registry tests; failure isolation; dry-run writes nothing. |
 | **D3** UI (Debloat → Windows) | D2, U10 | Presets, categories, search, risk/applied badges, apps tab, diff preview, apply, report, undo, history. | Keyboard accessible; typed plan == UI selection; no free-form commands. |
-| **D4** Advanced | D3 | Other user / Default hive, CLI (`--debloat`), preset export/import, drift check (report-only). | Hive always unloaded; CLI exit codes documented. |
+| **D4** Advanced | D3 | Other user / Default hive, CLI (`--debloat`), preset export/import, drift check (report-only). **Done 2026-11-28** — see `PROGRESS_LOG.md`; live UAC target run remains R-33. | Hive always unloaded; CLI exit codes documented. |
 | **D5** Tests | D4 | Schema, revert/detect presence, gating, conflicts, journal, denylist, parity. | All green; no real registry touched. |
 
 **Wave gate:** safety checklist per card; catalogue parity report; no untyped actions possible.

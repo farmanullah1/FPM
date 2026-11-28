@@ -109,6 +109,7 @@ public sealed class ElevatedHelperTests
             HelperCommand command,
             string tweakId,
             IReadOnlyList<RegistryValueState>? restore = null,
+            string targetUser = "",
             CancellationToken cancellationToken = default) =>
             Task.FromResult(new DebloatHelperOutcome { Success = true, Message = "ok" });
     }

@@ -65,8 +65,8 @@ public sealed class DebloatPlanRow(DebloatPlanItem item)
     public bool IsReady { get; } = item.IsRunnable;
 }
 
-/// <summary>Catalog app row. Removal is refused by the engine until package state can be journaled.</summary>
-public sealed class DebloatAppRow(DebloatApp app)
+/// <summary>Catalog app row. Selection is for preset files; removal is still refused.</summary>
+public sealed partial class DebloatAppRow(DebloatApp app) : ObservableObject
 {
     public DebloatApp App { get; } = app;
     public string Title { get; } = app.Title;
@@ -75,4 +75,28 @@ public sealed class DebloatAppRow(DebloatApp app)
     public string RemovalText { get; } = app.RemovalMethod == "Appx"
         ? "Package removal waits for a journaled Apps flow"
         : app.RemovalMethod;
+
+    [ObservableProperty]
+    private bool _isSelected;
+}
+
+/// <summary>One typed user target shown in the D4 profile picker.</summary>
+public sealed record DebloatTargetOption(string Token, string DisplayName, string Warning);
+
+public sealed record DebloatDriftItem(string TweakId, string Title, bool StillApplied);
+
+/// <summary>Report-only drift summary; never reapplies anything.</summary>
+public static class DebloatDrift
+{
+    public static string Summarize(IReadOnlyList<DebloatDriftItem> items)
+    {
+        int drifted = items.Count(item => !item.StillApplied);
+        int applied = items.Count - drifted;
+        string names = string.Join(", ", items.Where(item => !item.StillApplied).Select(item => item.Title));
+
+        return drifted == 0
+            ? $"Drift check: all {applied} journaled tweak(s) are still applied."
+            : $"Drift check: {applied} still applied, {drifted} reverted or changed: {names}. " +
+              "Nothing was reapplied.";
+    }
 }

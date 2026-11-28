@@ -32,7 +32,7 @@ public sealed partial class DebloatViewModel
         try
         {
             DebloatRunRecord record = await _engine.ApplyAsync(
-                ids, _osBuild, _isWindows11, CreateRestorePoint);
+                ids, _osBuild, _isWindows11, CreateRestorePoint, TargetToken);
 
             foreach (DebloatJournalEntry entry in record.Entries)
             {
@@ -89,7 +89,7 @@ public sealed partial class DebloatViewModel
         {
             foreach (DebloatTweakRow row in rows)
             {
-                DebloatHelperOutcome outcome = await _engine.DetectAsync(row.Tweak.Id);
+                DebloatHelperOutcome outcome = await _engine.DetectAsync(row.Tweak.Id, TargetToken);
 
                 if (!outcome.Success)
                 {
@@ -206,7 +206,8 @@ public sealed partial class DebloatViewModel
                           !latest.RolledBack && latest.Entries.Count > 0;
         HistoryText = latest is null
             ? "No debloat runs recorded yet."
-            : $"Latest run {latest.RunId} · restore point {latest.RestorePointStatus}";
+            : $"Latest run {latest.RunId} · target {TargetLabel(latest.TargetUser)} · " +
+              $"restore point {latest.RestorePointStatus}";
     }
 
 }

@@ -42,12 +42,13 @@ public sealed class DebloatEngine
 
     public async Task<DebloatHelperOutcome> DetectAsync(
         string tweakId,
+        string targetUser = "",
         CancellationToken cancellationToken = default)
     {
         DebloatTweak? tweak = Catalog.Value.Tweaks.FirstOrDefault(candidate => candidate.Id == tweakId);
         return tweak is null
             ? DebloatHelperOutcome.Failed($"Unknown tweak '{tweakId}'.")
-            : await _executor.DetectAsync(tweak, cancellationToken).ConfigureAwait(false);
+            : await _executor.DetectAsync(tweak, targetUser, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<DebloatRunRecord> ApplyAsync(
@@ -55,6 +56,7 @@ public sealed class DebloatEngine
         int osBuild,
         bool isWindows11,
         bool createRestorePoint = true,
+        string targetUser = "",
         CancellationToken cancellationToken = default)
     {
         DebloatPlan plan = Plan(tweakIds, osBuild, isWindows11);
@@ -64,6 +66,7 @@ public sealed class DebloatEngine
             StartedAtUtc = DateTime.UtcNow,
             RequiresReboot = plan.RequiresReboot,
             RequiresExplorerRestart = plan.RequiresExplorerRestart,
+            TargetUser = targetUser,
         };
 
         List<DebloatTweak> runnable = plan.Runnable.ToList();
@@ -85,7 +88,8 @@ public sealed class DebloatEngine
 
         foreach (DebloatTweak tweak in runnable)
         {
-            DebloatHelperOutcome detected = await _executor.DetectAsync(tweak, cancellationToken)
+            DebloatHelperOutcome detected = await _executor
+                .DetectAsync(tweak, targetUser, cancellationToken)
                 .ConfigureAwait(false);
 
             if (!detected.Success)
@@ -121,7 +125,8 @@ public sealed class DebloatEngine
 
         foreach (DebloatTweak tweak in toApply)
         {
-            DebloatHelperOutcome applied = await _executor.ApplyAsync(tweak, cancellationToken)
+            DebloatHelperOutcome applied = await _executor
+                .ApplyAsync(tweak, targetUser, cancellationToken)
                 .ConfigureAwait(false);
 
             if (!applied.Success)
@@ -185,7 +190,7 @@ public sealed class DebloatEngine
             }
 
             DebloatHelperOutcome reverted = await _executor
-                .RevertAsync(tweak, entry.Before, cancellationToken)
+                .RevertAsync(tweak, entry.Before, record.TargetUser, cancellationToken)
                 .ConfigureAwait(false);
 
             if (!reverted.Success)
@@ -221,7 +226,7 @@ public sealed class DebloatEngine
             }
 
             DebloatHelperOutcome reverted = await _executor
-                .RevertAsync(tweak, entry.Before, cancellationToken)
+                .RevertAsync(tweak, entry.Before, record.TargetUser, cancellationToken)
                 .ConfigureAwait(false);
 
             allRestored &= reverted.Success;

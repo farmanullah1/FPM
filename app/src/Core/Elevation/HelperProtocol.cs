@@ -41,6 +41,12 @@ public sealed class HelperRequest
 
     /// <summary>Exact pre-state for RevertTweak; validated against the tweak's own targets.</summary>
     public List<RegistryValueState> Restore { get; set; } = new();
+
+    /// <summary>
+    /// Typed user target: empty/"current", "default", a profile name, or "sid:S-1-5-...".
+    /// The helper resolves it against ProfileList; no path is accepted here.
+    /// </summary>
+    public string TargetUser { get; set; } = string.Empty;
 }
 
 /// <summary>One response line from the helper.</summary>
@@ -62,6 +68,9 @@ public sealed class HelperResponse
 
     /// <summary>Registry states captured by DetectTweak/ApplyTweak.</summary>
     public List<RegistryValueState> Values { get; set; } = new();
+
+    /// <summary>The resolved target the helper used (display text, never a path).</summary>
+    public string TargetUser { get; set; } = string.Empty;
 }
 
 /// <summary>Client-facing result, independent of the pipe transport.</summary>

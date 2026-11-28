@@ -21,7 +21,7 @@ public sealed partial class DebloatViewModel : ViewModelBase
     private List<DebloatApp> _allApps = new();
     private bool _applyingPreset;
 
-    public DebloatViewModel(DebloatEngine engine)
+    public DebloatViewModel(DebloatEngine engine, IDebloatProfileService? profiles = null)
     {
         _engine = engine;
 
@@ -34,6 +34,7 @@ public sealed partial class DebloatViewModel : ViewModelBase
         ApplyCommand = new AsyncRelayCommand(ApplyAsync, () => HasSelection && !IsBusy);
         UndoCommand = new AsyncRelayCommand(UndoAsync, () => !IsBusy && CanUndo);
         DetectCommand = new AsyncRelayCommand(DetectAsync, () => HasSelection && !IsBusy);
+        InitializeAdvanced(profiles);
     }
 
     public ObservableCollection<DebloatCategoryRow> Categories { get; } = new();
@@ -163,6 +164,7 @@ public sealed partial class DebloatViewModel : ViewModelBase
             RebuildTweaks();
             SelectPreset("recommended");
             RefreshHistory();
+            LoadTargets();
         }
         catch (Exception ex)
         {
@@ -361,7 +363,22 @@ public sealed partial class DebloatViewModel : ViewModelBase
         Apps.Clear();
         foreach (DebloatApp app in apps)
         {
-            Apps.Add(new DebloatAppRow(app));
+            var row = new DebloatAppRow(app) { IsSelected = _selectedAppIds.Contains(app.Id) };
+            row.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == nameof(DebloatAppRow.IsSelected))
+                {
+                    if (row.IsSelected)
+                    {
+                        _selectedAppIds.Add(app.Id);
+                    }
+                    else
+                    {
+                        _selectedAppIds.Remove(app.Id);
+                    }
+                }
+            };
+            Apps.Add(row);
         }
     }
 
@@ -373,6 +390,7 @@ public sealed partial class DebloatViewModel : ViewModelBase
         ApplyCommand.NotifyCanExecuteChanged();
         DetectCommand.NotifyCanExecuteChanged();
         UndoCommand.NotifyCanExecuteChanged();
+        DriftCheckCommand.NotifyCanExecuteChanged();
     }
 
     protected override void OnBusyChanged() => RefreshCommandStates();

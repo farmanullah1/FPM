@@ -26,6 +26,9 @@ public sealed class DebloatRunRecord
     public string FailureMessage { get; set; } = string.Empty;
     public string RestorePointStatus { get; set; } = string.Empty;
     public string BackupPath { get; set; } = string.Empty;
+
+    /// <summary>Typed user target token; empty means the signed-in account (old journals).</summary>
+    public string TargetUser { get; set; } = string.Empty;
     public bool RequiresReboot { get; set; }
     public bool RequiresExplorerRestart { get; set; }
     public List<DebloatJournalEntry> Entries { get; set; } = new();

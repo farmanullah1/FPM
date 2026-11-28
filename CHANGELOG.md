@@ -6,6 +6,15 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Windows debloat advanced (D4)**: typed user targets for another local profile (live hive or an
+  offline `NTUSER.DAT` loaded as `HKU\FPM_*` and always unloaded) and the Default user hive with a
+  SYSPREP warning and Windows 10 gate; a target picker plus profile refresh; `fpm-debloat-preset.json`
+  export/import with schema validation and unknown-id warnings; a report-only drift check; and a
+  `--debloat` CLI with presets/tweaks/user, dry-run and silent/accept-risk gating that shares the
+  page's planner, engine and journal. App removal remains refused, so `--apps` is parsed but does
+  not execute yet.
+
+### Added
 - **Windows debloat page (D3)**: a real Debloat page in the rail with Windows and Apps tabs —
   OS/build header, category counts and search, five documented selection presets, risk and impact
   labels, a typed plan/review, Detect/Apply/Undo over the journaled engine, a restore-point toggle,

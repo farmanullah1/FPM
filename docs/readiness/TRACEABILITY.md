@@ -24,7 +24,7 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-17 | Sensors: battery/temps, honest states (T1, T2) | T1, T2 | `ISensorService`, helper `ReadSensors` | parser fixtures + unavailable states |
 | TR-18 | Toolbox widget layout drives toolbar (T3, T4) | T3, T4 | `toolbox.layout.json`, toolbar | restart/toolbar-only persistence |
 | TR-19 | Windows debloat catalog + typed engine (D1–D3) | D1–D3 | `Assets/debloat/catalog.json`, planner/executor | schema tests; journal undo |
-| TR-20 | Debloat advanced: other user, sysprep, CLI, presets (D4) | D4 | helper hive load/unload, CLI | hive cleanup tests; dry-run writes nothing |
+| TR-20 | Debloat advanced: other user, sysprep, CLI, presets, drift (D4) | D4 | `Core/Debloat/DebloatTargets.cs`, `DebloatPresetFile.cs`, `DebloatCommandLine.cs`; `Helper/HelperHive.cs`, `DebloatRegistry.cs`; `Cli/DebloatCli.cs`; `ViewModels/DebloatViewModel.Advanced.cs` | resolver + hive cleanup tests; preset round-trip; CLI dry-run exit 0; UIA probe reads target/preset/drift surface; no live UAC run (R-33) |
 | TR-21 | Debloat tests incl. reference parity (D5) | D5 | `PCManager.Tests` | parity map + green tests |
 | TR-22 | ADB service/consent/signature (A1) | A1 | `IAdbService` | unsigned adb rejected; consent flow |
 | TR-23 | Android lists + schema (A2) | A2 | `Assets/android/uad_lists.json` | schema validation tests |

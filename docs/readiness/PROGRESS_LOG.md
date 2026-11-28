@@ -284,3 +284,23 @@ the undo source (the journal is).
 **Not checked / not delivered in D3:** no UAC-approved detect/apply/undo was run, so helper registry writes, rollback and DISM remain fake-executor evidence only (R-29). The Apps tab has no live installed detection or removal (R-31). Review shows typed target changes, not per-value old→new diffs (R-32). Detect/Apply can raise one prompt per tweak because the helper is one-shot (R-30). To run the UIA probe, the floating toolbar was temporarily disabled in local settings (the toolbar's desktop-following kept the main window off the probe's desktop); the settings file was restored immediately afterwards.
 
 Next card: **D4** (other-user/Default hive, CLI, preset import/export, drift check) and then **D5** (parity tests).
+
+## 2026-11-28 — D4 complete (typed targets, preset files, drift, CLI)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Target model | `DebloatTargets.cs`: tokens `current`/empty/current SID → HKCU; `default` → `HKU\FPM_Default` with a Windows 10 build gate and SYSPREP warning; `sid:<sid>`/`user:<name>`/bare name → live `HKU\<sid>` when loaded, otherwise offline `HKU\FPM_<sid digits>` with `NTUSER.DAT`; malformed/unknown profiles refused | resolver + hive tests |
+| Hive lifecycle | `IDebloatHiveApi`/`DebloatHiveScope`; helper `HelperHive.cs` resolves profiles from its own ProfileList and uses `RegLoadKey`/`RegUnloadKey`; a scope always unloads in `Dispose`, including after an apply exception, and reports an unload failure | fake-API load/unload success + failure tests |
+| Helper mapping | `DebloatRegistry.cs` maps logical catalog `HKCU` to the selected live/offline HKU root, reads/writes/restores values, and keeps logical HKCU names in the journal; helper request carries only `TargetUser`, never a path | helper + engine target propagation tests |
+| Target in engine/journal | `DebloatEngine.DetectAsync/ApplyAsync/UndoAsync` pass `targetUser`; `DebloatRunRecord.TargetUser` is written and undo/detect reuse it; old journals with no target still mean current user | target propagation test |
+| Page surface | Debloat Windows tab gained a typed **User target** picker with profile refresh, honest live/offline/SYSPREP warnings, **Export preset**, **Import preset**, **Check drift** and a preset-file/result line; Apps rows are selectable for preset files only | UIA probe below |
+| Preset files | `fpm-debloat-preset.json` version 1 with `tweaks` and `apps` arrays; serialize/parse in `DebloatPresetFile`, unknown ids dropped with warnings, unsupported version/bad JSON refused, round-trip tested | 2 tests |
+| Drift | Manual report-only check re-detects the latest journaled run at its recorded target; `DebloatDrift.Summarize` says what changed and explicitly says nothing was reapplied | drift summary test |
+| CLI | `DebloatCli` shares `DebloatEngine`/journal; `--preset/--tweaks/--user/--dry-run/--silent/--accept-risk`; silent requires accept-risk; plan is printed before any write; exit codes 0/1/2/3/4 documented in the class and usage | `FPM.exe --debloat --preset minimal --dry-run` exited 0, target “This account”, `Plan: 14 selected, 14 ready, 0 skipped`, no prompt |
+| Tests | 17 new D4 cases across target resolution, hive cleanup on failure, preset round-trip/version, CLI gates, target propagation into detect/apply/undo and drift summary | **260 tests passed**, 0 failed |
+| Gates | build **0 warnings / 0 errors**; `lint-xaml.ps1` **367** (baseline unchanged); `contrast-check.ps1` OK in both themes | pass |
+| Runtime probe | toolbar temporarily disabled, app launched, `tools/ui-probe-debloat.ps1` read `debloat page visible`, the plan, target status, `Changes apply…`, preset-file line, refreshed profiles, found all three D4 commands, then opened Apps and read `apps tab visible` | page renders D4 surface; probe exit 0 |
+
+**Not checked / gaps:** no UAC prompt was approved, so no live other-user hive load/unload, no Default/SYSPREP write, and no live detect/apply/drift run (R-28/R-33). The hive API and unload path are fake-API tests only. `--apps` is parsed but deliberately refused because Appx removal still cannot be journaled (D-051/D-063); the CLI cannot remove apps. The drift check is manual, not scheduled, and each detect can raise its own UAC prompt (R-35). The probe read the default target and the presence of the commands; it did not select another profile or open a file dialog. Settings were restored after the probe.
+
+Next card: **D5** (parity/schema tests).

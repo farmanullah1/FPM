@@ -1,14 +1,14 @@
 using System.Diagnostics;
 using System.Text.Json;
-using Microsoft.Win32;
 using PCManager.Core.Debloat;
 using PCManager.Core.Elevation;
 
 namespace PCManager.Helper;
 
 /// <summary>
-/// Catalog-scoped debloat commands. The client can only name a catalog tweak id and a restore
-/// state limited to that tweak's own targets; no free-form registry path ever arrives here.
+/// Catalog-scoped debloat commands. The client names a catalog tweak id, an optional typed user
+/// target and (for revert) pre-state limited to that tweak's own targets. No path or hive file
+/// ever crosses the pipe.
 /// </summary>
 internal static class DebloatCommands
 {
@@ -18,6 +18,8 @@ internal static class DebloatCommands
 
     public static HelperResponse Handle(HelperRequest request)
     {
+        DebloatHiveScope? scope = null;
+
         try
         {
             DebloatTweak? tweak = Catalog.Value.Tweaks
@@ -28,24 +30,58 @@ internal static class DebloatCommands
                 return Failure(request, $"Unknown tweak '{request.TweakId}'.");
             }
 
-            return request.Command switch
+            DebloatTargetResolution resolution = HelperHive.Resolve(request.TargetUser);
+
+            if (resolution.Target is not { } target)
             {
-                HelperCommand.DetectTweak => Detect(request, tweak),
-                HelperCommand.ApplyTweak => Apply(request, tweak),
-                HelperCommand.RevertTweak => Revert(request, tweak),
-                _ => Failure(request, "Unsupported debloat command."),
-            };
+                return Failure(request, resolution.Message);
+            }
+
+            scope = DebloatHiveScope.Acquire(new RegistryHiveApi(), target);
+
+            HelperResponse response;
+
+            using (var registry = new DebloatRegistry(target))
+            {
+                response = request.Command switch
+                {
+                    HelperCommand.DetectTweak => Detect(request, tweak, registry),
+                    HelperCommand.ApplyTweak => Apply(request, tweak, registry),
+                    HelperCommand.RevertTweak => Revert(request, tweak, registry),
+                    _ => Failure(request, "Unsupported debloat command."),
+                };
+            }
+
+            scope?.Dispose();
+
+            if (scope?.UnloadError is { Length: > 0 } unloadError)
+            {
+                return Failure(
+                    request,
+                    $"The target hive could not be unloaded: {unloadError}. " +
+                    "The run's journal still records exactly what was changed.");
+            }
+
+            response.TargetUser = target.DisplayName;
+            return response;
         }
         catch (Exception ex)
         {
-            Log($"Debloat {request.Command} {request.TweakId} failed: {ex}");
+            Log($"Debloat {request.Command} {request.TweakId} target='{request.TargetUser}' failed: {ex}");
             return Failure(request, ex.Message);
+        }
+        finally
+        {
+            scope?.Dispose();
         }
     }
 
-    private static HelperResponse Detect(HelperRequest request, DebloatTweak tweak)
+    private static HelperResponse Detect(
+        HelperRequest request,
+        DebloatTweak tweak,
+        DebloatRegistry registry)
     {
-        List<RegistryValueState> values = Capture(tweak.Actions);
+        List<RegistryValueState> values = registry.Capture(tweak.Actions);
         bool detected = tweak.Detect.All(probe => Evaluate(probe, values));
 
         return new HelperResponse
@@ -58,20 +94,30 @@ internal static class DebloatCommands
         };
     }
 
-    private static HelperResponse Apply(HelperRequest request, DebloatTweak tweak)
+    private static HelperResponse Apply(
+        HelperRequest request,
+        DebloatTweak tweak,
+        DebloatRegistry registry)
     {
         if (tweak.Actions.Any(action => action is RegistryKeyDeleteAction or AppxRemoveAction))
         {
             return Failure(request, "This tweak's action type is not supported by the registry executor.");
         }
 
-        List<RegistryValueState> before = Capture(tweak.Actions);
+        List<RegistryValueState> before = registry.Capture(tweak.Actions);
 
         try
         {
             foreach (DebloatAction action in tweak.Actions)
             {
-                Execute(action);
+                if (action is OptionalFeatureAction feature)
+                {
+                    SetOptionalFeature(feature.FeatureName, feature.Enable);
+                }
+                else
+                {
+                    registry.Execute(action);
+                }
             }
 
             return new HelperResponse
@@ -84,7 +130,7 @@ internal static class DebloatCommands
         }
         catch (Exception ex)
         {
-            bool rolledBack = TryRestore(before);
+            bool rolledBack = registry.TryRestore(before);
             Log($"Apply {tweak.Id} failed: {ex.Message}; rolledBack={rolledBack}");
             return new HelperResponse
             {
@@ -96,7 +142,10 @@ internal static class DebloatCommands
         }
     }
 
-    private static HelperResponse Revert(HelperRequest request, DebloatTweak tweak)
+    private static HelperResponse Revert(
+        HelperRequest request,
+        DebloatTweak tweak,
+        DebloatRegistry registry)
     {
         if (request.Restore.Count > MaxRestoreEntries)
         {
@@ -111,7 +160,7 @@ internal static class DebloatCommands
                 return Failure(request, refusal);
             }
 
-            return TryRestore(request.Restore)
+            return registry.TryRestore(request.Restore)
                 ? new HelperResponse
                 {
                     Success = true,
@@ -125,7 +174,14 @@ internal static class DebloatCommands
         {
             foreach (DebloatAction action in tweak.Revert)
             {
-                Execute(action);
+                if (action is OptionalFeatureAction feature)
+                {
+                    SetOptionalFeature(feature.FeatureName, feature.Enable);
+                }
+                else
+                {
+                    registry.Execute(action);
+                }
             }
 
             return new HelperResponse
@@ -139,135 +195,6 @@ internal static class DebloatCommands
         {
             return Failure(request, $"Revert failed: {ex.Message}");
         }
-    }
-
-    private static List<RegistryValueState> Capture(IEnumerable<DebloatAction> actions)
-    {
-        var states = new List<RegistryValueState>();
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (DebloatAction action in actions)
-        {
-            string? name = action switch
-            {
-                RegistrySetAction set => set.RegistryName,
-                RegistryDeleteAction delete => delete.RegistryName,
-                _ => null,
-            };
-
-            if (name is null)
-            {
-                continue;
-            }
-
-            string key = $"{action.Hive}\\{action.Path}\\{name}";
-            if (!seen.Add(key))
-            {
-                continue;
-            }
-
-            states.Add(ReadState(action.Hive, action.Path, name));
-        }
-
-        return states;
-    }
-
-    private static RegistryValueState ReadState(string hive, string path, string name)
-    {
-        using RegistryKey? key = OpenHive(hive)?.OpenSubKey(path, writable: false);
-
-        if (key is null)
-        {
-            return new RegistryValueState { Hive = hive, Path = path, Name = name, Existed = false };
-        }
-
-        object? value = key.GetValue(name, null, RegistryValueOptions.DoNotExpandEnvironmentNames);
-        if (value is null)
-        {
-            return new RegistryValueState { Hive = hive, Path = path, Name = name, Existed = false };
-        }
-
-        RegistryValueKind kind = key.GetValueKind(name);
-        return new RegistryValueState
-        {
-            Hive = hive,
-            Path = path,
-            Name = name,
-            Existed = true,
-            ValueType = kind switch
-            {
-                RegistryValueKind.DWord => "DWord",
-                RegistryValueKind.QWord => "QWord",
-                RegistryValueKind.MultiString => "MultiString",
-                RegistryValueKind.Binary => "Binary",
-                RegistryValueKind.ExpandString => "ExpandString",
-                _ => "String",
-            },
-            Value = JsonSerializer.SerializeToElement(value),
-        };
-    }
-
-    private static void Execute(DebloatAction action)
-    {
-        if (action is OptionalFeatureAction feature)
-        {
-            SetOptionalFeature(feature.FeatureName, feature.Enable);
-            return;
-        }
-
-        if (action is AppxRemoveAction)
-        {
-            throw new NotSupportedException("App package removal is not part of the registry executor.");
-        }
-
-        if (action is RegistryKeyDeleteAction)
-        {
-            throw new NotSupportedException("Key deletion is not supported by this engine yet.");
-        }
-
-        using RegistryKey hive = OpenHive(action.Hive)
-            ?? throw new InvalidOperationException($"Unknown hive '{action.Hive}'.");
-
-        if (action is RegistryDeleteAction delete)
-        {
-            using RegistryKey? existing = hive.OpenSubKey(delete.Path, writable: true);
-            existing?.DeleteValue(delete.RegistryName, throwOnMissingValue: false);
-            return;
-        }
-
-        var set = (RegistrySetAction)action;
-        using RegistryKey key = hive.CreateSubKey(set.Path, writable: true);
-        key.SetValue(set.RegistryName, ToClr(set.Value, set.ValueType), ToKind(set.ValueType));
-    }
-
-    private static bool TryRestore(IReadOnlyList<RegistryValueState> states)
-    {
-        bool ok = true;
-
-        foreach (RegistryValueState state in states)
-        {
-            try
-            {
-                using RegistryKey hive = OpenHive(state.Hive)!;
-
-                if (!state.Existed)
-                {
-                    using RegistryKey? key = hive.OpenSubKey(state.Path, writable: true);
-                    key?.DeleteValue(state.Name, throwOnMissingValue: false);
-                    continue;
-                }
-
-                using RegistryKey valueKey = hive.CreateSubKey(state.Path, writable: true);
-                valueKey.SetValue(state.Name, ToClr(state.Value, state.ValueType), ToKind(state.ValueType));
-            }
-            catch (Exception ex)
-            {
-                ok = false;
-                Log($"Restore failed for {state.Hive}\\{state.Path}\\{state.Name}: {ex.Message}");
-            }
-        }
-
-        return ok;
     }
 
     private static string? ValidateRestore(DebloatTweak tweak, IReadOnlyList<RegistryValueState> restore)
@@ -333,6 +260,7 @@ internal static class DebloatCommands
     {
         string verb = enable ? "/enable-feature" : "/disable-feature";
         ProcessResult result = RunDism($"/online {verb} /featurename:{name} /all /norestart");
+
         if (result.ExitCode != 0 && result.ExitCode != 3010)
         {
             throw new InvalidOperationException(
@@ -356,41 +284,6 @@ internal static class DebloatCommands
         string output = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd();
         process.WaitForExit(120000);
         return new ProcessResult(process.ExitCode, output);
-    }
-
-    private static RegistryKey? OpenHive(string hive) => hive switch
-    {
-        "HKCU" => Registry.CurrentUser,
-        "HKLM" => Registry.LocalMachine,
-        "HKU" => Registry.Users,
-        _ => null,
-    };
-
-    private static RegistryValueKind ToKind(string valueType) => valueType switch
-    {
-        "DWord" => RegistryValueKind.DWord,
-        "QWord" => RegistryValueKind.QWord,
-        "MultiString" => RegistryValueKind.MultiString,
-        "Binary" => RegistryValueKind.Binary,
-        "ExpandString" => RegistryValueKind.ExpandString,
-        _ => RegistryValueKind.String,
-    };
-
-    private static object ToClr(JsonElement? value, string valueType)
-    {
-        if (value is not { } element)
-        {
-            return string.Empty;
-        }
-
-        return valueType switch
-        {
-            "DWord" => element.GetUInt32(),
-            "QWord" => element.GetUInt64(),
-            "MultiString" => element.EnumerateArray().Select(item => item.GetString() ?? string.Empty).ToArray(),
-            "Binary" => Convert.FromHexString(element.GetString() ?? string.Empty),
-            _ => element.GetString() ?? string.Empty,
-        };
     }
 
     private static HelperResponse Failure(HelperRequest request, string message) => new()

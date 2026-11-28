@@ -266,15 +266,22 @@ public sealed class DebloatEngineTests
 
         public FakeExecutor(FakeRegistry registry) => _registry = registry;
 
-        public Task<DebloatHelperOutcome> DetectAsync(DebloatTweak tweak, CancellationToken cancellationToken = default) =>
+        public Task<DebloatHelperOutcome> DetectAsync(
+            DebloatTweak tweak,
+            string targetUser = "",
+            CancellationToken cancellationToken = default) =>
             Task.FromResult(_registry.Detect(tweak));
 
-        public Task<DebloatHelperOutcome> ApplyAsync(DebloatTweak tweak, CancellationToken cancellationToken = default) =>
+        public Task<DebloatHelperOutcome> ApplyAsync(
+            DebloatTweak tweak,
+            string targetUser = "",
+            CancellationToken cancellationToken = default) =>
             Task.FromResult(_registry.Apply(tweak));
 
         public Task<DebloatHelperOutcome> RevertAsync(
             DebloatTweak tweak,
             IReadOnlyList<RegistryValueState> before,
+            string targetUser = "",
             CancellationToken cancellationToken = default)
         {
             _registry.Restore(before);

@@ -234,7 +234,10 @@ public sealed class DebloatRunReportTests
 
     private sealed class FakeExecutor(FakeRegistry registry) : IDebloatExecutor
     {
-        public Task<DebloatHelperOutcome> DetectAsync(DebloatTweak tweak, CancellationToken cancellationToken = default) =>
+        public Task<DebloatHelperOutcome> DetectAsync(
+            DebloatTweak tweak,
+            string targetUser = "",
+            CancellationToken cancellationToken = default) =>
             Task.FromResult(new DebloatHelperOutcome
             {
                 Success = true,
@@ -253,12 +256,16 @@ public sealed class DebloatRunReportTests
                 }).ToList(),
             });
 
-        public Task<DebloatHelperOutcome> ApplyAsync(DebloatTweak tweak, CancellationToken cancellationToken = default) =>
+        public Task<DebloatHelperOutcome> ApplyAsync(
+            DebloatTweak tweak,
+            string targetUser = "",
+            CancellationToken cancellationToken = default) =>
             Task.FromResult(new DebloatHelperOutcome { Success = true });
 
         public Task<DebloatHelperOutcome> RevertAsync(
             DebloatTweak tweak,
             IReadOnlyList<RegistryValueState> before,
+            string targetUser = "",
             CancellationToken cancellationToken = default) =>
             Task.FromResult(new DebloatHelperOutcome { Success = true });
     }
