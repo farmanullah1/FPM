@@ -39,7 +39,7 @@ working time for one agent session, not calendar time. `☑` = verified, `☐` =
 | 2.7 | D4 advanced debloat | 6–8 h | Typed target, hive unload, presets, drift, CLI, tests, probe, docs | ☑ 2026-11-28 — 260 tests, probe exit 0, build 0/0, lint 367, contrast OK; live UAC run not approved (R-33) |
 | 2.8 | D5 Windows debloat tests | 4–6 h | Schema, revert/detect, gating, conflicts, journal, denylist and parity all covered; no live registry touched | ☑ 2026-11-28 — 267 tests, build 0/0, lint 367, contrast OK; dry-run 0 files; 16/16 exclusions; live UAC gaps remain (R-28/R-33) |
 | 2.9 | A1 ADB service | 4–6 h | Locate/consent/download/verify adb, devices parsing, onboarding, device info, 2 s visible polling; unsigned adb rejected; no bundling | ☑ 2026-11-28 — 287 tests (20 A1), build 0/0, lint 367, contrast OK, IconGen 113; UIA probe exit 0 with real signed adb + NoDevice; no physical phone/live download (R-38/R-39) |
-| 2.10 | A2 package lists | 3–5 h | Typed model + schema/validator for `uad_lists.json`; user-initiated update with diff/hash; embedded fallback | ☑ 2026-11-28 — 302 tests (15 A2), embedded 2,400/2,394/6 + SHA-256, fake-source update/cache/diff, build 0/0, lint 367, contrast OK, IconGen 113; probe read embedded counts; no live upstream fetch (R-44) |
+| 2.10 | A2 package lists | 3–5 h | Typed model + schema/validator for `uad_lists.json`; user-initiated update with diff/hash; embedded fallback | ☑ 2026-11-28 — `e33b5cb`; 302 tests (15 A2), embedded 2,400/2,394/6 + SHA-256, fake-source update/cache/diff, build 0/0, lint 367, contrast OK, IconGen 113; probe read embedded counts; no live upstream fetch (R-44) |
 
 ## Waves (details in `PHASE2_PLAN.md`)
 

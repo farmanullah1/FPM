@@ -363,7 +363,7 @@ Next card: **A2** (package lists). No user-only blocker for A2. D-043 (LHM) and 
 
 **Card acceptance quoted before implementation:** “Typed model + schema + validator for `uad_lists.json`; user-initiated update with diff/hash.” **Acceptance:** “Schema tests; embedded fallback.”
 
-A2 implementation commit: pending local commit.
+A2 implementation commit: `e33b5cb62a1aab340087261df0a4d24e2129dd3c` (25 files; code, asset, tests, feature map and initial evidence). Follow-up evidence commit: pending local commit.
 
 | Step | Evidence | Result |
 |---|---|---|

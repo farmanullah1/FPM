@@ -78,7 +78,7 @@ memory overhead recorded in `BUILD_STATUS.md`.
 | Card | Depends on | Work | Acceptance |
 |---|---|---|---|
 | **A1** ADB service | R2 | Locate/consent/download/verify adb, devices parsing, onboarding, device info, polling. **Done 2026-11-28** — pinned 35.0.2, real signed adb locator, 20 A1 tests, Android tab probe; see `PROGRESS_LOG.md`. | Unsigned adb rejected; no bundling; 287 tests; probe exit 0 (no physical phone/download: R-38/R-39). |
-| **A2** Package lists | A1 | Typed model + schema + validator for `uad_lists.json`; user-initiated update with diff/hash. **Done 2026-11-28** — embedded 2,400/2,394/6, SHA-256; fake-source update/cache/diff; 15 tests; see `PROGRESS_LOG.md`. | Schema tests; embedded fallback; no live upstream fetch (R-44). |
+| **A2** Package lists | A1 | Typed model + schema + validator for `uad_lists.json`; user-initiated update with diff/hash. **Done 2026-11-28 (`e33b5cb`)** — embedded 2,400/2,394/6, SHA-256; fake-source update/cache/diff; 15 tests; see `PROGRESS_LOG.md`. | Schema tests; embedded fallback; no live upstream fetch (R-44). |
 | **A3** Package engine | A2 | State computation, typed commands, batch results, verify, dependency warnings. | Command builder rejects injection; continue-on-failure. |
 | **A4** UI (Debloat → Android) | A3, U10 | Device/user selectors, filters, virtualized list, review/confirm, denylist UX, report, undo. | Expert typed confirmation; first-run warnings. |
 | **A5** Backup/restore/log/export | A4 | Pre-apply snapshot, restore, append-only log, selection export/import (UAD-compatible). | Snapshot restore verified with fakes; no personal data in logs. |
