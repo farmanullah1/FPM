@@ -26,6 +26,8 @@
                             Command="{Binding ShowWindowsCommand}" AutomationProperties.Name="Windows tab" />
                     <Button Content="Apps" Style="{StaticResource PillButton}" Margin="{StaticResource Thickness.1}"
                             Command="{Binding ShowAppsCommand}" AutomationProperties.Name="Apps tab" />
+                    <Button Content="Android" Style="{StaticResource PillButton}" Margin="{StaticResource Thickness.1}"
+                            Command="{Binding ShowAndroidCommand}" AutomationProperties.Name="Android tab" />
                 </StackPanel>
 
                 <!-- Windows tab -->
@@ -347,6 +349,90 @@
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Android tab: A1 onboarding, device identity and read-only status. -->
+                <StackPanel Visibility="{Binding IsAndroidTab, Converter={StaticResource BoolToVisibility}}">
+                    <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.4}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <controls:Icon3D Key="Adb" Size="24" Margin="{StaticResource Thickness.1}" />
+                                <TextBlock Text="Android device" FontSize="17" FontWeight="SemiBold"
+                                           AutomationProperties.Name="Android device" />
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding Android.AdbStatusText}" FontWeight="SemiBold"
+                                       TextWrapping="Wrap" Margin="{StaticResource Thickness.2}" />
+                            <TextBlock Text="{Binding Android.AdbPathText}" Style="{StaticResource CaptionText}"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding Android.DeviceCountText}" Style="{StaticResource CaptionText}"
+                                       TextWrapping="Wrap" />
+
+                            <StackPanel Orientation="Horizontal" Margin="{StaticResource Thickness.2}">
+                                <Button Content="Refresh ADB" Style="{StaticResource PillButton}"
+                                        Command="{Binding Android.RefreshCommand}" Margin="{StaticResource Thickness.1}"
+                                        AutomationProperties.Name="Refresh ADB" />
+                                <Button Content="Download platform-tools" Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding Android.DownloadCommand}" Margin="{StaticResource Thickness.1}"
+                                        AutomationProperties.Name="Download platform-tools" />
+                            </StackPanel>
+
+                            <TextBlock Text="ADB path (optional)" Style="{StaticResource SectionTitle}"
+                                       Margin="{StaticResource Thickness.2}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding Android.AdbPathOverride, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="A full path to adb.exe, or the folder containing it"
+                                         AutomationProperties.Name="ADB path override" />
+                                <Button Grid.Column="1" Content="Use this path" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding Android.UsePathCommand}" Margin="{StaticResource Thickness.2}"
+                                        AutomationProperties.Name="Use ADB path" />
+                            </Grid>
+
+                            <TextBlock Text="{Binding Android.OnboardingText}" Style="{StaticResource CaptionText}"
+                                       TextWrapping="Wrap" Margin="{StaticResource Thickness.2}" />
+
+                            <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.3}"
+                                    Margin="{StaticResource Thickness.2}">
+                                <StackPanel>
+                                    <TextBlock Text="Official platform-tools download" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Android.VersionText}" Style="{StaticResource CaptionText}"
+                                               TextWrapping="Wrap" />
+                                    <CheckBox Content="I accept Google's Android SDK License Agreement"
+                                              IsChecked="{Binding Android.ConsentGiven, Mode=TwoWay}"
+                                              Margin="{StaticResource Thickness.2}"
+                                              AutomationProperties.Name="Accept Android SDK license" />
+                                    <TextBlock Text="{Binding Android.LicenseText}" Style="{StaticResource CaptionText}"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Android.LicenseUrl}" Style="{StaticResource CaptionText}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="Connected devices" Style="{StaticResource SectionTitle}"
+                                       Margin="{StaticResource Thickness.2}" />
+                            <ComboBox ItemsSource="{Binding Android.Devices}"
+                                      SelectedItem="{Binding Android.SelectedDevice, Mode=TwoWay}"
+                                      DisplayMemberPath="DisplayName"
+                                      AutomationProperties.Name="Android devices" />
+                            <TextBlock Text="{Binding Android.DeviceInfoText}" Style="{StaticResource CaptionText}"
+                                       TextWrapping="Wrap" Margin="{StaticResource Thickness.2}"
+                                       AutomationProperties.Name="Android device info" />
+                            <TextBlock Text="{Binding Android.ProfileText}" Style="{StaticResource CaptionText}"
+                                       TextWrapping="Wrap" />
+                            <ItemsControl ItemsSource="{Binding Android.UserRows}" Margin="{StaticResource Thickness.1}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Style="{StaticResource CaptionText}"
+                                                   TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
                     </Border>
                 </StackPanel>

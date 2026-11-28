@@ -72,6 +72,18 @@ public static class ServiceCollectionExtensions
             sp => new PCManager.Services.Debloat.DebloatProfileService(
                 sp.GetRequiredService<IAppLogger>()));
 
+        // A1: locate/verify adb, consent-gated pinned download, read-only device discovery.
+        services.AddSingleton<PCManager.Services.Android.IAdbRunner, PCManager.Services.Android.ProcessAdbRunner>();
+        services.AddSingleton<PCManager.Services.Android.IAdbSignatureVerifier,
+            PCManager.Services.Android.AuthenticodeAdbSignatureVerifier>();
+        services.AddSingleton<PCManager.Services.Android.IAdbPackageSource,
+            PCManager.Services.Android.HttpAdbPackageSource>();
+        services.AddSingleton<PCManager.Services.Android.IAdbProvisioner>(sp =>
+            new PCManager.Services.Android.AdbProvisioner(
+                sp.GetRequiredService<PCManager.Services.Android.IAdbPackageSource>(),
+                sp.GetRequiredService<PCManager.Services.Android.IAdbSignatureVerifier>()));
+        services.AddSingleton<PCManager.Services.Android.IAdbService, PCManager.Services.Android.AdbService>();
+
         // --- FPM Services (Migration, Memory Diagnostics, Unified Cleanup, Network) ---
         services.AddSingleton<ILegacyIdentityMigrationService, PCManager.Services.Infrastructure.LegacyIdentityMigrationService>();
         services.AddSingleton<MemoryDiagnosticsService>();

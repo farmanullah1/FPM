@@ -13,6 +13,7 @@ namespace PCManager.ViewModels;
 public sealed partial class DebloatViewModel : ViewModelBase
 {
     private readonly DebloatEngine _engine;
+    private readonly AndroidDebloatViewModel _android;
     private readonly List<DebloatTweakRow> _allRows = new();
     private readonly HashSet<string> _appliedIds = new(StringComparer.Ordinal);
     private readonly int _osBuild = Environment.OSVersion.Version.Build;
@@ -20,13 +21,34 @@ public sealed partial class DebloatViewModel : ViewModelBase
     private DebloatCatalog? _catalog;
     private List<DebloatApp> _allApps = new();
     private bool _applyingPreset;
+    private bool _pageVisible;
 
-    public DebloatViewModel(DebloatEngine engine, IDebloatProfileService? profiles = null)
+    public DebloatViewModel(
+        DebloatEngine engine,
+        AndroidDebloatViewModel android,
+        IDebloatProfileService? profiles = null)
     {
         _engine = engine;
+        _android = android;
 
-        ShowWindowsCommand = new RelayCommand(() => { IsWindowsTab = true; IsAppsTab = false; });
-        ShowAppsCommand = new RelayCommand(() => { IsWindowsTab = false; IsAppsTab = true; });
+        ShowWindowsCommand = new RelayCommand(() =>
+        {
+            IsWindowsTab = true;
+            IsAppsTab = false;
+            IsAndroidTab = false;
+        });
+        ShowAppsCommand = new RelayCommand(() =>
+        {
+            IsWindowsTab = false;
+            IsAppsTab = true;
+            IsAndroidTab = false;
+        });
+        ShowAndroidCommand = new RelayCommand(() =>
+        {
+            IsWindowsTab = false;
+            IsAppsTab = false;
+            IsAndroidTab = true;
+        });
         SelectAllVisibleCommand = new RelayCommand(SelectAllVisible, () => !IsBusy);
         ClearSelectionCommand = new RelayCommand(ClearSelection, () => !IsBusy);
         ReviewCommand = new RelayCommand(OpenReview, () => HasSelection && !IsBusy);
@@ -46,8 +68,11 @@ public sealed partial class DebloatViewModel : ViewModelBase
     public ObservableCollection<string> HistoryRows { get; } = new();
     public ObservableCollection<string> AppFilters { get; } = new() { "All", "Recommended safe", "Optional", "Unsafe" };
 
+    public AndroidDebloatViewModel Android => _android;
+
     public RelayCommand ShowWindowsCommand { get; }
     public RelayCommand ShowAppsCommand { get; }
+    public RelayCommand ShowAndroidCommand { get; }
     public RelayCommand SelectAllVisibleCommand { get; }
     public RelayCommand ClearSelectionCommand { get; }
     public RelayCommand ReviewCommand { get; }
@@ -76,6 +101,9 @@ public sealed partial class DebloatViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isAppsTab;
+
+    [ObservableProperty]
+    private bool _isAndroidTab;
 
     [ObservableProperty]
     private bool _createRestorePoint = true;
@@ -184,6 +212,15 @@ public sealed partial class DebloatViewModel : ViewModelBase
     partial void OnAppSearchTextChanged(string value) => RebuildApps();
 
     partial void OnSelectedAppFilterChanged(string value) => RebuildApps();
+
+    partial void OnIsAndroidTabChanged(bool value) =>
+        _android.SetVisible(_pageVisible && value);
+
+    public void SetPageVisible(bool visible)
+    {
+        _pageVisible = visible;
+        _android.SetVisible(visible && IsAndroidTab);
+    }
 
     partial void OnSelectedPresetChanged(DebloatPreset? value)
     {

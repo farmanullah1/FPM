@@ -24,7 +24,7 @@ assume a tool exists. Baseline versions are in `BASELINE.md`.
 | R4 | GitHub Actions, `gh` CLI (optional for local release) | owner's account; never print tokens |
 | R5 | screenshot capture script (UIA + PrintWindow) | repo-local `tools/` scripts, DPI-aware |
 | D1–D5 | Win11Debloat reference source at `reference/win11debloat` | present, read-only |
-| A1–A7 | Android platform-tools `adb` (user-consented download, Google-signed) | never bundled |
+| A1–A7 | Android platform-tools `adb` (user-consented download, Google-signed) | A1 pins **35.0.2** (`platform-tools_r35.0.2-win.zip`, SHA-256 `2975a3ea…300bb9`); never bundled; A1 tests use a fake runner, no device |
 | T2 | `LibreHardwareMonitorLib` NuGet (MPL-2.0) | licence review required before adding |
 | W2 | COM `IVirtualDesktopManager` | documented API only |
 | R4 | `gitleaks` **8.30.1** via `tools/secret-scan.ps1` | Installed and checksum-verified; CI downloads the same pinned release |

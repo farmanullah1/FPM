@@ -6,11 +6,11 @@ everything they do not cover. No card is started before its dependencies and ent
 
 ## 1. Current position
 
-Done and committed: **G0, R1, R2, R4, U1–U6, W1–W5, T1, D1–D5** (D5 is the current HEAD; see
+Done and committed: **G0, R1, R2, R4, U1–U6, W1–W5, T1, D1–D5, A1** (A1 is the current card; see
 `PROGRESS_LOG.md`). T2 is partial: the unprivileged path ships, LHM/helper awaits D-043. U7's
 reduced-motion capture and cancel are still open.
-Next by the approved order: **A1** (ADB service). Owner-gated: D-043 (LHM), Q-05 (push/signing).
-Not started: U7–U12, T2 helper/LHM, T3–T4, A1–A7, R3, R5–R6, and the v7-only backlog in §9.
+Next by the approved order: **A2** (package lists). Owner-gated: D-043 (LHM), Q-05 (push/signing).
+Not started: U7–U12, T2 helper/LHM, T3–T4, A2–A7, R3, R5–R6, and the v7-only backlog in §9.
 
 ## 2. Wave 0 — release foundations (est. 8–12 h)
 
@@ -77,7 +77,7 @@ memory overhead recorded in `BUILD_STATUS.md`.
 
 | Card | Depends on | Work | Acceptance |
 |---|---|---|---|
-| **A1** ADB service | R2 | Locate/consent/download/verify adb, devices parsing, onboarding, device info, polling. | Unsigned adb rejected; no bundling. |
+| **A1** ADB service | R2 | Locate/consent/download/verify adb, devices parsing, onboarding, device info, polling. **Done 2026-11-28** — pinned 35.0.2, real signed adb locator, 20 A1 tests, Android tab probe; see `PROGRESS_LOG.md`. | Unsigned adb rejected; no bundling; 287 tests; probe exit 0 (no physical phone/download: R-38/R-39). |
 | **A2** Package lists | A1 | Typed model + schema + validator for `uad_lists.json`; user-initiated update with diff/hash. | Schema tests; embedded fallback. |
 | **A3** Package engine | A2 | State computation, typed commands, batch results, verify, dependency warnings. | Command builder rejects injection; continue-on-failure. |
 | **A4** UI (Debloat → Android) | A3, U10 | Device/user selectors, filters, virtualized list, review/confirm, denylist UX, report, undo. | Expert typed confirmation; first-run warnings. |

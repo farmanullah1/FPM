@@ -74,6 +74,7 @@ public partial class App : Application
         // One battery presenter shared by Home, the toolbar and Settings (T1).
         collection.AddSingleton<BatteryStatusViewModel>();
         collection.AddSingleton<TemperatureStatusViewModel>();
+        collection.AddSingleton<AndroidDebloatViewModel>();
         collection.AddSingleton<DebloatViewModel>();
 
         // Navigation is a broker so pages never reference the shell.

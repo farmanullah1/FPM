@@ -6,6 +6,9 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Android ADB onboarding (A1)**: a new Debloat → Android tab locates a signed `adb` (configured path, FPM tools, Android SDK locations, then PATH), refuses unsigned copies, explains every device state (no device, unauthorized, offline, no USB permission), and reads device identity and Android profiles through a closed typed command set. Google platform-tools **35.0.2** is offered only after an explicit Android SDK license acceptance; the pinned archive is SHA-256 checked before extraction and the staged `adb.exe` must carry a valid Google Authenticode signature. The ADB server starts lazily, is stopped only when FPM started it, and the device list polls every 2 s only while the tab is visible. No platform-tools are bundled.
+
+### Added
 - **Windows debloat safety tests (D5)**: the planner now refuses contradictory selections
   (`SkippedConflict`) before elevation — the same registry value with different final data, or one
   optional feature both on and off — so presets cannot silently apply both sides of Spotlight,
