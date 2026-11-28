@@ -6,6 +6,7 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using PCManager.Cli;
 using PCManager.Core;
+using PCManager.Core.Debloat;
 using PCManager.Core.Models;
 using PCManager.Motion;
 using PCManager.Services;
@@ -73,7 +74,9 @@ public partial class App : Application
         // One battery presenter shared by Home, the toolbar and Settings (T1).
         collection.AddSingleton<BatteryStatusViewModel>();
         collection.AddSingleton<TemperatureStatusViewModel>();
-        collection.AddSingleton<DebloatEngineViewModel>();
+        collection.AddSingleton<PackageListViewModel>();
+        collection.AddSingleton<AndroidDebloatViewModel>();
+        collection.AddSingleton<DebloatViewModel>();
 
         // Navigation is a broker so pages never reference the shell.
         collection.AddSingleton<NavigationService>();
@@ -104,6 +107,20 @@ public partial class App : Application
 
         // One motion policy for the whole shell: system settings, app settings, power and RDP.
         MotionKit.UsePolicy(_services.GetRequiredService<IMotionPolicy>());
+
+        // Debloat CLI shares the exact planner, engine and journal as the page.
+        if (DebloatCommandLine.IsDebloatCommand(e.Args))
+        {
+            int exitCode = Task.Run(() => DebloatCli.RunAsync(
+                    e.Args,
+                    _services.GetRequiredService<PCManager.Services.Debloat.DebloatEngine>(),
+                    _services.GetRequiredService<PCManager.Services.Debloat.IDebloatProfileService>()))
+                .GetAwaiter()
+                .GetResult();
+
+            Environment.Exit(exitCode);
+            return;
+        }
 
         // Cleanup CLI shares the exact same engine as the UI. --scan deletes nothing;
         // --clean requires an explicit --ids list.

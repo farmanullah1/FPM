@@ -6,6 +6,38 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Android package lists (A2)**: the Debloat → Android tab now loads a typed, validated UAD catalog from the embedded GPL package data (2,400 source rows, 2,394 unique ids, 6 reported duplicates) and shows its source, counts and SHA-256. A user-pressed **Check for list updates** fetches the official upstream JSON over HTTPS, validates it with the same schema, shows an added/removed/changed diff, and writes a cached copy plus SHA-256 sidecar under `%LOCALAPPDATA%\FPM\android\lists`; an absent, invalid or failed update falls back to the embedded list. No package operations are exposed yet.
+
+### Added
+- **Android ADB onboarding (A1)**: a new Debloat → Android tab locates a signed `adb` (configured path, FPM tools, Android SDK locations, then PATH), refuses unsigned copies, explains every device state (no device, unauthorized, offline, no USB permission), and reads device identity and Android profiles through a closed typed command set. Google platform-tools **35.0.2** is offered only after an explicit Android SDK license acceptance; the pinned archive is SHA-256 checked before extraction and the staged `adb.exe` must carry a valid Google Authenticode signature. The ADB server starts lazily, is stopped only when FPM started it, and the device list polls every 2 s only while the tab is visible. No platform-tools are bundled.
+
+### Added
+- **Windows debloat safety tests (D5)**: the planner now refuses contradictory selections
+  (`SkippedConflict`) before elevation — the same registry value with different final data, or one
+  optional feature both on and off — so presets cannot silently apply both sides of Spotlight,
+  search-box, taskbar, Start-layout or drive-letter choices. Restore-state validation moved into a
+  shared Core guard with unknown-path/hive tests, the parity test compares all 106 reference
+  features (90 ported + 16 exclusions) with the embedded catalog, and the catalog now records the
+  five exclusions the generator previously omitted.
+
+### Added
+- **Windows debloat advanced (D4)**: typed user targets for another local profile (live hive or an
+  offline `NTUSER.DAT` loaded as `HKU\FPM_*` and always unloaded) and the Default user hive with a
+  SYSPREP warning and Windows 10 gate; a target picker plus profile refresh; `fpm-debloat-preset.json`
+  export/import with schema validation and unknown-id warnings; a report-only drift check; and a
+  `--debloat` CLI with presets/tweaks/user, dry-run and silent/accept-risk gating that shares the
+  page's planner, engine and journal. App removal remains refused, so `--apps` is parsed but does
+  not execute yet.
+
+### Added
+- **Windows debloat page (D3)**: a real Debloat page in the rail with Windows and Apps tabs —
+  OS/build header, category counts and search, five documented selection presets, risk and impact
+  labels, a typed plan/review, Detect/Apply/Undo over the journaled engine, a restore-point toggle,
+  success/declined/partial-rollback reports and journal history. The Apps tab is a searchable
+  catalog only; removal stays refused until Appx state can be journaled. Unsupported and protected
+  tweaks remain disabled with their planner reason. The Settings preview card was removed.
+
+### Added
 - **Windows debloat engine (D2)**: catalog tweaks now plan into an ordered, OS-gated list and run
   only through three typed helper commands (`DetectTweak`, `ApplyTweak`, `RevertTweak`). Every run
   writes a `.reg` backup and a journal of the exact pre-state, tries a restore point (recording a

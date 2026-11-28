@@ -13,17 +13,23 @@ public sealed class HelperDebloatExecutor : IDebloatExecutor
 
     public Task<DebloatHelperOutcome> DetectAsync(
         DebloatTweak tweak,
+        string targetUser = "",
         CancellationToken cancellationToken = default) =>
-        _elevation.RunDebloatAsync(HelperCommand.DetectTweak, tweak.Id, cancellationToken: cancellationToken);
+        _elevation.RunDebloatAsync(
+            HelperCommand.DetectTweak, tweak.Id, targetUser: targetUser, cancellationToken: cancellationToken);
 
     public Task<DebloatHelperOutcome> ApplyAsync(
         DebloatTweak tweak,
+        string targetUser = "",
         CancellationToken cancellationToken = default) =>
-        _elevation.RunDebloatAsync(HelperCommand.ApplyTweak, tweak.Id, cancellationToken: cancellationToken);
+        _elevation.RunDebloatAsync(
+            HelperCommand.ApplyTweak, tweak.Id, targetUser: targetUser, cancellationToken: cancellationToken);
 
     public Task<DebloatHelperOutcome> RevertAsync(
         DebloatTweak tweak,
         IReadOnlyList<RegistryValueState> before,
+        string targetUser = "",
         CancellationToken cancellationToken = default) =>
-        _elevation.RunDebloatAsync(HelperCommand.RevertTweak, tweak.Id, before, cancellationToken);
+        _elevation.RunDebloatAsync(
+            HelperCommand.RevertTweak, tweak.Id, before, targetUser, cancellationToken);
 }

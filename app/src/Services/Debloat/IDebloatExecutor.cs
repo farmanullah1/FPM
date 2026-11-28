@@ -8,12 +8,19 @@ namespace PCManager.Services.Debloat;
 /// </summary>
 public interface IDebloatExecutor
 {
-    Task<DebloatHelperOutcome> DetectAsync(DebloatTweak tweak, CancellationToken cancellationToken = default);
+    Task<DebloatHelperOutcome> DetectAsync(
+        DebloatTweak tweak,
+        string targetUser = "",
+        CancellationToken cancellationToken = default);
 
-    Task<DebloatHelperOutcome> ApplyAsync(DebloatTweak tweak, CancellationToken cancellationToken = default);
+    Task<DebloatHelperOutcome> ApplyAsync(
+        DebloatTweak tweak,
+        string targetUser = "",
+        CancellationToken cancellationToken = default);
 
     Task<DebloatHelperOutcome> RevertAsync(
         DebloatTweak tweak,
         IReadOnlyList<RegistryValueState> before,
+        string targetUser = "",
         CancellationToken cancellationToken = default);
 }
