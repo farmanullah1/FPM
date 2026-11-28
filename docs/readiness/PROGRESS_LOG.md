@@ -335,6 +335,8 @@ Next card: **A1** (ADB service: locate/consent/download/verify adb, device parsi
 
 ## 2026-11-28 — A1 complete (ADB service)
 
+A1 implementation commit: `5eca8a7e19c49779809dbf4b539c0294c8cadcef`.
+
 | Step | Evidence | Result |
 |---|---|---|
 | Command surface | `Core/Android/AdbCommandLine.cs`: closed enum `StartServer`, `KillServer`, `Devices`, `GetProperties`, `ListUsers`; `ArgumentList` only; serial regex rejects spaces/empty. `AdbParserTests.Command_builder_only_emits_the_typed_a1_surface_and_rejects_bad_serials` | no free-form shell; A2+ must extend the enum |

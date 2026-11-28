@@ -10,7 +10,7 @@ The plan copies in `docs/freebuff/`, `AGENT_STATE.md`, the root plan/prompt/hand
 read-only reference tree are intentionally local-only and git-ignored (D-066). This folder stays
 tracked; no status, decision, risk or evidence file depends on an ignored path.
 
-Status date: **2026-11-28**. Baseline commit: **the A1 commit at the top of `git log`** (recorded in `PROGRESS_LOG.md`).
+Status date: **2026-11-28**. Baseline commit: **`5eca8a7`** (A1 implementation; the evidence follow-up records the full hash in `PROGRESS_LOG.md`).
 
 ## 1. Documents in this folder
 
