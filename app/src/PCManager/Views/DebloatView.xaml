@@ -457,6 +457,149 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+
+                            <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.3}"
+                                    Margin="{StaticResource Thickness.2}">
+                                <StackPanel>
+                                    <TextBlock Text="Android package safety" FontWeight="SemiBold" />
+                                    <TextBlock Text="Removing system, launcher, telephony or OEM packages can brick or destabilize a phone. Unsafe packages stay blocked unless Expert mode and the exact package id are provided."
+                                               Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                                    <CheckBox Content="I understand the risk"
+                                              IsChecked="{Binding Android.PackageManagement.SafetyAcknowledged, Mode=TwoWay}"
+                                              AutomationProperties.Name="I understand Android package risk"
+                                              Margin="{StaticResource Thickness.2}" />
+                                    <TextBlock Text="FAQ: https://github.com/0x192/universal-android-debloater/wiki"
+                                               Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <Grid Margin="{StaticResource Thickness.2}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ComboBox ItemsSource="{Binding Android.PackageManagement.Users}"
+                                          SelectedItem="{Binding Android.PackageManagement.SelectedUser, Mode=TwoWay}"
+                                          DisplayMemberPath="Name"
+                                          AutomationProperties.Name="Android user profile"
+                                          Margin="{StaticResource Thickness.1}" />
+                                <Button Grid.Column="1" Content="Refresh packages"
+                                        Style="{StaticResource PillButton}"
+                                        Command="{Binding Android.PackageManagement.RefreshCommand}"
+                                        AutomationProperties.Name="Refresh Android packages"
+                                        Margin="{StaticResource Thickness.1}" />
+                            </Grid>
+
+                            <TextBlock Text="{Binding Android.PackageManagement.StatusText}"
+                                       FontWeight="SemiBold" TextWrapping="Wrap"
+                                       Margin="{StaticResource Thickness.1}" />
+                            <WrapPanel Margin="{StaticResource Thickness.1}">
+                                <TextBox Text="{Binding Android.PackageManagement.SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         Width="220" AutomationProperties.Name="Search Android packages"
+                                         Margin="{StaticResource Thickness.1}" />
+                                <ComboBox ItemsSource="{Binding Android.PackageManagement.ListFilters}"
+                                          SelectedItem="{Binding Android.PackageManagement.SelectedList, Mode=TwoWay}"
+                                          Width="120" AutomationProperties.Name="Android package list filter"
+                                          Margin="{StaticResource Thickness.1}" />
+                                <ComboBox ItemsSource="{Binding Android.PackageManagement.RemovalFilters}"
+                                          SelectedItem="{Binding Android.PackageManagement.SelectedRemoval, Mode=TwoWay}"
+                                          Width="120" AutomationProperties.Name="Android removal tier filter"
+                                          Margin="{StaticResource Thickness.1}" />
+                                <ComboBox ItemsSource="{Binding Android.PackageManagement.StateFilters}"
+                                          SelectedItem="{Binding Android.PackageManagement.SelectedState, Mode=TwoWay}"
+                                          Width="120" AutomationProperties.Name="Android package state filter"
+                                          Margin="{StaticResource Thickness.1}" />
+                                <CheckBox Content="Selected only"
+                                          IsChecked="{Binding Android.PackageManagement.SelectedOnly, Mode=TwoWay}"
+                                          AutomationProperties.Name="Show selected Android packages only"
+                                          Margin="{StaticResource Thickness.1}" />
+                            </WrapPanel>
+                            <StackPanel Orientation="Horizontal" Margin="{StaticResource Thickness.1}">
+                                <Button Content="Select all visible" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding Android.PackageManagement.SelectAllCommand}"
+                                        AutomationProperties.Name="Select all visible Android packages" />
+                                <Button Content="Clear" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding Android.PackageManagement.ClearCommand}"
+                                        AutomationProperties.Name="Clear Android package selection"
+                                        Margin="{StaticResource Thickness.1}" />
+                                <Button Content="Invert" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding Android.PackageManagement.InvertCommand}"
+                                        AutomationProperties.Name="Invert visible Android package selection"
+                                        Margin="{StaticResource Thickness.1}" />
+                            </StackPanel>
+
+                            <ListBox ItemsSource="{Binding Android.PackageManagement.VisiblePackages}"
+                                     SelectedItem="{Binding Android.PackageManagement.FocusedPackage, Mode=TwoWay}"
+                                     MaxHeight="360"
+                                     VirtualizingPanel.IsVirtualizing="True"
+                                     VirtualizingPanel.VirtualizationMode="Recycling"
+                                     ScrollViewer.CanContentScroll="True"
+                                     Background="Transparent" BorderThickness="0"
+                                     AutomationProperties.Name="Android packages">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource RowCard}" Padding="{StaticResource Thickness.2}"
+                                                Margin="{StaticResource Row.Margin}"
+                                                AutomationProperties.Name="{Binding AutomationName}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                          AutomationProperties.Name="{Binding AutomationName}"
+                                                          Margin="{StaticResource Thickness.2}" />
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding Id}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Description}"
+                                                               Style="{StaticResource CaptionText}"
+                                                               TextWrapping="Wrap" MaxHeight="42" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2">
+                                                    <TextBlock Text="{Binding ListText}" FontSize="10" />
+                                                    <TextBlock Text="{Binding RemovalText}" FontSize="10" />
+                                                    <TextBlock Text="{Binding StateText}" FontSize="10" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.3}"
+                                    Margin="{StaticResource Thickness.2}">
+                                <StackPanel>
+                                    <TextBlock Text="Review and apply" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Android.PackageManagement.ReviewText}"
+                                               Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                                    <CheckBox Content="Disable instead of uninstall"
+                                              IsChecked="{Binding Android.PackageManagement.DisableInsteadOfUninstall, Mode=TwoWay}"
+                                              AutomationProperties.Name="Disable Android packages instead of uninstall" />
+                                    <CheckBox Content="Expert mode"
+                                              IsChecked="{Binding Android.PackageManagement.ExpertMode, Mode=TwoWay}"
+                                              AutomationProperties.Name="Android Expert mode" />
+                                    <TextBox Text="{Binding Android.PackageManagement.ExpertConfirmation, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Exact protected package confirmation"
+                                             Margin="{StaticResource Thickness.1}" />
+                                    <StackPanel Orientation="Horizontal" Margin="{StaticResource Thickness.1}">
+                                        <Button Content="Review package batch" Style="{StaticResource PrimaryButton}"
+                                                Command="{Binding Android.PackageManagement.ReviewCommand}"
+                                                AutomationProperties.Name="Review Android package batch" />
+                                        <Button Content="Apply batch" Style="{StaticResource PrimaryButton}"
+                                                Command="{Binding Android.PackageManagement.ApplyCommand}"
+                                                AutomationProperties.Name="Apply Android package batch"
+                                                Margin="{StaticResource Thickness.1}" />
+                                        <Button Content="Undo last batch" Style="{StaticResource SecondaryButton}"
+                                                Command="{Binding Android.PackageManagement.UndoCommand}"
+                                                AutomationProperties.Name="Undo Android package batch"
+                                                Margin="{StaticResource Thickness.1}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Text="{Binding Android.PackageManagement.ResultText}"
+                                       Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                                       AutomationProperties.Name="Android package batch result" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

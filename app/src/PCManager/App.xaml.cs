@@ -75,6 +75,7 @@ public partial class App : Application
         collection.AddSingleton<BatteryStatusViewModel>();
         collection.AddSingleton<TemperatureStatusViewModel>();
         collection.AddSingleton<PackageListViewModel>();
+        collection.AddSingleton<AndroidPackageViewModel>();
         collection.AddSingleton<AndroidDebloatViewModel>();
         collection.AddSingleton<DebloatViewModel>();
 
