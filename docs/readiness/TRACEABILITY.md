@@ -87,6 +87,8 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-80 | D3 Apps tab catalog surface, with removal refused (D3) | D3 | `DebloatView.xaml` Apps tab, `DebloatAppRow` | probe found “Preinstalled apps”; no removal offered |
 | TR-81 | D3 empty/no-catalog/running/partial-rollback/error states (D3) | D3 | `DebloatView.xaml`, report model | XAML bindings + rollback report test |
 | TR-82 | D3 runtime page evidence through UIA (D3) | D3 | `tools/ui-probe-debloat.ps1` | probe output in `PROGRESS_LOG.md`; UAC not approved (R-29) |
+| TR-83 | Android package state, typed actions, batch/verify and dependency warnings (A3) | A3 | `Core/Android/PackageModels.cs`, `PackageDenylist.cs`, `PackageDependencyWarnings.cs`, `AdbCommandLine.cs`, `AdbParsers.cs`; `Services/Android/PackageEngine.cs`, `IPackageEngine.cs`, `PackageEngineRules.cs`; `AdbService.cs` | 19 A3 tests: four-query state join, injection/ID/user rejection, all four command argument lists, denylist block/exact Expert confirmation, Already without mutation, continue-on-failure, disconnect stop, verification, disable-instead, dependency warnings; 321 total; no live device (R-47) |
+| TR-84 | Android package UI, selectors, filters, review/confirmation, denylist UX, report and undo (A4) | A4 | `ViewModels/AndroidDebloatViewModel.cs`, `AndroidPackageRow.cs`, `Views/DebloatView.xaml`; `tools/ui-probe-android.ps1` | 325 tests total plus UIA probe; control automation names verified with NoDevice; no live package mutation |
 | TR-44 | Release workflow (tag → installer + checksums) | R4 (release half), R3 | `.github/workflows/release.yml` | deferred: needs the owner's push/signing decision; blocker recorded in `RISKS.md` |
 
 ## Coverage notes

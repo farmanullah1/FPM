@@ -25,11 +25,13 @@ public sealed partial class AndroidDebloatViewModel : ObservableObject, IDisposa
     public AndroidDebloatViewModel(
         IAdbService adb,
         ISettingsService settings,
-        PackageListViewModel packageList)
+        PackageListViewModel packageList,
+        AndroidPackageViewModel packageManagement)
     {
         _adb = adb;
         _settings = settings;
         PackageList = packageList;
+        PackageManagement = packageManagement;
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _timer.Tick += OnTick;
 
@@ -42,6 +44,7 @@ public sealed partial class AndroidDebloatViewModel : ObservableObject, IDisposa
     public ObservableCollection<AdbDevice> Devices { get; } = new();
     public ObservableCollection<string> UserRows { get; } = new();
     public PackageListViewModel PackageList { get; }
+    public AndroidPackageViewModel PackageManagement { get; }
 
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand UsePathCommand { get; }
@@ -257,6 +260,7 @@ public sealed partial class AndroidDebloatViewModel : ObservableObject, IDisposa
         {
             DeviceInfoText = $"{device.DisplayName} · {device.StateText}. Authorize the phone to read device info.";
             ProfileText = "Profiles: not read.";
+            PackageManagement.SetDevice(null, Array.Empty<AdbUser>());
             return;
         }
 
@@ -267,6 +271,7 @@ public sealed partial class AndroidDebloatViewModel : ObservableObject, IDisposa
         {
             AdbDeviceInfo? info = await _adb.GetDeviceInfoAsync(device);
             IReadOnlyList<AdbUser> users = await _adb.GetUsersAsync(device);
+            PackageManagement.SetDevice(device, users);
 
             DeviceInfoText = info is null
                 ? "Device identity is unavailable; refresh after authorizing the phone."

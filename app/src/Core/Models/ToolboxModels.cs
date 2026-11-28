@@ -124,6 +124,9 @@ public sealed class AppSettings
 
     /// <summary>A3: devices that refuse uninstall use disable-user instead; reviewed by the user first.</summary>
     public bool AndroidDisableInsteadOfUninstall { get; set; }
+
+    /// <summary>A4: Android debloat safety warning was acknowledged.</summary>
+    public bool AndroidSafetyAcknowledged { get; set; }
 }
 
 public enum ThemeOption

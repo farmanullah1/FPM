@@ -387,6 +387,8 @@ Next card: **A3** (package engine). No user-only blocker for A3. D-043 (LHM) and
 
 ## 2026-11-28 — A3 complete (Android package engine)
 
+A3 implementation commits: `3946e1d` (typed surface, engine, tests, initial evidence), `360c126` (interface split + command tests), `0c50c62` (rules extraction). Final evidence follow-up: pending local docs commit.
+
 | Step | Evidence | Result |
 |---|---|---|
 | Typed command surface | `AdbCommandKind` now includes package list, uninstall, disable, enable and restore; `AdbCommandLine.Build` validates serial and dotted package ids and supplies argument lists only | no shell/free-form package command |
@@ -394,12 +396,30 @@ Next card: **A3** (package engine). No user-only blocker for A3. D-043 (LHM) and
 | Engine | `IPackageEngine`/`PackageEngine` scans all/disabled/system lists, applies sequentially, supports disable-instead-of-uninstall, warns on dependencies, re-scans and verifies final state | continue-on-failure; disconnect stop |
 | Denylist | `PackageDenylist` protects critical launcher, shell, telephony, settings, installer and system packages; unsafe UAD rows are also denied | exact typed package confirmation required in Expert mode |
 | Wiring | `IAdbCommandExecutor` added to `AdbService`; `IPackageEngine` registered in the service collection | no package mutation occurs in ADB discovery/onboarding |
-| Tests | `PackageEngineTests` covers state join, denylist block/confirm, already state, continue failure, disconnect stop and dependency warnings | 321 tests total, 0 failed |
+| Tests | `PackageEngineTests` (9) + `PackageCommandTests` (10 cases) cover the four-query state join, malformed package/serial/user rejection, every command's exact argument list, denylist block/exact Expert confirmation, Already without mutation, continue-on-failure, disconnect stop, verification, disable-instead and dependency warnings | **321 passed**, 0 failed (**19 A3 tests**) |
 | Build | `dotnet build app/PCManager.sln -nodeReuse:false -m:1 --no-restore` | 0 warnings / 0 errors |
 | Static gates | `lint-xaml.ps1`, `contrast-check.ps1`, `IconGen --check` | lint 367; contrast OK Light/Dark; 113 icons/213 geometries |
+| Runtime regression | `tools/ui-probe-android.ps1` after the A3 build; A3 has no UI yet (A4 owns it), so this proves the existing Android tab and A2 embedded list still load | **exit 0**; `ADB status: NoDevice`; `UAD package list: 2,394 package ids ready`; embedded 2,400/6/SHA prefix; no FPM or adb process left |
 
-**A3 acceptance:** typed state and command builder, batch application with per-package result and disconnect stop, final re-query, dependency warnings and Expert/denylist protection are implemented. No real device or package was mutated.
+**A3 acceptance:** the typed command builder rejects shell text and malformed ids/users; state is computed from all/system/enabled/disabled queries with UAD metadata; batches return per-package `OK|ALREADY|FAILED|BLOCKED_DENYLIST`, continue after ordinary failures, stop on disconnect, re-query to verify, and emit dependency/needed-by warnings. Denylisted/Unsafe packages require Expert mode plus the exact package id. No real device or package was mutated.
 
-**Not checked:** no physical Android device, USB authorization or live package mutation was exercised (R-38/R-39); A4 package UI remains not started.
+**Not checked:** no physical Android device, USB authorization, live `pm` state or package mutation was exercised (R-38/R-39/R-47); A3 exposes no UI controls, so no A3 screen exists to capture until A4. The runtime probe is an A2-tab regression check only. The background .NET 11 dependency bump was reverted to the last .NET 8 set because it produced unsupported-TFM warnings (D-084).
 
 Next card: **A4** (Android package UI). No owner-only blocker.
+
+## 2026-11-28 — A4 complete (Android package UI)
+
+| Step | Evidence | Result |
+|---|---|---|
+| VM and package model | `AndroidDebloatViewModel` now owns device/user selection, package scan, filters, review, apply/undo and safety acknowledgement; `AndroidPackageRow` exposes typed metadata and selection automation | no package action executes before acknowledgement and confirmation |
+| Package UI | `DebloatView.xaml` Android tab now includes search, list/tier/state filters, selected-only, visible select/clear/invert, virtualized rows, action options, review, apply/undo and result text | controls retain 3D icons and token styles |
+| Safety | denylisted/Unsafe rows are blocked unless Expert mode and exact package id match; final MessageBox confirmation; first-run acknowledgement persists in settings | no real package mutation |
+| Tests | `AndroidPackageRowTests` plus existing A3 package engine tests | **325 passed**, 0 failed |
+| Build/static gates | solution build, XAML lint, contrast check, IconGen check | 0/0 build; lint 367; contrast both themes; 113 icons |
+| Runtime probe | `tools/ui-probe-android.ps1` | **exit 0**; NoDevice; A4 device/user/filter/list/review/undo controls found; settings restored |
+
+**A4 acceptance:** the Android tab exposes the package engine through device/user selectors, filters, virtualized rows, review, denylist/Expert confirmation and inverse undo. No live phone or package mutation was exercised.
+
+**Not checked:** real 360/560/1280 captures, both-theme visual review and live device package apply/undo remain unverified (R-45/R-47). A5 owns persistent snapshot/log/export behavior.
+
+Next card: **A5** (Android backup, restore, log and export/import). No owner-only blocker.
