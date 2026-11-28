@@ -126,6 +126,11 @@ public sealed class UadListProviderTests
         Assert.Equal(RemoteJson, directory.ReadCache().TrimEnd());
         Assert.True(File.Exists(directory.Path + "/uad_lists.json.sha256"));
         Assert.Equal(provider.Current.Sha256 + Environment.NewLine, directory.ReadHash());
+
+        var reloaded = new UadListProvider(source, new FakeLogger(), directory.Path);
+        UadListCatalog cached = await reloaded.LoadAsync();
+        Assert.Equal(UadListOrigin.Cached, cached.Origin);
+        Assert.Equal(3, cached.Packages.Count);
     }
 
     [Fact]
