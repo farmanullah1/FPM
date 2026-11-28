@@ -36,23 +36,26 @@ No `git rm --cached` was needed: nothing forbidden was ever tracked.
 
 ## `.gitignore` changes
 
-Replaced the ad-hoc list with a VisualStudio-template-derived policy in labelled
-sections: build/IDE output, packages, installer and release artifacts, secrets and
-signing material, local app data, third-party reference material, investigation
-artifacts, AI-agent files, OS/editor noise, root documentation.
+Replaced the ad-hoc list with a lean deny-list in labelled sections: build/IDE output,
+packages, installer and release artifacts, secrets and signing material, local app data,
+third-party reference material, investigation artifacts, AI-agent files, OS/editor noise,
+and local planning/prompt/handoff documents.
 
-Two corrections worth noting:
+Important corrections:
 
-- The old rule `/*.md` (with `!/README.md`) would have blocked every future public
-  document. It now unignores `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`,
-  `SECURITY.md`, `CODE_OF_CONDUCT.md`, `THIRD_PARTY_NOTICES.md` and all of `docs/**`,
-  then re-ignores `docs/freebuff/`.
+- Root pages are tracked by default again; only the local planning/prompt/handoff files
+  (`AGENT_STATE.md`, `BUILD_STATUS.md`, `PROJECT_SPEC.md`, `REA_REFERENCE_AUDIT.md`,
+  `FPM_Master_*.md`, `FPM_FreeBuff_*.md`, `*_MASTER_PROMPT*.md`, `*_Master_Prompt*.md`)
+  are ignored.
 - `secrets.json`, `.key`, `.pem`, `.p12`, `platform-tools/`, `installer/Output/`,
   `*.zip`, `publish/`, `dist/`, `artifacts/`, `coverage/` and the agent-tool folders
-  were missing entirely and are now covered.
+  are covered.
+- `docs/freebuff/` stays ignored on purpose (D-066); the tracked source of truth is
+  `docs/readiness/`, and every file there remains visible to Git.
 
 The six plan documents were moved to `docs/freebuff/` as the start file asks; they
-remain ignored.
+remain local-only and ignored. This is an explicit decision, not an accidental
+exclusion of the mission's progress log, decisions, risks or traceability files.
 
 ## Proof
 

@@ -22,6 +22,7 @@ public interface IElevationService
         HelperCommand command,
         string tweakId,
         IReadOnlyList<RegistryValueState>? restore = null,
+        string targetUser = "",
         CancellationToken cancellationToken = default);
 }
 

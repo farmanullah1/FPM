@@ -21,7 +21,7 @@ public sealed class DebloatCatalogTests
     {
         Assert.Equal(90, Catalog.Tweaks.Count);
         Assert.Equal(161, Catalog.Apps.Count);
-        Assert.Equal(11, Catalog.ExcludedFeatures.Count);
+        Assert.Equal(16, Catalog.ExcludedFeatures.Count);
         Assert.Equal(2, Catalog.AppPresets.Count);
     }
 

@@ -78,6 +78,7 @@ public sealed class ElevationService : IElevationService
         HelperCommand command,
         string tweakId,
         IReadOnlyList<RegistryValueState>? restore = null,
+        string targetUser = "",
         CancellationToken cancellationToken = default)
     {
         var request = new HelperRequest
@@ -86,6 +87,7 @@ public sealed class ElevationService : IElevationService
             TweakId = tweakId,
             RequestId = Guid.NewGuid().ToString("N"),
             Restore = restore?.ToList() ?? new List<RegistryValueState>(),
+            TargetUser = targetUser,
         };
 
         ExchangeResult exchange = await ExchangeAsync(request, cancellationToken).ConfigureAwait(false);
@@ -109,6 +111,7 @@ public sealed class ElevationService : IElevationService
             Detected = response.Detected,
             Message = response.Message,
             Values = response.Values,
+            TargetUser = response.TargetUser,
         };
     }
 

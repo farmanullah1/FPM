@@ -266,4 +266,121 @@ elevated run against the live registry. Journal/backup files hold user-specific 
 out of the repo. The `.reg` QWord write uses `hex(b)`; it is an auxiliary human-readable backup, not
 the undo source (the journal is).
 
-Next card: **D3** (full Debloat page: categories, presets, apps).
+## 2026-11-28 — D3 complete (full Debloat page)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Navigation | `PageKeys.Debloat`, a seventh rail entry (“Debloat”, icon `Debloat`), a Ctrl+7 palette entry and a review command; `MainWindow` maps the page to `DebloatView` | reachable from the shell |
+| Windows tab | OS/build header, rule-based presets (Recommended safe, Privacy focus, Performance, Minimal, Custom), category list with counts, search, risk/impact labels, unsupported rows disabled with the planner's reason, applied badges from the journal | `DebloatView.xaml`, `DebloatViewModel` |
+| Plan/review | Selection becomes a typed plan through `DebloatEngine.Plan`; summary shows selected/ready/skipped and Low/Medium/High counts plus reboot/Explorer flags; review lists typed target changes and exposes **Apply selected** | plan probe below |
+| Detect/Apply/Undo | Detect selected reads through `DebloatEngine.DetectAsync`; Apply uses `ApplyAsync` with the new restore-point toggle; Undo replays the engine journal in reverse; report distinguishes success, failure, permission decline and partial rollback (chip) | report unit tests |
+| History | `DebloatJournalStore.LoadAll` now returns up to 20 records; the page shows the latest 10 with the engine's latest-run undo | store/engine tests |
+| Apps tab | Searchable catalog of 161 preinstalled apps with recommendation/removal-method labels. Removal is explicitly not offered: Appx is still refused by the planner/helper until package state can be journaled (D-051/D-054) | `Apps tab visible` probe |
+| States | no catalog → error card; empty selection → plan text; running → indeterminate progress + UAC explanation; report → success/declined/partial-rollback; history | XAML bindings |
+| Tests | 11 new tests: preset rules, category+search filtering, plan impact summary, review text, run-report success/rollback/decline, and the restore-point-off path | **243 tests**, 11 new |
+| Gates | build 0/0; tests 243 passed; lint 367 (new page at 0 literals); contrast OK | pass |
+| Runtime | launched `FPM.exe`; `tools/ui-probe-debloat.ps1` selected the Debloat rail item, read `Plan: 53 selected · 53 ready · 0 skipped · risk 53 Low · reboot required · Explorer restart`, then opened the Apps tab and found “Preinstalled apps” | page renders and computes from the embedded catalog |
+
+**Not checked / not delivered in D3:** no UAC-approved detect/apply/undo was run, so helper registry writes, rollback and DISM remain fake-executor evidence only (R-29). The Apps tab has no live installed detection or removal (R-31). Review shows typed target changes, not per-value old→new diffs (R-32). Detect/Apply can raise one prompt per tweak because the helper is one-shot (R-30). To run the UIA probe, the floating toolbar was temporarily disabled in local settings (the toolbar's desktop-following kept the main window off the probe's desktop); the settings file was restored immediately afterwards.
+
+Next card: **D4** (other-user/Default hive, CLI, preset import/export, drift check) and then **D5** (parity tests).
+
+## 2026-11-28 — D4 complete (typed targets, preset files, drift, CLI)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Target model | `DebloatTargets.cs`: tokens `current`/empty/current SID → HKCU; `default` → `HKU\FPM_Default` with a Windows 10 build gate and SYSPREP warning; `sid:<sid>`/`user:<name>`/bare name → live `HKU\<sid>` when loaded, otherwise offline `HKU\FPM_<sid digits>` with `NTUSER.DAT`; malformed/unknown profiles refused | resolver + hive tests |
+| Hive lifecycle | `IDebloatHiveApi`/`DebloatHiveScope`; helper `HelperHive.cs` resolves profiles from its own ProfileList and uses `RegLoadKey`/`RegUnloadKey`; a scope always unloads in `Dispose`, including after an apply exception, and reports an unload failure | fake-API load/unload success + failure tests |
+| Helper mapping | `DebloatRegistry.cs` maps logical catalog `HKCU` to the selected live/offline HKU root, reads/writes/restores values, and keeps logical HKCU names in the journal; helper request carries only `TargetUser`, never a path | helper + engine target propagation tests |
+| Target in engine/journal | `DebloatEngine.DetectAsync/ApplyAsync/UndoAsync` pass `targetUser`; `DebloatRunRecord.TargetUser` is written and undo/detect reuse it; old journals with no target still mean current user | target propagation test |
+| Page surface | Debloat Windows tab gained a typed **User target** picker with profile refresh, honest live/offline/SYSPREP warnings, **Export preset**, **Import preset**, **Check drift** and a preset-file/result line; Apps rows are selectable for preset files only | UIA probe below |
+| Preset files | `fpm-debloat-preset.json` version 1 with `tweaks` and `apps` arrays; serialize/parse in `DebloatPresetFile`, unknown ids dropped with warnings, unsupported version/bad JSON refused, round-trip tested | 2 tests |
+| Drift | Manual report-only check re-detects the latest journaled run at its recorded target; `DebloatDrift.Summarize` says what changed and explicitly says nothing was reapplied | drift summary test |
+| CLI | `DebloatCli` shares `DebloatEngine`/journal; `--preset/--tweaks/--user/--dry-run/--silent/--accept-risk`; silent requires accept-risk; plan is printed before any write; exit codes 0/1/2/3/4 documented in the class and usage | `FPM.exe --debloat --preset minimal --dry-run` exited 0, target “This account”, `Plan: 14 selected, 14 ready, 0 skipped`, no prompt |
+| Tests | 17 new D4 cases across target resolution, hive cleanup on failure, preset round-trip/version, CLI gates, target propagation into detect/apply/undo and drift summary | **260 tests passed**, 0 failed |
+| Gates | build **0 warnings / 0 errors**; `lint-xaml.ps1` **367** (baseline unchanged); `contrast-check.ps1` OK in both themes | pass |
+| Runtime probe | toolbar temporarily disabled, app launched, `tools/ui-probe-debloat.ps1` read `debloat page visible`, the plan, target status, `Changes apply…`, preset-file line, refreshed profiles, found all three D4 commands, then opened Apps and read `apps tab visible` | page renders D4 surface; probe exit 0 |
+
+**Not checked / gaps:** no UAC prompt was approved, so no live other-user hive load/unload, no Default/SYSPREP write, and no live detect/apply/drift run (R-28/R-33). The hive API and unload path are fake-API tests only. `--apps` is parsed but deliberately refused because Appx removal still cannot be journaled (D-051/D-063); the CLI cannot remove apps. The drift check is manual, not scheduled, and each detect can raise its own UAC prompt (R-35). The probe read the default target and the presence of the commands; it did not select another profile or open a file dialog. Settings were restored after the probe.
+
+Next card: **D5** (parity/schema tests).
+
+## 2026-11-28 — ignore policy reconciled (mission deliverable audit)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Read the source protocol | `docs/freebuff/FPM_FreeBuff_00_START_HERE.md` says the six plan copies are **git-ignored by design**; `docs/dev/REPO_AUDIT.md` records the same policy | local-only plan inputs are intentional, not a missing deliverable |
+| Replaced the ignore list | `.gitignore` is now a lean deny-list: build/IDE output, packages, installer output, secrets, local app data, reference trees, agent files, local planning/prompt/handoff files, OS noise | no broad root-document rule; public docs are tracked by default |
+| Verified tracked files are not ignored | `git ls-files -ci --exclude-standard` | **empty** |
+| Verified the source of truth is visible | `git check-ignore -q --no-index` on `docs/readiness/README.md`, `CHECKLIST.md`, `DECISIONS.md`, `RISKS.md`, `TRACEABILITY.md`, `PROGRESS_LOG.md`, `README.md`, `CHANGELOG.md`, `docs/dev/REPO_AUDIT.md` | all **visible**; `docs/freebuff/…` and `AGENT_STATE.md` remain ignored on purpose |
+| Recorded the decision | D-066 added to `DECISIONS.md`; `README.md` §1 and `REPO_AUDIT.md` state that `docs/readiness/` is the tracked single source of truth | no mission deliverable is hidden by accident |
+
+## 2026-11-28 — D5 complete (Windows debloat safety/parity tests)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Conflict refusal | `DebloatConflicts.Find` compares final registry data and optional-feature state; `DebloatPlanner` marks every side `SkippedConflict` with the target and the other tweak ids before elevation | synthetic opposite/identical-value tests; real Spotlight pair test |
+| Restore guard | `DebloatRestoreGuard` is shared Core validation for journal pre-state: only the tweak's own targets and the catalog hive allow-list pass | own target accepted; foreign path and `HKCR` rejected; helper delegates to the same guard |
+| Reference parity | `DebloatReferenceParityTests` parses `docs/dev/win11debloat-feature-map.md`: 106 unique rows, 90 ported ids exactly equal the catalog ids, 16 excluded ids exactly equal `catalog.excludedFeatures`, every exclusion has a reason | parity is now a test, not a one-time script read |
+| Catalog data fix | `tools/debloat_catalog_gen.py` now records dynamic exclusions too; regenerated `catalog.json` (90 tweaks, 161 apps, **16** excluded features) | D1's map already said 16; the embedded catalog had 11. Fixed (D-068) |
+| Detection/action invariant | `DebloatCatalogDetectionTests` checks every detect probe against the typed action that satisfies it: `RegistryEquals` matches the set's type/value, `RegistryAbsent` matches a delete, `RegistryKeyAbsent` matches a key delete, optional-feature state matches, Appx absence matches; every action is also detected in reverse | all 90 catalog tweaks pass |
+| Existing D5 coverage retained | schema/validator, every tweak has detect + revert, OS gating, key-delete/Appx/protected refusals, fake-registry apply/undo/rollback, journal round-trip, hive cleanup, protected apps, preset round-trip | all green |
+| Dry-run no-write | `FPM.exe --debloat --preset minimal --dry-run` → exit **0**, `Plan: 14 selected, 7 ready, 7 skipped`; journal+backup file count **0 → 0** | no elevation, journal or backup file |
+| UI probe | launched `FPM.exe`; `tools/ui-probe-debloat.ps1` → exit **0**: `debloat page visible`, `Plan: 53 selected · 21 ready · 32 skipped · risk 21 Low · reboot required · Explorer restart`, target status, target picker, warning, preset-file line, refreshed profiles, all three D4 commands, `apps tab visible` | page computes conflict refusals and still shows the D4 surface |
+| Gates | build **0 warnings / 0 errors**; **267 tests passed**, 0 failed; lint **367** (baseline unchanged); contrast OK both themes | pass |
+
+**Not checked / gaps:** no UAC prompt was approved, so no live detect/apply/undo, other-user hive load/unload or Default/SYSPREP run was executed (R-28/R-33). The conflict refusal is unit-tested against synthetic targets and the real Spotlight pair; the page shows all 32 skipped rows but does not yet group alternatives or choose a default (R-37). The dry-run evidence is the built app plus file counts, not an automated CLI process test. Settings were restored after the probe.
+
+Next card: **A1** (ADB service: locate/consent/download/verify adb, device parsing). No user-only blocker for A1; D-043 (LHM) and Q-05 (push/signing) remain owner decisions that do not block it.
+
+## 2026-11-28 — A1 complete (ADB service)
+
+A1 implementation commit: `5eca8a7e19c49779809dbf4b539c0294c8cadcef`.
+
+| Step | Evidence | Result |
+|---|---|---|
+| Command surface | `Core/Android/AdbCommandLine.cs`: closed enum `StartServer`, `KillServer`, `Devices`, `GetProperties`, `ListUsers`; `ArgumentList` only; serial regex rejects spaces/empty. `AdbParserTests.Command_builder_only_emits_the_typed_a1_surface_and_rejects_bad_serials` | no free-form shell; A2+ must extend the enum |
+| Locator/order | `AdbPathResolver` checks configured path → `%LOCALAPPDATA%\FPM\tools\platform-tools` → common SDK locations → PATH, skips invalid paths and does not stop at an unsigned candidate. `AdbServiceTests.Locator_prefers_a_configured_signed_path_and_does_not_accept_an_unsigned_one`, `Missing_adb_and_unsigned_adb_are_distinct_states` | signed local wins when the configured copy is unsigned; missing and unverified are distinct |
+| Consent/checksum/signature | `AdbProvisioner` returns `Declined` before touching the source, hashes the archive before extraction, then installs only when the staged `adb.exe` is Google-signed. `AdbProvisionerTests` cover consent, checksum mismatch (extraction/signature not reached), unsigned valid-checksum rejection and a successful staged install. `AdbPackage` pins 35.0.2, the official URL, 6,700,829 bytes and SHA-256 `2975a3ea…300bb9`. | no download without consent; mismatch/unsigned cannot install |
+| Server ownership | `AdbService.EnsureServerAsync` watches start-server output; `Shutdown` calls `kill-server` only when FPM saw `daemon started successfully`/`daemon not running`. `No_device…` asserts kill; `Existing_server…` asserts no kill. | no other tool's server is stopped |
+| Device parsing/onboarding | `AdbParsers` handles `device`, `unauthorized`, `offline`, `???????????? no permissions`, emulator/wireless/USB, malformed/header lines; `getprop` fields and `pm list users` id/name/flags/work/running. `AdbOnboarding` gives the phone steps and driver link. `AdbParserTests` | every A1 state has typed text, not a fake “ready” |
+| ViewModel/UI wiring | `AndroidDebloatViewModel` owns consent checkbox, optional path, `Refresh`/`Use this path`/download commands, devices/profile collections and a 2 s `DispatcherTimer`; `SetVisible` starts/stops it. `DebloatViewModel` adds the Android tab and page-visibility propagation; `DebloatView.xaml` shows status/path/onboarding/license/devices/profiles. | polling is tab-visible-only by construction |
+| Build | `dotnet build app/PCManager.sln -nodeReuse:false -m:1 --no-restore` | **0 warnings / 0 errors** |
+| Tests | `cd app && dotnet test tests/PCManager.Tests/PCManager.Tests.csproj --no-build -nodeReuse:false` | **287 passed**, 0 failed; 20 A1 tests (parsers/commands/package 4, service 10 including three theory cases, provisioner 4, package-source 2) |
+| XAML/theme gates | `tools/lint-xaml.ps1`, `tools/contrast-check.ps1`, `dotnet run --project tools/IconGen -- --check` | lint **367** (baseline unchanged); contrast **OK both themes**; **113 icons / 213 geometries**, up to date |
+| Runtime probe | launched the built `FPM.exe`, temporarily set `ShowFloatingToolbar=false`/`CloseToTray=false`, ran `tools/ui-probe-android.ps1` | **exit 0**; `ADB status: NoDevice - No Android device is connected.`; `ADB: C:\Users\farma\AppData\Local\Android\Sdk\platform-tools\adb.exe`; onboarding text and license notice read; controls present: Android device, Official platform-tools download, Accept Android SDK license, ADB path override, Refresh ADB, Download platform-tools, Android devices, Connected devices |
+| Ownership runtime evidence | `%LOCALAPPDATA%\FPM\logs\app-20261128.log` | `ADB found via Android SDK…` → `ADB server started by FPM.` → `FPM exiting.` → `ADB server stopped because FPM started it.`; `tasklist /FI "IMAGENAME eq adb.exe"` after the probe: no task |
+| Read-only guarantee | `Authorized_device_reads_getprop_and_profiles_with_the_owned_server` asserts the exact call sequence `StartServer, Devices, GetProperties, ListUsers` and serial propagation; no package command exists in the enum | only read-only identity commands were executed; no package action is reachable |
+| Settings cleanup | probe backed up `%LOCALAPPDATA%\FPM\settings.json` and restored it | `ShowFloatingToolbar=True`, `CloseToTray=True` back; no FPM process left |
+
+**A1 acceptance:** locate/consent/download/verify adb = covered; typed missing/unverified/declined/checksum/device states = covered; `adb devices -l` parsing including unauthorized/offline/no permissions = covered; getprop identity and `pm list users` profiles = covered; 2 s visible-only polling and multi-device selector = wired; unsigned adb rejected and no bundling = covered. The runtime probe exercised the real locator and real `adb start-server`/`devices` path; it did not have a phone attached.
+
+**Not checked / gaps:** no physical Android device, so no live USB authorization prompt, live `getprop`, live work-profile list, or live unauthorized/offline/no-permissions rendering (R-38). The real download path was not run in the app; consent/checksum/signature use a fake package source (R-39). The new tab was not captured at 360/560/1280 or in both themes (R-40). Poll stop-on-leave is not runtime-measured (R-41). Authenticode revocation is not checked online (R-42). Settings were restored after the probe.
+
+Next card: **A2** (package lists). No user-only blocker for A2. D-043 (LHM) and Q-05 (push/signing) remain owner decisions that do not block it.
+
+## 2026-11-28 — A2 complete (package lists)
+
+**Card acceptance quoted before implementation:** “Typed model + schema + validator for `uad_lists.json`; user-initiated update with diff/hash.” **Acceptance:** “Schema tests; embedded fallback.”
+
+A2 implementation commit: pending local commit.
+
+| Step | Evidence | Result |
+|---|---|---|
+| Embedded data | Copied `reference/universal-android-debloater/resources/assets/uad_lists.json` (commit `11f27c6…`) to `Core/Assets/android/uad_lists.json`; verified **845,509 bytes**, SHA-256 `e25a5087ea1730575e48aefa0d1f65990c0eaffc179c9950867aaf4ffbd85383`; embedded as `PCManager.Core.Assets.android.uad_lists.json` | 2,400 source rows, 2,394 unique package ids, 6 duplicate ids; no reference scripts run |
+| Schema/validator | `UadListParser` requires an array of objects with string id/list/description/removal and string arrays for dependencies/neededBy/labels; unknown list/removal, wrong types and malformed roots are rejected; 4,000,000-character bound; `android` plus dotted ids accepted (D-076) | valid reference accepted; invalid fixtures rejected with row-specific errors |
+| Duplicate handling | Dictionary normalization last-wins, `SourceRowCount` and `DuplicateIdCount` retained in `UadListCatalog`; six reference duplicates are reported, not hidden | embedded count 2,394; duplicate count 6 |
+| Cache/provider | `UadListProvider.LoadAsync` selects a valid cached file, otherwise embedded; `UpdateAsync(false)` makes no request; invalid remote leaves current/cache untouched; identical SHA is `AlreadyCurrent`; successful update writes `%LOCALAPPDATA%\FPM\android\lists\uad_lists.json` through a temporary file and a `.sha256` sidecar | fake-source tests cover cache, fallback, gate, invalid, same, updated, network failure |
+| Difference summary | `UadListDiff` compares ids and typed fields; reports added/removed/changed counts, capped sample ids, and duplicate normalization; UI prints the summary | updated fixture reports 1 added / 0 removed / 1 changed |
+| UI surface | `PackageListViewModel` loads without network on Android-tab visibility; `Check for list updates` is the only call to `UpdateAsync(true)`; card shows source, 2,394 ids, 2,400 source rows, duplicate count, SHA prefix and the Chinese-OEM warning | A2 card visible on the existing Android tab; no package rows/actions added |
+| Build | `dotnet build app/PCManager.sln -nodeReuse:false -m:1 --no-restore` | **0 warnings / 0 errors** |
+| Tests | `cd app && dotnet test tests/PCManager.Tests/PCManager.Tests.csproj --no-build -nodeReuse:false` | **302 passed**, 0 failed; **15 A2 tests** (8 parser/embedded, 7 provider) |
+| Static gates | `tools/lint-xaml.ps1`, `tools/contrast-check.ps1`, `dotnet run --project tools/IconGen -- --check` | lint **367** (baseline unchanged); contrast **OK both themes**; **113 icons / 213 geometries** |
+| Runtime probe | `tools/ui-probe-android.ps1` (same settings backup/restore and recorded-PID cleanup as A1) | **exit 0**; `UAD package list: 2,394 package ids ready`; `Embedded UAD list · 2,400 source rows · 6 duplicate id(s) normalized · SHA-256 e25a5087ea17`; `UAD package list` and `Check for list updates` present; ADB NoDevice path still visible |
+| Reference map | `docs/dev/uad-feature-map.md` records the pinned commit, schema, feature → component rows and deliberate differences; `Core/Assets/android/README.md` records provenance/license/hash | A7 can automate parity later; no upstream screenshots/code copied |
+
+**A2 acceptance:** typed model/schema/validator = covered by 8 parser/embedded tests; user-initiated update with diff/hash = covered by 7 provider tests and the UI command; embedded fallback = `LoadAsync` uses it on missing/invalid cache and the probe shows `Embedded UAD list`. The update request is gated by `UpdateAsync(userInitiated: true)` and is not triggered by startup, tab visibility or polling.
+
+**Not checked / gaps:** no live upstream GitHub fetch was performed; the real URL, proxy/timeout behaviour and current upstream compatibility are fake-source evidence only (R-44). No package rows, filters or actions were added (A3/A4). The A2 card was not visually captured at 360/560/1280 or in both themes (R-45). The remote list is HTTPS/schema-validated but not signed (R-46), and six upstream duplicate ids are last-wins (R-43). Settings were restored after the probe.
+
+Next card: **A3** (package engine). No user-only blocker for A3. D-043 (LHM) and Q-05 (push/signing) remain owner decisions that do not block it.

@@ -68,6 +68,27 @@ public static class ServiceCollectionExtensions
         // D2: typed debloat planning, journaling and helper execution.
         services.AddSingleton<PCManager.Services.Debloat.IDebloatExecutor, PCManager.Services.Debloat.HelperDebloatExecutor>();
         services.AddSingleton<PCManager.Services.Debloat.DebloatEngine>();
+        services.AddSingleton<PCManager.Services.Debloat.IDebloatProfileService>(
+            sp => new PCManager.Services.Debloat.DebloatProfileService(
+                sp.GetRequiredService<IAppLogger>()));
+
+        // A1: locate/verify adb, consent-gated pinned download, read-only device discovery.
+        services.AddSingleton<PCManager.Services.Android.IAdbRunner, PCManager.Services.Android.ProcessAdbRunner>();
+        services.AddSingleton<PCManager.Services.Android.IAdbSignatureVerifier,
+            PCManager.Services.Android.AuthenticodeAdbSignatureVerifier>();
+        services.AddSingleton<PCManager.Services.Android.IAdbPackageSource,
+            PCManager.Services.Android.HttpAdbPackageSource>();
+        services.AddSingleton<PCManager.Services.Android.IAdbProvisioner>(sp =>
+            new PCManager.Services.Android.AdbProvisioner(
+                sp.GetRequiredService<PCManager.Services.Android.IAdbPackageSource>(),
+                sp.GetRequiredService<PCManager.Services.Android.IAdbSignatureVerifier>()));
+        services.AddSingleton<PCManager.Services.Android.IAdbService, PCManager.Services.Android.AdbService>();
+
+        // A2: embedded/cached UAD list, validated; HTTPS only on an explicit update command.
+        services.AddSingleton<PCManager.Services.Android.IUadListSource,
+            PCManager.Services.Android.HttpUadListSource>();
+        services.AddSingleton<PCManager.Services.Android.IPackageListProvider,
+            PCManager.Services.Android.UadListProvider>();
 
         // --- FPM Services (Migration, Memory Diagnostics, Unified Cleanup, Network) ---
         services.AddSingleton<ILegacyIdentityMigrationService, PCManager.Services.Infrastructure.LegacyIdentityMigrationService>();

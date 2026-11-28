@@ -6,7 +6,11 @@ which remains the working protocol, and `FPM_Master_Plan_v7.md`, which remains t
 specification. If this folder and those documents disagree, the plan documents win for product
 behaviour; this folder wins for process, status and evidence.
 
-Status date: **2026-11-27**. Baseline commit: **`ccdbff4`**.
+The plan copies in `docs/freebuff/`, `AGENT_STATE.md`, the root plan/prompt/handoff files and the
+read-only reference tree are intentionally local-only and git-ignored (D-066). This folder stays
+tracked; no status, decision, risk or evidence file depends on an ignored path.
+
+Status date: **2026-11-28**. Baseline commit: **the A2 implementation commit** (the evidence follow-up records the full hash in `PROGRESS_LOG.md`).
 
 ## 1. Documents in this folder
 

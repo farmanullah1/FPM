@@ -253,6 +253,7 @@ public partial class MainWindow : FpmWindow
             StorageViewModel => new StorageView(),
             AppsViewModel => new AppsView(),
             ToolboxViewModel => new ToolboxView(),
+            DebloatViewModel => new DebloatView(),
             SettingsViewModel => new SettingsView(),
             _ => throw new InvalidOperationException($"No view is registered for {page.GetType().Name}.")
         };

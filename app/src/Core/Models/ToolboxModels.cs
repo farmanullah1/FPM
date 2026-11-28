@@ -118,6 +118,9 @@ public sealed class AppSettings
 
     /// <summary>Shows the startup splash unless the app was launched with --no-splash.</summary>
     public bool ShowSplash { get; set; } = true;
+
+    /// <summary>A1: optional user-configured adb.exe (or its folder). Empty means search FPM/SDK/PATH.</summary>
+    public string AdbPath { get; set; } = string.Empty;
 }
 
 public enum ThemeOption

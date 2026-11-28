@@ -25,6 +25,7 @@ public sealed class DebloatHelperOutcome
     public bool? Detected { get; init; }
     public string Message { get; init; } = string.Empty;
     public IReadOnlyList<RegistryValueState> Values { get; init; } = Array.Empty<RegistryValueState>();
+    public string TargetUser { get; init; } = string.Empty;
 
     public static DebloatHelperOutcome Failed(string message, bool cancelled = false) =>
         new() { Success = false, Cancelled = cancelled, Message = message };

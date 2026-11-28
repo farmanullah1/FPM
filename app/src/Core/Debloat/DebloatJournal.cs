@@ -26,6 +26,9 @@ public sealed class DebloatRunRecord
     public string FailureMessage { get; set; } = string.Empty;
     public string RestorePointStatus { get; set; } = string.Empty;
     public string BackupPath { get; set; } = string.Empty;
+
+    /// <summary>Typed user target token; empty means the signed-in account (old journals).</summary>
+    public string TargetUser { get; set; } = string.Empty;
     public bool RequiresReboot { get; set; }
     public bool RequiresExplorerRestart { get; set; }
     public List<DebloatJournalEntry> Entries { get; set; } = new();
@@ -54,21 +57,37 @@ public sealed class DebloatJournalStore
         File.WriteAllText(path, JsonSerializer.Serialize(record, Options));
     }
 
-    public DebloatRunRecord? LoadLatest()
+    /// <summary>Every saved run, newest first; the page shows a bounded history.</summary>
+    public IReadOnlyList<DebloatRunRecord> LoadAll(int limit = 20)
     {
         if (!System.IO.Directory.Exists(Directory))
         {
-            return null;
+            return Array.Empty<DebloatRunRecord>();
         }
 
-        string? newest = System.IO.Directory.EnumerateFiles(Directory, "*.json")
-            .OrderByDescending(File.GetLastWriteTimeUtc)
-            .FirstOrDefault();
+        var records = new List<DebloatRunRecord>();
 
-        return newest is null
-            ? null
-            : JsonSerializer.Deserialize<DebloatRunRecord>(File.ReadAllText(newest), Options);
+        foreach (string path in System.IO.Directory.EnumerateFiles(Directory, "*.json")
+                     .OrderByDescending(File.GetLastWriteTimeUtc)
+                     .Take(limit))
+        {
+            try
+            {
+                if (JsonSerializer.Deserialize<DebloatRunRecord>(File.ReadAllText(path), Options) is { } record)
+                {
+                    records.Add(record);
+                }
+            }
+            catch (JsonException)
+            {
+                // A half-written record must not hide the rest of the history.
+            }
+        }
+
+        return records;
     }
+
+    public DebloatRunRecord? LoadLatest() => LoadAll(limit: 1).FirstOrDefault();
 }
 
 /// <summary>Builds a .reg text backup of every previous value the run will touch.</summary>

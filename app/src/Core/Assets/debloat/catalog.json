@@ -9650,6 +9650,26 @@
     {
       "featureId": "DisableStoreSearchSuggestions",
       "reason": "Edits the Store SQLite database (not a registry/file action type); intentionally excluded from D1."
+    },
+    {
+      "featureId": "DisableGameBarIntegration",
+      "reason": "Uses HKEY_CLASSES_ROOT, outside D1's hive allow-list (HKCU/HKLM/HKU\\Default)."
+    },
+    {
+      "featureId": "DisableDeliveryOptimization",
+      "reason": "Writes under a service SID hive; D1 only allows HKU\\Default."
+    },
+    {
+      "featureId": "HideIncludeInLibrary",
+      "reason": "Uses HKEY_CLASSES_ROOT, outside D1's hive allow-list (HKCU/HKLM/HKU\\Default)."
+    },
+    {
+      "featureId": "HideGiveAccessTo",
+      "reason": "Uses HKEY_CLASSES_ROOT, outside D1's hive allow-list (HKCU/HKLM/HKU\\Default)."
+    },
+    {
+      "featureId": "HideShare",
+      "reason": "Uses HKEY_CLASSES_ROOT, outside D1's hive allow-list (HKCU/HKLM/HKU\\Default)."
     }
   ],
   "excludedApps": [

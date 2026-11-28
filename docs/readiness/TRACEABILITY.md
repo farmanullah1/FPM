@@ -24,10 +24,10 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-17 | Sensors: battery/temps, honest states (T1, T2) | T1, T2 | `ISensorService`, helper `ReadSensors` | parser fixtures + unavailable states |
 | TR-18 | Toolbox widget layout drives toolbar (T3, T4) | T3, T4 | `toolbox.layout.json`, toolbar | restart/toolbar-only persistence |
 | TR-19 | Windows debloat catalog + typed engine (D1–D3) | D1–D3 | `Assets/debloat/catalog.json`, planner/executor | schema tests; journal undo |
-| TR-20 | Debloat advanced: other user, sysprep, CLI, presets (D4) | D4 | helper hive load/unload, CLI | hive cleanup tests; dry-run writes nothing |
-| TR-21 | Debloat tests incl. reference parity (D5) | D5 | `PCManager.Tests` | parity map + green tests |
-| TR-22 | ADB service/consent/signature (A1) | A1 | `IAdbService` | unsigned adb rejected; consent flow |
-| TR-23 | Android lists + schema (A2) | A2 | `Assets/android/uad_lists.json` | schema validation tests |
+| TR-20 | Debloat advanced: other user, sysprep, CLI, presets, drift (D4) | D4 | `Core/Debloat/DebloatTargets.cs`, `DebloatPresetFile.cs`, `DebloatCommandLine.cs`; `Helper/HelperHive.cs`, `DebloatRegistry.cs`; `Cli/DebloatCli.cs`; `ViewModels/DebloatViewModel.Advanced.cs` | resolver + hive cleanup tests; preset round-trip; CLI dry-run exit 0; UIA probe reads target/preset/drift surface; no live UAC run (R-33) |
+| TR-21 | Debloat tests incl. reference parity (D5) | D5 | `DebloatSafetyTests`, `DebloatConflicts`, `DebloatRestoreGuard` | 267 tests; map 106 = 90 ported + 16 excluded; detect/action invariant; conflict/restore/dry-run evidence in `PROGRESS_LOG.md` |
+| TR-22 | ADB service/consent/signature (A1) | A1 | `Core/Android/AdbCommandLine.cs`, `AdbParsers.cs`, `AdbModels.cs`, `AdbPackage.cs`; `Services/Android/AdbService.cs`, `AdbProvisioner.cs`, `AdbPathResolver.cs`, `AdbRunner.cs`, `AdbSignatureVerifier.cs`; `ViewModels/AndroidDebloatViewModel.cs`; `PCManager/Views/DebloatView.xaml`; `tests/PCManager.Tests/Adb*Tests.cs` | pinned 35.0.2 SHA-256; consent/checksum/unsigned rejection; devices/getprop/users parsers; server ownership; **287 tests** (20 A1); runtime probe exit 0 with `NoDevice`, real signed adb path, onboarding/license/controls; log shows FPM started and stopped its own server; no adb left. Gaps R-38…R-42. |
+| TR-23 | Android lists + schema (A2) | A2 | `Core/Assets/android/uad_lists.json`; `Core/Android/UadListModels.cs`, `UadListParser.cs`, `UadListCatalogLoader.cs`; `Services/Android/PackageListProvider.cs`; `ViewModels/PackageListViewModel.cs`; `Views/DebloatView.xaml` | embedded 2,400 source rows / 2,394 ids / 6 duplicates, SHA-256 `e25a5087…`; schema/duplicate/fallback tests; explicit update diff/hash/cache + sidecar; probe reads `2,394 package ids ready` and `2,400 source rows`; no live upstream fetch (R-44) |
 | TR-24 | Package engine, denylist, undo (A3, A5) | A3, A5 | `IPackageEngine`, snapshots | fake-runner tests; snapshot restore |
 | TR-25 | Android UI + multi-device/wireless (A4, A6) | A4, A6 | Debloat → Android tab | warning flow; typed confirmation |
 | TR-26 | Android tests (A7) | A7 | tests | command-builder rejection tests |
@@ -81,6 +81,12 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-74 | Restore point attempted, skipped with a reason when unavailable (D2) | D2 | `DebloatEngine.TryRestorePointAsync` | fake restore-point test records `Skipped` |
 | TR-75 | Mid-run failure rolls back the run truthfully (D2) | D2 | `DebloatEngine.ApplyAsync`/`RollbackAsync` | failure test asserts `RolledBack` + restored first tweak |
 | TR-76 | UI surface invokes detect/apply/revert/undo (D2) | D2 | `Views/SettingsView.xaml`, `ViewModels/DebloatEngineViewModel.cs` | UIA probe: card + plan visible; UAC path not exercised (R-28) |
+| TR-77 | D3 categories, search and documented preset rules over the catalog (D3) | D3 | `Core/Debloat/DebloatPresets.cs`, `DebloatPageCatalog.Filter`, `DebloatViewModel` | preset/filter tests; UIA page probe |
+| TR-78 | D3 computed plan with per-tweak risk/impact and skipped reasons (D3) | D3 | `DebloatPageCatalog.BuildImpactSummary`, `DebloatPlanRow`, `DebloatView.xaml` | plan summary test; D5 probe read 21 ready / 32 conflict-skipped |
+| TR-79 | D3 Detect/Apply/Undo through the real engine, report and history (D3) | D3 | `DebloatViewModel.Runs.cs`, `DebloatJournalStore.LoadAll` | report tests; restore-toggle test |
+| TR-80 | D3 Apps tab catalog surface, with removal refused (D3) | D3 | `DebloatView.xaml` Apps tab, `DebloatAppRow` | probe found “Preinstalled apps”; no removal offered |
+| TR-81 | D3 empty/no-catalog/running/partial-rollback/error states (D3) | D3 | `DebloatView.xaml`, report model | XAML bindings + rollback report test |
+| TR-82 | D3 runtime page evidence through UIA (D3) | D3 | `tools/ui-probe-debloat.ps1` | probe output in `PROGRESS_LOG.md`; UAC not approved (R-29) |
 | TR-44 | Release workflow (tag → installer + checksums) | R4 (release half), R3 | `.github/workflows/release.yml` | deferred: needs the owner's push/signing decision; blocker recorded in `RISKS.md` |
 
 ## Coverage notes
