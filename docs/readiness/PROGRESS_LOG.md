@@ -266,4 +266,21 @@ elevated run against the live registry. Journal/backup files hold user-specific 
 out of the repo. The `.reg` QWord write uses `hex(b)`; it is an auxiliary human-readable backup, not
 the undo source (the journal is).
 
-Next card: **D3** (full Debloat page: categories, presets, apps).
+## 2026-11-28 — D3 complete (full Debloat page)
+
+| Step | Evidence | Result |
+|---|---|---|
+| Navigation | `PageKeys.Debloat`, a seventh rail entry (“Debloat”, icon `Debloat`), a Ctrl+7 palette entry and a review command; `MainWindow` maps the page to `DebloatView` | reachable from the shell |
+| Windows tab | OS/build header, rule-based presets (Recommended safe, Privacy focus, Performance, Minimal, Custom), category list with counts, search, risk/impact labels, unsupported rows disabled with the planner's reason, applied badges from the journal | `DebloatView.xaml`, `DebloatViewModel` |
+| Plan/review | Selection becomes a typed plan through `DebloatEngine.Plan`; summary shows selected/ready/skipped and Low/Medium/High counts plus reboot/Explorer flags; review lists typed target changes and exposes **Apply selected** | plan probe below |
+| Detect/Apply/Undo | Detect selected reads through `DebloatEngine.DetectAsync`; Apply uses `ApplyAsync` with the new restore-point toggle; Undo replays the engine journal in reverse; report distinguishes success, failure, permission decline and partial rollback (chip) | report unit tests |
+| History | `DebloatJournalStore.LoadAll` now returns up to 20 records; the page shows the latest 10 with the engine's latest-run undo | store/engine tests |
+| Apps tab | Searchable catalog of 161 preinstalled apps with recommendation/removal-method labels. Removal is explicitly not offered: Appx is still refused by the planner/helper until package state can be journaled (D-051/D-054) | `Apps tab visible` probe |
+| States | no catalog → error card; empty selection → plan text; running → indeterminate progress + UAC explanation; report → success/declined/partial-rollback; history | XAML bindings |
+| Tests | 11 new tests: preset rules, category+search filtering, plan impact summary, review text, run-report success/rollback/decline, and the restore-point-off path | **243 tests**, 11 new |
+| Gates | build 0/0; tests 243 passed; lint 367 (new page at 0 literals); contrast OK | pass |
+| Runtime | launched `FPM.exe`; `tools/ui-probe-debloat.ps1` selected the Debloat rail item, read `Plan: 53 selected · 53 ready · 0 skipped · risk 53 Low · reboot required · Explorer restart`, then opened the Apps tab and found “Preinstalled apps” | page renders and computes from the embedded catalog |
+
+**Not checked / not delivered in D3:** no UAC-approved detect/apply/undo was run, so helper registry writes, rollback and DISM remain fake-executor evidence only (R-29). The Apps tab has no live installed detection or removal (R-31). Review shows typed target changes, not per-value old→new diffs (R-32). Detect/Apply can raise one prompt per tweak because the helper is one-shot (R-30). To run the UIA probe, the floating toolbar was temporarily disabled in local settings (the toolbar's desktop-following kept the main window off the probe's desktop); the settings file was restored immediately afterwards.
+
+Next card: **D4** (other-user/Default hive, CLI, preset import/export, drift check) and then **D5** (parity tests).

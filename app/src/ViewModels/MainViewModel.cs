@@ -20,6 +20,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly StorageViewModel _storage;
     private readonly AppsViewModel _apps;
     private readonly MemoryViewModel _memory;
+    private readonly DebloatViewModel _debloat;
     private readonly SettingsViewModel _settingsPage;
 
     public MainViewModel(
@@ -29,6 +30,7 @@ public sealed partial class MainViewModel : ObservableObject
         AppsViewModel apps,
         ToolboxViewModel toolbox,
         MemoryViewModel memory,
+        DebloatViewModel debloat,
         SettingsViewModel settingsPage,
         NavigationService navigation,
         ISettingsService settings,
@@ -40,6 +42,7 @@ public sealed partial class MainViewModel : ObservableObject
         _storage = storage;
         _apps = apps;
         _memory = memory;
+        _debloat = debloat;
         _settingsPage = settingsPage;
 
         Pages = new ObservableCollection<NavigationItem>
@@ -49,7 +52,8 @@ public sealed partial class MainViewModel : ObservableObject
             new(PageKeys.Protection, "Protection", "Security and updates", "Protection", protection),
             new(PageKeys.Storage, "Storage", "Cleanup and disks", "Storage", storage),
             new(PageKeys.Apps, "Apps", "Processes and startup", "Apps", apps),
-            new(PageKeys.Toolbox, "Toolbox", "Everyday utilities", "Toolbar", toolbox)
+            new(PageKeys.Toolbox, "Toolbox", "Everyday utilities", "Toolbar", toolbox),
+            new(PageKeys.Debloat, "Debloat", "Windows tweaks and apps", "Debloat", debloat)
         };
 
         // Settings is pinned under the rail separator, so it lives in its own one-item list.
@@ -135,6 +139,7 @@ public sealed partial class MainViewModel : ObservableObject
         _allCommands.Add(new CommandPaletteEntry("Navigate to Storage", "Navigation", "Ctrl+4", () => SelectPage(PageKeys.Storage)));
         _allCommands.Add(new CommandPaletteEntry("Navigate to Apps", "Navigation", "Ctrl+5", () => SelectPage(PageKeys.Apps)));
         _allCommands.Add(new CommandPaletteEntry("Navigate to Toolbox", "Navigation", "Ctrl+6", () => SelectPage(PageKeys.Toolbox)));
+        _allCommands.Add(new CommandPaletteEntry("Navigate to Debloat", "Navigation", "Ctrl+7", () => SelectPage(PageKeys.Debloat)));
         _allCommands.Add(new CommandPaletteEntry("Navigate to Settings", "Navigation", "Ctrl+,", () => SelectPage(PageKeys.Settings)));
 
         // Actions execute the same command the page's button runs; page-bound commands also
@@ -155,6 +160,7 @@ public sealed partial class MainViewModel : ObservableObject
         _allCommands.Add(new CommandPaletteEntry("Scan app leftovers", "Action", string.Empty, () => RunOn(PageKeys.Apps, _apps.ScanLeftoversCommand)));
         _allCommands.Add(new CommandPaletteEntry("Refresh memory diagnostics", "Action", string.Empty, () => RunOn(PageKeys.Memory, _memory.RefreshCommand)));
         _allCommands.Add(new CommandPaletteEntry("Run readiness check", "Action", string.Empty, () => RunOn(PageKeys.Settings, _settingsPage.RunReadinessCheckCommand)));
+        _allCommands.Add(new CommandPaletteEntry("Review selected Windows debloat tweaks", "Action", string.Empty, () => RunOn(PageKeys.Debloat, _debloat.ReviewCommand)));
 
         FilterCommands();
     }

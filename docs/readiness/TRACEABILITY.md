@@ -81,6 +81,12 @@ that closes it. Card details live in the plan documents; this table is the index
 | TR-74 | Restore point attempted, skipped with a reason when unavailable (D2) | D2 | `DebloatEngine.TryRestorePointAsync` | fake restore-point test records `Skipped` |
 | TR-75 | Mid-run failure rolls back the run truthfully (D2) | D2 | `DebloatEngine.ApplyAsync`/`RollbackAsync` | failure test asserts `RolledBack` + restored first tweak |
 | TR-76 | UI surface invokes detect/apply/revert/undo (D2) | D2 | `Views/SettingsView.xaml`, `ViewModels/DebloatEngineViewModel.cs` | UIA probe: card + plan visible; UAC path not exercised (R-28) |
+| TR-77 | D3 categories, search and documented preset rules over the catalog (D3) | D3 | `Core/Debloat/DebloatPresets.cs`, `DebloatPageCatalog.Filter`, `DebloatViewModel` | preset/filter tests; UIA page probe |
+| TR-78 | D3 computed plan with per-tweak risk/impact and skipped reasons (D3) | D3 | `DebloatPageCatalog.BuildImpactSummary`, `DebloatPlanRow`, `DebloatView.xaml` | plan summary test; probe read 53 ready/Low |
+| TR-79 | D3 Detect/Apply/Undo through the real engine, report and history (D3) | D3 | `DebloatViewModel.Runs.cs`, `DebloatJournalStore.LoadAll` | report tests; restore-toggle test |
+| TR-80 | D3 Apps tab catalog surface, with removal refused (D3) | D3 | `DebloatView.xaml` Apps tab, `DebloatAppRow` | probe found “Preinstalled apps”; no removal offered |
+| TR-81 | D3 empty/no-catalog/running/partial-rollback/error states (D3) | D3 | `DebloatView.xaml`, report model | XAML bindings + rollback report test |
+| TR-82 | D3 runtime page evidence through UIA (D3) | D3 | `tools/ui-probe-debloat.ps1` | probe output in `PROGRESS_LOG.md`; UAC not approved (R-29) |
 | TR-44 | Release workflow (tag → installer + checksums) | R4 (release half), R3 | `.github/workflows/release.yml` | deferred: needs the owner's push/signing decision; blocker recorded in `RISKS.md` |
 
 ## Coverage notes

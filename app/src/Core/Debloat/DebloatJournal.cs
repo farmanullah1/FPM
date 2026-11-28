@@ -54,21 +54,37 @@ public sealed class DebloatJournalStore
         File.WriteAllText(path, JsonSerializer.Serialize(record, Options));
     }
 
-    public DebloatRunRecord? LoadLatest()
+    /// <summary>Every saved run, newest first; the page shows a bounded history.</summary>
+    public IReadOnlyList<DebloatRunRecord> LoadAll(int limit = 20)
     {
         if (!System.IO.Directory.Exists(Directory))
         {
-            return null;
+            return Array.Empty<DebloatRunRecord>();
         }
 
-        string? newest = System.IO.Directory.EnumerateFiles(Directory, "*.json")
-            .OrderByDescending(File.GetLastWriteTimeUtc)
-            .FirstOrDefault();
+        var records = new List<DebloatRunRecord>();
 
-        return newest is null
-            ? null
-            : JsonSerializer.Deserialize<DebloatRunRecord>(File.ReadAllText(newest), Options);
+        foreach (string path in System.IO.Directory.EnumerateFiles(Directory, "*.json")
+                     .OrderByDescending(File.GetLastWriteTimeUtc)
+                     .Take(limit))
+        {
+            try
+            {
+                if (JsonSerializer.Deserialize<DebloatRunRecord>(File.ReadAllText(path), Options) is { } record)
+                {
+                    records.Add(record);
+                }
+            }
+            catch (JsonException)
+            {
+                // A half-written record must not hide the rest of the history.
+            }
+        }
+
+        return records;
     }
+
+    public DebloatRunRecord? LoadLatest() => LoadAll(limit: 1).FirstOrDefault();
 }
 
 /// <summary>Builds a .reg text backup of every previous value the run will touch.</summary>

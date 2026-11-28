@@ -75,3 +75,14 @@ accepted decision marked **owner**.
 | D-050 | 2026-11-27 | Journal and `.reg` backups live under `%LOCALAPPDATA%\FPM\debloat\{journal,backups}`, not in the repo or Program Files. | Per-user state survives upgrades, needs no elevation to read, and never publishes registry contents. | accepted |
 | D-051 | 2026-11-27 | D2's executor supports registry values and optional features only; key deletion, Appx removal and other-user hives are refused by the planner until they have typed snapshots. | Undo must be exact; a key or package cannot yet be journaled faithfully, so the engine must not pretend it can. | accepted |
 | D-052 | 2026-11-27 | Detect runs for every selected tweak before the first write, and an already-applied tweak is skipped rather than re-applied. | Prevents the journal from recording a post-change “pre-state” and avoids duplicate no-op writes. | accepted |
+
+## D3 decisions
+
+| ID | Date | Decision | Rationale | Status |
+|---|---|---|---|---|
+| D-053 | 2026-11-28 | The five Windows-tab presets are documented rules over catalog category and risk, not hidden reference presets; Custom means the user's own selection. | The catalog has no tweak presets, and inventing opaque defaults would be worse than showing the rule. | accepted |
+| D-054 | 2026-11-28 | The Apps tab is a searchable catalog surface only; it does not offer removal or claim live installed detection. | Appx is refused by the planner/helper until package state can be journaled (D-051); a disabled removal button would be a fake affordance. | accepted |
+| D-055 | 2026-11-28 | Review shows the typed target changes, not per-value old→new diffs; current values are captured by the helper immediately before the write. | Old values would require a protected read per tweak before review; that noise is deferred until the helper can batch reads. | accepted |
+| D-056 | 2026-11-28 | History shows the latest 10 journal runs, while Undo remains the engine's latest-run reverse replay. | The journal is per-run; undoing an arbitrary older run safely needs an engine API and dependency-aware replay. | accepted |
+| D-057 | 2026-11-28 | Detect and Apply stay on the existing one-id-per-call helper contract; the page explains the administrator prompt but does not hide how many may appear. | No batched helper protocol exists yet; changing it would be a protocol extension, not a page change. | accepted |
+| D-058 | 2026-11-28 | The review's “Create restore point first” toggle is passed to the engine and recorded as `Skipped: turned off for this run` when off. | The user's choice must be visible in the journal/report rather than silently ignored. | accepted |

@@ -1,0 +1,314 @@
+<UserControl x:Class="PCManager.Views.DebloatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PCManager.Controls">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="{StaticResource Page.MarginCompact}">
+        <Grid MaxWidth="{StaticResource App.ContentMaxWidth}" HorizontalAlignment="Stretch">
+            <StackPanel>
+
+                <Grid Margin="{StaticResource Card.Margin}">
+                    <StackPanel Orientation="Horizontal">
+                        <controls:Icon3D Key="Debloat" Size="44" Margin="{StaticResource Thickness.3}" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Windows Debloat" Style="{StaticResource PageTitle}"
+                                       AutomationProperties.Name="Windows Debloat" />
+                            <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap">
+                                <Run Text="{Binding OsText, Mode=OneWay}" />
+                                <Run Text=" · " /><Run Text="{Binding CatalogStatus, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" Margin="{StaticResource Card.Margin}">
+                    <Button Content="Windows" Style="{StaticResource PillButton}" Margin="{StaticResource Thickness.1}"
+                            Command="{Binding ShowWindowsCommand}" AutomationProperties.Name="Windows tab" />
+                    <Button Content="Apps" Style="{StaticResource PillButton}" Margin="{StaticResource Thickness.1}"
+                            Command="{Binding ShowAppsCommand}" AutomationProperties.Name="Apps tab" />
+                </StackPanel>
+
+                <!-- Windows tab -->
+                <StackPanel Visibility="{Binding IsWindowsTab, Converter={StaticResource BoolToVisibility}}">
+                    <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.4}">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Preset and restore point" FontSize="17" FontWeight="SemiBold" />
+                                    <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
+                                              DisplayMemberPath="Name" Margin="{StaticResource Thickness.2}"
+                                              MinWidth="220" HorizontalAlignment="Left"
+                                              AutomationProperties.Name="Debloat preset" />
+                                    <TextBlock Text="{Binding SelectedPreset.Description}" Style="{StaticResource CaptionText}"
+                                               TextWrapping="Wrap" MaxWidth="420" />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" Style="{StaticResource ToggleSwitch}"
+                                          Content="Create restore point first" VerticalAlignment="Top"
+                                          IsChecked="{Binding CreateRestorePoint, Mode=TwoWay}"
+                                          ToolTip="Attempted before non-Low-risk runs; a disabled or unavailable System Restore is recorded as skipped." />
+                            </Grid>
+
+                            <Grid Margin="{StaticResource Thickness.3}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="170" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border BorderBrush="{DynamicResource App.Border}" BorderThickness="0,0,1,0"
+                                        Padding="{StaticResource Thickness.2}" Margin="{StaticResource Thickness.2}">
+                                    <StackPanel>
+                                        <TextBlock Text="Categories" Style="{StaticResource SectionTitle}" />
+                                        <ListBox ItemsSource="{Binding Categories}"
+                                                 SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                                                 Background="Transparent" BorderThickness="0"
+                                                 MaxHeight="340"
+                                                 AutomationProperties.Name="Debloat categories">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="{StaticResource Thickness.1}">
+                                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding CountText}" Style="{StaticResource CaptionText}"
+                                                                   HorizontalAlignment="Right" Margin="{StaticResource Thickness.1}" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </StackPanel>
+                                </Border>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Search tweaks" Margin="{StaticResource Row.Margin}"
+                                             AutomationProperties.Name="Search tweaks" />
+                                    <ListBox ItemsSource="{Binding Tweaks}" MaxHeight="340"
+                                             Background="Transparent" BorderThickness="0"
+                                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                             AutomationProperties.Name="Debloat tweaks">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource RowCard}" Padding="{StaticResource Thickness.2}" Margin="{StaticResource Row.Margin}"
+                                                        AutomationProperties.Name="{Binding AutomationName}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                  IsEnabled="{Binding IsSelectable}"
+                                                                  VerticalAlignment="Center" Margin="{StaticResource Thickness.2}"
+                                                                  AutomationProperties.Name="{Binding AutomationName}" />
+                                                        <controls:Icon3D Grid.Column="1" Key="{Binding IconKey}" Size="20"
+                                                                         Margin="{StaticResource Thickness.2}" VerticalAlignment="Center" />
+                                                        <StackPanel Grid.Column="2">
+                                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
+                                                                       TextWrapping="Wrap" />
+                                                            <TextBlock Text="{Binding StateText}" Style="{StaticResource CaptionText}"
+                                                                       TextWrapping="Wrap" />
+                                                        </StackPanel>
+                                                        <Border Grid.Column="3" Style="{StaticResource Chip}" Padding="{StaticResource Thickness.1}"
+                                                                Visibility="{Binding IsApplied, Converter={StaticResource BoolToVisibility}}"
+                                                                VerticalAlignment="Center" Margin="{StaticResource Thickness.2}">
+                                                            <TextBlock Text="Applied" FontSize="10" />
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="{Binding PlanSummary}" FontWeight="SemiBold" TextWrapping="Wrap"
+                                       Margin="{StaticResource Thickness.2}" />
+                            <TextBlock Text="Selection is turned into an ordered, OS-gated plan. Unsupported or protected tweaks are refused before elevation."
+                                       Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+
+                            <StackPanel Orientation="Horizontal" Margin="{StaticResource Thickness.2}">
+                                <Button Content="Select all visible" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding SelectAllVisibleCommand}" Margin="{StaticResource Thickness.1}" />
+                                <Button Content="Clear" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding ClearSelectionCommand}" Margin="{StaticResource Thickness.1}" />
+                                <Button Content="Review changes" Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding ReviewCommand}" Margin="{StaticResource Thickness.1}"
+                                        AutomationProperties.Name="Review debloat changes" />
+                                <Button Content="Detect selected" Style="{StaticResource PillButton}" Margin="{StaticResource Thickness.1}"
+                                        Command="{Binding DetectCommand}"
+                                        AutomationProperties.Name="Detect selected tweaks" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Running -->
+                    <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.4}"
+                            Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Working…" FontSize="16" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding RunningText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                            <ProgressBar Style="{StaticResource ThinProgress}" IsIndeterminate="True"
+                                         Margin="{StaticResource Thickness.2}" />
+                            <TextBlock Text="Windows shows an administrator prompt for the helper. FPM explains it here before it appears; declining changes nothing."
+                                       Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Review -->
+                    <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.4}"
+                            Visibility="{Binding IsReviewOpen, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Review changes" FontSize="16" FontWeight="SemiBold" />
+                            <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap"
+                                       Text="Typed changes only. Current values are captured by the helper immediately before each write and saved to the .reg backup and journal." />
+                            <ItemsControl ItemsSource="{Binding PlanRows}" Margin="{StaticResource Thickness.2}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="{StaticResource Thickness.1}">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding RiskText}" Style="{StaticResource CaptionText}"
+                                                           Margin="{StaticResource Thickness.2}" />
+                                                <TextBlock Text="{Binding StatusText}" Style="{StaticResource CaptionText}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <ItemsControl ItemsSource="{Binding ReviewItems}" MaxHeight="220">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Style="{StaticResource CaptionText}"
+                                                   TextWrapping="Wrap" Margin="{StaticResource Thickness.1}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel Orientation="Horizontal" Margin="{StaticResource Thickness.2}">
+                                <Button Content="Apply selected" Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding ApplyCommand}"
+                                        AutomationProperties.Name="Apply selected tweaks" />
+                                <Button Content="Cancel" Style="{StaticResource SecondaryButton}" Margin="{StaticResource Thickness.2}"
+                                        Command="{Binding CloseReviewCommand}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Report: success, failure, partial rollback, permission declined -->
+                    <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.4}"
+                            Visibility="{Binding IsReportVisible, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <controls:Icon3D Key="Restore" Size="20" Margin="{StaticResource Thickness.1}" />
+                                <TextBlock Text="{Binding ReportHeadline}" FontSize="16" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <Border Style="{StaticResource Chip}" HorizontalAlignment="Left" Margin="{StaticResource Thickness.2}"
+                                    Visibility="{Binding ReportRolledBack, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="Partially rolled back" FontSize="10" />
+                            </Border>
+                            <TextBlock Text="{Binding ReportDetail}" Style="{StaticResource CaptionText}"
+                                       TextWrapping="Wrap" Margin="{StaticResource Thickness.1}" />
+                            <StackPanel Orientation="Horizontal" Margin="{StaticResource Thickness.2}">
+                                <Button Content="Undo this run" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding UndoCommand}"
+                                        AutomationProperties.Name="Undo debloat run" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Error -->
+                    <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.4}"
+                            Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Something went wrong" FontSize="16" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ErrorText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- History -->
+                    <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.4}">
+                        <StackPanel>
+                            <TextBlock Text="History" FontSize="16" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding HistoryText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                            <ItemsControl ItemsSource="{Binding HistoryRows}" Margin="{StaticResource Thickness.1}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Style="{StaticResource CaptionText}"
+                                                   TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel Orientation="Horizontal" Margin="{StaticResource Thickness.2}">
+                                <Button Content="Undo last run" Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding UndoCommand}" />
+                                <TextBlock Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="{StaticResource Thickness.2}"
+                                           Text="Every run is journaled under %LOCALAPPDATA%\FPM\debloat." />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Apps tab -->
+                <StackPanel Visibility="{Binding IsAppsTab, Converter={StaticResource BoolToVisibility}}">
+                    <Border Style="{StaticResource Card}" Padding="{StaticResource Thickness.4}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <controls:Icon3D Key="Apps" Size="24" Margin="{StaticResource Thickness.1}" />
+                                <TextBlock Text="Preinstalled apps" FontSize="17" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding AppsSummary}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                            <TextBlock Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="{StaticResource Thickness.1}"
+                                       Text="Removal is not enabled on this tab: the engine refuses Appx changes until it can capture and journal each package's state. Browse or search the catalog here; nothing is queued for removal." />
+
+                            <Grid Margin="{StaticResource Thickness.2}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding AppSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Search app catalog" AutomationProperties.Name="Search debloat apps" />
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding AppFilters}"
+                                          SelectedItem="{Binding SelectedAppFilter, Mode=TwoWay}"
+                                          Margin="{StaticResource Thickness.2}" MinWidth="140"
+                                          AutomationProperties.Name="Debloat app filter" />
+                            </Grid>
+
+                            <ListBox ItemsSource="{Binding Apps}" MaxHeight="380" Margin="{StaticResource Thickness.2}"
+                                     Background="Transparent" BorderThickness="0"
+                                     AutomationProperties.Name="Debloat app catalog">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource RowCard}" Padding="{StaticResource Thickness.2}" Margin="{StaticResource Row.Margin}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding PackagesText}" Style="{StaticResource CaptionText}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Margin="{StaticResource Thickness.2}" HorizontalAlignment="Right">
+                                                    <TextBlock Text="{Binding Recommendation}" Style="{StaticResource CaptionText}"
+                                                               HorizontalAlignment="Right" />
+                                                    <TextBlock Text="{Binding RemovalText}" Style="{StaticResource CaptionText}"
+                                                               HorizontalAlignment="Right" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource CaptionText}"
+                           Margin="{StaticResource Thickness.1}" TextWrapping="Wrap" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

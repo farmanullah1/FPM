@@ -38,6 +38,8 @@ public sealed class DebloatEngine
 
     public DebloatRunRecord? LatestRun() => _journal.LoadLatest();
 
+    public IReadOnlyList<DebloatRunRecord> Runs(int limit = 20) => _journal.LoadAll(limit);
+
     public async Task<DebloatHelperOutcome> DetectAsync(
         string tweakId,
         CancellationToken cancellationToken = default)
@@ -52,6 +54,7 @@ public sealed class DebloatEngine
         IReadOnlyCollection<string> tweakIds,
         int osBuild,
         bool isWindows11,
+        bool createRestorePoint = true,
         CancellationToken cancellationToken = default)
     {
         DebloatPlan plan = Plan(tweakIds, osBuild, isWindows11);
@@ -72,7 +75,8 @@ public sealed class DebloatEngine
             return record;
         }
 
-        record.RestorePointStatus = await TryRestorePointAsync(plan, cancellationToken).ConfigureAwait(false);
+        record.RestorePointStatus = await TryRestorePointAsync(plan, createRestorePoint, cancellationToken)
+            .ConfigureAwait(false);
 
         // Detect first: a tweak already applied is skipped, and the values captured here are the
         // exact pre-state that both the .reg backup and the journal will hold.
@@ -226,8 +230,16 @@ public sealed class DebloatEngine
         return allRestored;
     }
 
-    private async Task<string> TryRestorePointAsync(DebloatPlan plan, CancellationToken cancellationToken)
+    private async Task<string> TryRestorePointAsync(
+        DebloatPlan plan,
+        bool createRestorePoint,
+        CancellationToken cancellationToken)
     {
+        if (!createRestorePoint)
+        {
+            return "Skipped: turned off for this run";
+        }
+
         if (!plan.HasHighRisk && !plan.Items.Any(item =>
                 item.IsRunnable && !string.Equals(item.Tweak.Risk, "Low", StringComparison.Ordinal)))
         {

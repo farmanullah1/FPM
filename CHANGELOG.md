@@ -6,6 +6,14 @@ follow the audit legend: **[DONE]**, **[PARTIAL]**, **[MISSING]**.
 ## [Unreleased]
 
 ### Added
+- **Windows debloat page (D3)**: a real Debloat page in the rail with Windows and Apps tabs —
+  OS/build header, category counts and search, five documented selection presets, risk and impact
+  labels, a typed plan/review, Detect/Apply/Undo over the journaled engine, a restore-point toggle,
+  success/declined/partial-rollback reports and journal history. The Apps tab is a searchable
+  catalog only; removal stays refused until Appx state can be journaled. Unsupported and protected
+  tweaks remain disabled with their planner reason. The Settings preview card was removed.
+
+### Added
 - **Windows debloat engine (D2)**: catalog tweaks now plan into an ordered, OS-gated list and run
   only through three typed helper commands (`DetectTweak`, `ApplyTweak`, `RevertTweak`). Every run
   writes a `.reg` backup and a journal of the exact pre-state, tries a restore point (recording a
